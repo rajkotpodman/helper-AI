@@ -25,6 +25,9 @@
           <div class="status-dot" id="system-dot"></div>
           <span id="system-status">System Ready</span>
         </div>
+        <button class="btn-icon" id="btn-open-metrics">
+          📊 <span>Metrics</span>
+        </button>
         <button class="btn-icon" id="btn-open-settings">
           ⚙️ <span>Settings</span>
         </button>
@@ -35,9 +38,14 @@
     <main>
       <section class="card" id="goal-card">
         <div class="prompt-box">
-          <label style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
-            🎯 What goal would you like Helper to achieve?
-          </label>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+              🎯 What goal would you like Helper to achieve?
+            </label>
+            <button class="btn-icon" id="btn-voice" title="Speak your goal (Voice-to-Text)" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">
+              🎙️ <span>Voice Input</span>
+            </button>
+          </div>
           <textarea id="goal-input" placeholder="Example: Clean up temporary files, or research the top 5 AI models and write a summary to my Desktop..."></textarea>
           
           <div class="quick-prompts">
@@ -80,10 +88,31 @@
         <!-- Completion Box -->
         <div class="completion-box" id="completion-box" style="display: none;">
           <h3>🎉 Mission Accomplished!</h3>
-          <p id="completion-message"></p>
+          <p id="completion-message" style="margin-bottom: 1rem; line-height: 1.5;"></p>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn-icon" id="btn-export-md" style="font-size: 0.85rem;">
+              📥 <span>Download Markdown Report</span>
+            </button>
+            <button class="btn-icon" id="btn-export-json" style="font-size: 0.85rem;">
+              📄 <span>Download JSON History</span>
+            </button>
+          </div>
         </div>
       </section>
     </main>
+
+    <!-- Metrics Modal -->
+    <div class="modal-overlay" id="metrics-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 style="font-size: 1.25rem;">📊 Operational Telemetry</h2>
+          <button class="btn-icon" id="btn-close-metrics" style="padding: 0.2rem 0.5rem;">✕</button>
+        </div>
+        <div id="metrics-content" style="font-family: var(--code-font); font-size: 0.85rem; background: var(--bg-primary); padding: 1rem; border-radius: 8px; max-height: 350px; overflow-y: auto;">
+          Loading metrics...
+        </div>
+      </div>
+    </div>
 
     <!-- Settings Modal -->
     <div class="modal-overlay" id="settings-modal">

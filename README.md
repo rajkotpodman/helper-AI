@@ -7,12 +7,41 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![CI/CD Pipeline](https://github.com/rajkotpodman/helper-AI/actions/workflows/ci.yml/badge.svg)](https://github.com/rajkotpodman/helper-AI/actions/workflows/ci.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
+[![Tests: 14 Passed](https://img.shields.io/badge/tests-14%20passed-success.svg)]()
 <br><br>
 📖 **[ગુજરાતી ભાષામાં સંપૂર્ણ માર્ગદર્શિકા (Gujarati Guide)](HOW_TO_USE.md)**
 
 </div>
+
+---
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    User([User Goal / Voice Input]) --> Frontend[Web Dashboard / CLI Runner]
+    Frontend --> Core[HelperAgent ReAct Engine]
+    
+    subgraph Brain[LLM Planning & Self-Healing]
+        Core <--> LLM[Multi-Provider Client\nGemini • OpenAI • Groq • Ollama • RuleEngine]
+        Core <--> Memory[AgentMemory & Context Window]
+    end
+
+    subgraph Observability[Enterprise Monitoring]
+        Core --> Audit[AuditLogger\nStructured JSONL + Token Redaction]
+        Core --> Metrics[TelemetryCollector\nLatency, Uptime, Error Rates]
+    end
+
+    subgraph Tools[Full OS & Web Arsenal]
+        Core --> PSTool[PowerShell / Shell Runner]
+        Core --> FileTool[Smart File System\nDesktop/Downloads Resolver]
+        Core --> SysTool[Process & Health Diagnostics]
+        Core --> WebTool[DuckDuckGo Search & Scraper]
+    end
+```
 
 ---
 
@@ -134,11 +163,57 @@ helper-AI/
 
 ---
 
+## 🐳 Docker Deployment
+
+Run Helper-AI in a secure containerized environment:
+
+```bash
+# Build and run with Docker Compose
+docker compose up -d
+
+# Or build standalone image
+docker build -t helper-ai:latest .
+docker run -p 8000:8000 --env-file .env helper-ai:latest
+```
+
+---
+
+## 🧪 Automated Testing & Quality
+
+Helper-AI includes an automated test suite verifying tool execution, safety restrictions, API endpoints, and memory retention:
+
+```bash
+# Run complete test suite
+pytest tests/ -v
+
+# Run with coverage report
+pytest --cov=core tests/
+```
+
+---
+
+## 📊 Telemetry & Audit Logs
+
+- **Structured JSONL Audit Trail:** Stored at `logs/audit.jsonl` with token and password masking.
+- **Live Metrics API:** Access operational telemetry at `GET http://localhost:8000/api/metrics`.
+- **History Export:** Download execution history in Markdown or JSON format directly from the web dashboard.
+
+---
+
 ## 🛡️ Safety & Autonomous Guardrails
 
 Helper-AI provides two operating modes:
 - **Full Autonomous Mode (Default):** Runs commands and solves problems without interrupting you with questions.
 - **Safe Mode:** Can be toggled on in Settings or with `--safe` in CLI. It restricts potentially destructive PowerShell commands (such as recursive drive format or deletion).
+
+---
+
+## 🤝 Community & Governance
+
+- [Contributing Guidelines](CONTRIBUTING.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Security Policy](SECURITY.md)
+- [Changelog](CHANGELOG.md)
 
 ---
 

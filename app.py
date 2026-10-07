@@ -16,6 +16,8 @@ load_dotenv()
 from core.agent import HelperAgent
 from core.llm import LLMClient
 from core.tools import ToolRegistry
+from core.metrics import metrics
+from core.audit import audit_logger
 
 app = FastAPI(title="Helper-AI Dashboard")
 
@@ -93,6 +95,33 @@ async def get_status():
 async def get_tools():
     tools = ToolRegistry()
     return {"tools": tools.get_schemas()}
+
+@app.get("/api/metrics")
+async def get_metrics():
+    return metrics.get_snapshot()
+
+@app.get("/api/audit")
+async def get_audit(limit: int = 50):
+    lines = []
+    if audit_logger.audit_file.exists():
+        with open(audit_logger.audit_file, "r", encoding="utf-8") as f:
+            all_lines = f.readlines()
+            for line in all_lines[-limit:]:
+                try:
+                    lines.append(json.loads(line.strip()))
+                except Exception:
+                    continue
+    return {"events": lines, "total_logged": len(lines)}
+
+@app.get("/api/export")
+async def export_history(format: str = "json"):
+    if format == "markdown":
+        md = f"# Helper-AI Goal Execution Report\n\n**Goal:** {current_goal_info['goal']}\n\n"
+        for idx, item in enumerate(current_goal_info["history"], start=1):
+            md += f"### Step {idx} ({item.get('action', 'none')})\n"
+            md += f"**Success:** {item.get('success')}\n\n```\n{item.get('output', '')}\n```\n\n"
+        return JSONResponse(content={"markdown": md})
+    return {"goal": current_goal_info["goal"], "history": current_goal_info["history"]}
 
 @app.post("/api/run")
 async def start_goal(req: GoalRequest):
