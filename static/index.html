@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helper-AI • Autonomous PC & Internet Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo-group">
+        <div class="logo-icon">⚡</div>
+        <div>
+          <h1>Helper<span>-AI</span></h1>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">Autonomous PC Control & Internet Agent</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-badge">
+          <div class="status-dot" id="system-dot"></div>
+          <span id="system-status">System Ready</span>
+        </div>
+        <button class="btn-icon" id="btn-open-settings">
+          ⚙️ <span>Settings</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Goal Input Card -->
+    <main>
+      <section class="card" id="goal-card">
+        <div class="prompt-box">
+          <label style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+            🎯 What goal would you like Helper to achieve?
+          </label>
+          <textarea id="goal-input" placeholder="Example: Clean up temporary files, or research the top 5 AI models and write a summary to my Desktop..."></textarea>
+          
+          <div class="quick-prompts">
+            <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">Quick Ideas:</span>
+            <div class="chip" onclick="setGoal('Check my PC health, CPU, RAM and disk usage')">💻 PC Health Diagnostic</div>
+            <div class="chip" onclick="setGoal('Search the web for latest AI agent frameworks and create a research report on my Desktop')">🔍 Web Research Report</div>
+            <div class="chip" onclick="setGoal('List the largest files in my Downloads folder')">📂 Inspect Downloads</div>
+            <div class="chip" onclick="setGoal('List top running processes using high memory')">⚡ Inspect Processes</div>
+            <div class="chip" onclick="setGoal('Open PowerShell, test git version and write system info to Desktop/sysinfo.txt')">📝 System Info to Desktop</div>
+          </div>
+        </div>
+
+        <div class="action-bar">
+          <div class="controls-left">
+            <span>🛡️ Safe Mode: <strong id="safe-mode-label">Off (Full Autonomous)</strong></span>
+            <span>🤖 Provider: <strong id="current-provider-label">Gemini</strong></span>
+          </div>
+          <div class="controls-right">
+            <button class="btn-danger" id="btn-cancel">⏹ Stop Agent</button>
+            <button class="btn-primary" id="btn-run">
+              <span>🚀 Execute Goal</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Agent Live Execution Progress -->
+      <section class="card execution-section" id="execution-section">
+        <div class="execution-header">
+          <div class="execution-title">
+            <div class="pulse-indicator"></div>
+            <span id="execution-status-text">Helper is working autonomously on your goal...</span>
+          </div>
+          <span style="font-size: 0.85rem; color: var(--text-muted);" id="step-counter">Step 0</span>
+        </div>
+
+        <!-- Step Timeline -->
+        <div class="timeline" id="timeline"></div>
+
+        <!-- Completion Box -->
+        <div class="completion-box" id="completion-box" style="display: none;">
+          <h3>🎉 Mission Accomplished!</h3>
+          <p id="completion-message"></p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2 style="font-size: 1.25rem;">⚙️ Helper-AI Settings</h2>
+          <button class="btn-icon" id="btn-close-settings" style="padding: 0.2rem 0.5rem;">✕</button>
+        </div>
+
+        <div class="form-group">
+          <label>AI Model Provider</label>
+          <select id="setting-provider">
+            <option value="gemini">Google Gemini (Recommended & Fast)</option>
+            <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+            <option value="groq">Groq (Ultra-fast Llama 3.3)</option>
+            <option value="ollama">Ollama (100% Offline & Free)</option>
+            <option value="rule_engine">Smart Rule Engine (No API Key Required)</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="group-gemini">
+          <label>Gemini API Key</label>
+          <input type="password" id="setting-gemini-key" placeholder="AIzaSy...">
+        </div>
+
+        <div class="form-group" id="group-openai" style="display: none;">
+          <label>OpenAI API Key</label>
+          <input type="password" id="setting-openai-key" placeholder="sk-...">
+        </div>
+
+        <div class="form-group" id="group-groq" style="display: none;">
+          <label>Groq API Key</label>
+          <input type="password" id="setting-groq-key" placeholder="gsk_...">
+        </div>
+
+        <div class="form-group" id="group-ollama" style="display: none;">
+          <label>Ollama Endpoint URL</label>
+          <input type="text" id="setting-ollama-url" value="http://localhost:11434">
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+            <input type="checkbox" id="setting-safe-mode" style="width: auto;">
+            Enable Safe Mode (blocks risky PowerShell commands)
+          </label>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button class="btn-icon" id="btn-cancel-settings">Cancel</button>
+          <button class="btn-primary" id="btn-save-settings">Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      Helper-AI • Autonomous PC & Internet Agent • Built for seamless autonomous productivity.
+    </footer>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
