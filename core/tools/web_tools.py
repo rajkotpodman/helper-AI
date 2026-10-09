@@ -88,12 +88,30 @@ class SearchWebTool(BaseTool):
                             "snippet": clean_snip,
                             "url": m_link
                         })
-            except Exception as e:
-                return {
-                    "success": False,
-                    "output": f"Web search encountered an error: {str(e)}",
-                    "error": str(e)
-                }
+            except Exception:
+                pass
+
+        # Attempt 3: High-reliability Bing fallback
+        if not results:
+            try:
+                b_url = f"https://www.bing.com/search?q={urllib.parse.quote(query)}"
+                b_resp = requests.get(b_url, headers=HEADERS, timeout=8)
+                if b_resp.status_code == 200 and BeautifulSoup:
+                    soup = BeautifulSoup(b_resp.text, "html.parser")
+                    for card in soup.select("li.b_algo"):
+                        t_elem = card.select_one("h2")
+                        s_elem = card.select_one(".b_caption p") or card.select_one(".b_caption")
+                        a_elem = card.select_one("h2 a")
+                        if t_elem and s_elem:
+                            results.append({
+                                "title": t_elem.get_text(strip=True),
+                                "snippet": s_elem.get_text(strip=True),
+                                "url": a_elem.get("href", "") if a_elem else ""
+                            })
+                            if len(results) >= max_results:
+                                break
+            except Exception:
+                pass
 
         if not results:
             return {

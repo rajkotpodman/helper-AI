@@ -9,20 +9,41 @@ from core.tools.base import BaseTool
 def resolve_user_path(path_str: str) -> Path:
     """
     Expands user-friendly shortcuts like 'Desktop', 'Downloads', 'Documents', '~'
-    into actual absolute paths on the user's operating system.
+    into actual absolute paths on the user's operating system, accounting for OneDrive sync.
     """
     path_str = path_str.strip().strip('"').strip("'")
     home = Path.home()
     lower = path_str.lower()
+    onedrive = home / "OneDrive"
+
+    def get_known_folder(folder_name: str) -> Path:
+        od_path = onedrive / folder_name
+        std_path = home / folder_name
+        # If OneDrive folder exists and has items, prioritize it
+        if od_path.exists():
+            try:
+                if any(od_path.iterdir()):
+                    return od_path
+            except Exception:
+                pass
+        if std_path.exists():
+            try:
+                if any(std_path.iterdir()):
+                    return std_path
+            except Exception:
+                pass
+        if od_path.exists():
+            return od_path
+        return std_path
 
     if lower in ["desktop", "my desktop"]:
-        return home / "Desktop"
+        return get_known_folder("Desktop")
     elif lower in ["downloads", "my downloads"]:
         return home / "Downloads"
     elif lower in ["documents", "my documents"]:
-        return home / "Documents"
+        return get_known_folder("Documents")
     elif lower in ["pictures", "my pictures"]:
-        return home / "Pictures"
+        return get_known_folder("Pictures")
     elif lower in ["music"]:
         return home / "Music"
     elif lower in ["videos"]:
@@ -34,11 +55,23 @@ def resolve_user_path(path_str: str) -> Path:
         prefix_win = folder + "\\"
         if lower.startswith(prefix) or lower.startswith(prefix_win):
             remainder = path_str[len(folder)+1:]
-            return (home / folder.capitalize()) / remainder
+            base_dir = get_known_folder(folder.capitalize()) if folder != "downloads" else (home / "Downloads")
+            return base_dir / remainder
 
     # Handle standard path expansion
     expanded = os.path.expanduser(os.path.expandvars(path_str))
     p = Path(expanded)
+
+    # If the user passed explicit path e.g. C:\Users\DELL\Desktop and it's empty, check OneDrive Desktop
+    if p.name.lower() in ["desktop", "documents", "pictures"] and p.exists() and p.is_dir():
+        try:
+            if not any(p.iterdir()):
+                od_alt = onedrive / p.name.capitalize()
+                if od_alt.exists() and any(od_alt.iterdir()):
+                    return od_alt
+        except Exception:
+            pass
+
     if not p.is_absolute():
         p = (Path.cwd() / p).resolve()
     return p

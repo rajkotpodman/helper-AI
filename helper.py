@@ -33,10 +33,10 @@ def print_banner():
     banner_text.append("Non-technical friendly • Automatic Self-Healing", style="italic green")
     console.print(Panel(banner_text, border_style="cyan"))
 
-async def run_cli(goal: str, provider: str = None, safe_mode: bool = False, max_steps: int = 25):
+async def run_cli(goal: str, provider: str = None, model: str = None, safe_mode: bool = False, max_steps: int = 25):
     print_banner()
 
-    llm = LLMClient(provider=provider)
+    llm = LLMClient(provider=provider, model=model)
     agent = HelperAgent(llm_client=llm, safe_mode=safe_mode, max_steps=max_steps)
 
     console.print(f"\n[bold yellow]🎯 Active Goal:[/bold yellow] [bold white]{goal}[/bold white]")
@@ -69,6 +69,14 @@ async def run_cli(goal: str, provider: str = None, safe_mode: bool = False, max_
                 title="Goal Complete",
                 border_style="green"
             ))
+        elif event_type == "memory_limit_reached":
+            console.print(Panel(
+                f"[bold red]⚠️ MEMORY LIMIT REACHED (20 MB)![/bold red]\n\n"
+                f"{data.get('alert_message', '')}\n\n"
+                f"[bold yellow]Please copy and store/backup your memory file before starting a fresh log.[/bold yellow]",
+                title="Memory Limit Alert",
+                border_style="red"
+            ))
 
     result = await agent.run(goal, on_event=handle_event)
     return result
@@ -77,6 +85,7 @@ def main():
     parser = argparse.ArgumentParser(description="Helper-AI Autonomous PC & Internet Agent")
     parser.add_argument("goal", nargs="?", default="", help="Goal to accomplish (e.g. 'clean up downloads')")
     parser.add_argument("--provider", default=None, help="LLM provider: gemini, openai, groq, ollama, rule_engine")
+    parser.add_argument("--model", default=None, help="Specific model name (e.g. qwen2.5:1.5b)")
     parser.add_argument("--safe", action="store_true", help="Enable Safe Mode to restrict destructive commands")
     parser.add_argument("--steps", type=int, default=25, help="Maximum execution steps")
 
@@ -93,7 +102,7 @@ def main():
         sys.exit(0)
 
     try:
-        asyncio.run(run_cli(goal, provider=args.provider, safe_mode=args.safe, max_steps=args.steps))
+        asyncio.run(run_cli(goal, provider=args.provider, model=args.model, safe_mode=args.safe, max_steps=args.steps))
     except KeyboardInterrupt:
         console.print("\n[yellow]Interrupted by user. Exiting gracefully.[/yellow]")
 

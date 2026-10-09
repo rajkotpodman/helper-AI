@@ -17,6 +17,16 @@ if %errorlevel% neq 0 (
 echo [*] Verifying dependencies...
 pip install -r requirements.txt --quiet --disable-pip-version-check
 
+echo [*] Checking Ollama local AI server...
+where ollama >nul 2>&1
+if %errorlevel% equ 0 (
+    curl -s http://localhost:11434/api/version >nul 2>&1
+    if %errorlevel% neq 0 (
+        echo [*] Starting Ollama local engine in background...
+        start /b "" ollama serve >nul 2>&1
+    )
+)
+
 echo.
 echo [*] Starting Helper-AI Web Dashboard...
 echo [*] Your browser will open automatically at http://localhost:8000

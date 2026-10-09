@@ -31,13 +31,15 @@ class AgentMemory:
     def __init__(self, goal: str):
         self.goal = goal
         self.history: List[StepRecord] = []
+        home = Path.home()
+        desktop_dir = home / "OneDrive" / "Desktop" if (home / "OneDrive" / "Desktop").exists() else home / "Desktop"
         self.system_info = {
             "os": platform.system(),
             "release": platform.release(),
             "cwd": str(Path.cwd()),
-            "user_home": str(Path.home()),
-            "desktop": str(Path.home() / "Desktop"),
-            "downloads": str(Path.home() / "Downloads")
+            "user_home": str(home),
+            "desktop": str(desktop_dir),
+            "downloads": str(home / "Downloads")
         }
 
     def add_step(self, thought: str, action: str, action_args: Dict[str, Any], result: str, success: bool) -> StepRecord:
@@ -67,6 +69,17 @@ class AgentMemory:
                 f"  Action: {s.action} with arguments {json.dumps(s.action_args)}\n"
                 f"  Observation ({status}): {res_snippet}\n"
             )
+
+        # Anti-loop warning for small models
+        if len(self.history) >= 2:
+            last1 = self.history[-1]
+            last2 = self.history[-2]
+            if not last1.success and not last2.success and last1.action == last2.action:
+                lines.append(
+                    f"\n⚠️ CRITICAL WARNING: Action '{last1.action}' has failed consecutively! "
+                    "DO NOT repeat this failing action or similar command. You must pivot to an alternative tool or command immediately."
+                )
+
         return "\n".join(lines)
 
     def export_json(self) -> str:

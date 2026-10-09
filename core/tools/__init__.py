@@ -5,7 +5,8 @@ from core.tools.system_tools import (
     ExecutePowerShellTool,
     GetSystemHealthTool,
     ProcessManagerTool,
-    OpenAppOrFileTool
+    OpenAppOrFileTool,
+    ManageOllamaTool
 )
 from core.tools.file_tools import (
     ListDirectoryTool,
@@ -19,6 +20,7 @@ from core.tools.web_tools import (
     FetchWebContentTool,
     DownloadFileTool
 )
+from core.tools.browser_tools import BrowserAutomationTool
 
 class ToolRegistry:
     """Central registry of all tools available to Helper-AI."""
@@ -32,10 +34,9 @@ class ToolRegistry:
 
     def _register_default_tools(self):
         defaults = [
-            ExecutePowerShellTool(),
+            ManageOllamaTool(),
             GetSystemHealthTool(),
             ProcessManagerTool(),
-            OpenAppOrFileTool(),
             ListDirectoryTool(),
             ReadFileTool(),
             WriteFileTool(),
@@ -43,7 +44,10 @@ class ToolRegistry:
             SearchFilesTool(),
             SearchWebTool(),
             FetchWebContentTool(),
-            DownloadFileTool()
+            DownloadFileTool(),
+            OpenAppOrFileTool(),
+            BrowserAutomationTool(),
+            ExecutePowerShellTool()
         ]
         for t in defaults:
             self.register(t)
@@ -56,6 +60,14 @@ class ToolRegistry:
 
     def get_schemas(self) -> List[Dict[str, Any]]:
         return [tool.to_schema() for tool in self._tools.values()]
+
+    def get_concise_schema_text(self) -> str:
+        lines = []
+        for t in self.get_all_tools():
+            props = t.parameters.get("properties", {})
+            params = ", ".join(props.keys())
+            lines.append(f"- {t.name}({params}): {t.description}")
+        return "\n".join(lines)
 
     def execute(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         tool = self.get_tool(tool_name)

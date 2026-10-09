@@ -27,6 +27,8 @@ const settingGeminiKey = document.getElementById('setting-gemini-key');
 const settingOpenaiKey = document.getElementById('setting-openai-key');
 const settingGroqKey = document.getElementById('setting-groq-key');
 const settingOllamaUrl = document.getElementById('setting-ollama-url');
+const settingOllamaModel = document.getElementById('setting-ollama-model');
+const ollamaDetectedModels = document.getElementById('ollama-detected-models');
 const settingSafeMode = document.getElementById('setting-safe-mode');
 
 // Groups
@@ -43,10 +45,34 @@ const metricsContent = document.getElementById('metrics-content');
 const btnExportMd = document.getElementById('btn-export-md');
 const btnExportJson = document.getElementById('btn-export-json');
 
+// Permission Modal Elements (1-Click Human-in-the-Loop)
+const permissionModal = document.getElementById('permission-modal');
+const permissionDescription = document.getElementById('permission-description');
+const permissionDetailsBox = document.getElementById('permission-details-box');
+const btnApprovePermission = document.getElementById('btn-approve-permission');
+const btnDenyPermission = document.getElementById('btn-deny-permission');
+let currentPermissionRequestId = null;
+
+// Memory Modal Elements
+const btnOpenMemory = document.getElementById('btn-open-memory');
+const memoryModal = document.getElementById('memory-modal');
+const btnCloseMemory = document.getElementById('btn-close-memory');
+const btnCloseMemoryBtn = document.getElementById('btn-close-memory-btn');
+const btnResetMemory = document.getElementById('btn-reset-memory');
+const memoryStatSize = document.getElementById('memory-stat-size');
+const memoryProgressBar = document.getElementById('memory-progress-bar');
+const memorySizeBadge = document.getElementById('memory-size-badge');
+
+const memoryAlertModal = document.getElementById('memory-alert-modal');
+const btnCloseMemoryAlert = document.getElementById('btn-close-memory-alert');
+const btnDismissMemoryAlert = document.getElementById('btn-dismiss-memory-alert');
+const btnDownloadMemoryAlert = document.getElementById('btn-download-memory-alert');
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   setupWebSocket();
   fetchStatus();
+  fetchMemoryStatus();
   setupEventListeners();
 });
 
@@ -61,6 +87,37 @@ function setupEventListeners() {
   btnOpenMetrics.addEventListener('click', handleOpenMetrics);
   btnCloseMetrics.addEventListener('click', () => metricsModal.style.display = 'none');
   btnVoice.addEventListener('click', handleVoiceInput);
+
+  const btnOpenBrowser = document.getElementById('btn-open-browser');
+  if (btnOpenBrowser) {
+    btnOpenBrowser.addEventListener('click', async () => {
+      try {
+        btnOpenBrowser.innerHTML = '<span>⏳ Opening...</span>';
+        const res = await fetch('/api/browser/launch', { method: 'POST' });
+        const data = await res.json();
+        btnOpenBrowser.innerHTML = '<span>🌐 Project Browser</span>';
+        alert(data.message || 'Project Browser is open on your screen.');
+      } catch (e) {
+        btnOpenBrowser.innerHTML = '<span>🌐 Project Browser</span>';
+        alert('Failed to launch browser: ' + e.message);
+      }
+    });
+  }
+
+  if (btnOpenMemory) btnOpenMemory.addEventListener('click', handleOpenMemory);
+  if (btnCloseMemory) btnCloseMemory.addEventListener('click', () => memoryModal.style.display = 'none');
+  if (btnCloseMemoryBtn) btnCloseMemoryBtn.addEventListener('click', () => memoryModal.style.display = 'none');
+  if (btnResetMemory) btnResetMemory.addEventListener('click', handleResetMemory);
+
+  if (btnCloseMemoryAlert) btnCloseMemoryAlert.addEventListener('click', () => memoryAlertModal.style.display = 'none');
+  if (btnDismissMemoryAlert) btnDismissMemoryAlert.addEventListener('click', () => memoryAlertModal.style.display = 'none');
+  if (btnDownloadMemoryAlert) btnDownloadMemoryAlert.addEventListener('click', () => {
+    window.location.href = '/api/memory/download';
+    memoryAlertModal.style.display = 'none';
+  });
+
+  if (btnApprovePermission) btnApprovePermission.addEventListener('click', () => respondPermission(true));
+  if (btnDenyPermission) btnDenyPermission.addEventListener('click', () => respondPermission(false));
 
   if (btnExportMd) btnExportMd.addEventListener('click', () => downloadReport('markdown'));
   if (btnExportJson) btnExportJson.addEventListener('click', () => downloadReport('json'));
@@ -81,6 +138,25 @@ function updateProviderFormVisibility() {
   groupOpenai.style.display = p === 'openai' ? 'block' : 'none';
   groupGroq.style.display = p === 'groq' ? 'block' : 'none';
   groupOllama.style.display = p === 'ollama' ? 'block' : 'none';
+  if (p === 'ollama') {
+    fetchOllamaModels();
+  }
+}
+
+async function fetchOllamaModels() {
+  try {
+    const res = await fetch('/api/ollama/models');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.models && data.models.length > 0) {
+        ollamaDetectedModels.innerHTML = 'Installed models: ' + data.models.map(m => `<span style="text-decoration: underline; cursor: pointer; color: var(--accent); margin-right: 6px;" onclick="document.getElementById('setting-ollama-model').value='${m}'">${m}</span>`).join(' ');
+      } else {
+        ollamaDetectedModels.innerHTML = 'No models detected yet. Make sure Ollama is installed.';
+      }
+    }
+  } catch (e) {
+    console.error('Failed to query ollama models', e);
+  }
 }
 
 function setGoal(text) {
@@ -94,6 +170,12 @@ async function fetchStatus() {
     const data = await res.json();
     currentProviderLabel.textContent = data.provider.toUpperCase();
     settingProvider.value = data.provider;
+    if (settingOllamaModel && data.ollama_model) {
+      settingOllamaModel.value = data.ollama_model;
+    }
+    if (typeof data.is_running === 'boolean') {
+      setRunningState(data.is_running);
+    }
     updateProviderFormVisibility();
   } catch (e) {
     console.error('Failed to fetch status:', e);
@@ -149,23 +231,97 @@ function handleAgentEvent(eventType, data) {
       updateStepCardResult(data);
       break;
 
+    case 'permission_requested':
+      currentPermissionRequestId = data.request_id || (data.details && data.details.request_id);
+      if (permissionDescription) permissionDescription.textContent = data.description || 'Permission requested for high-risk action';
+      if (permissionDetailsBox) {
+        permissionDetailsBox.textContent = JSON.stringify(data.details || {}, null, 2);
+      }
+      if (permissionModal) permissionModal.style.display = 'flex';
+      break;
+
+    case 'permission_decided':
+      if (permissionModal) permissionModal.style.display = 'none';
+      currentPermissionRequestId = null;
+      break;
+
     case 'completed':
+    case 'finished':
+      if (permissionModal) permissionModal.style.display = 'none';
       setRunningState(false);
       executionStatusText.textContent = 'Goal Finished';
       completionBox.style.display = 'block';
-      completionMessage.textContent = data.message;
+      completionMessage.textContent = data.message || 'Execution finished successfully.';
       completionBox.scrollIntoView({ behavior: 'smooth' });
+      fetchMemoryStatus();
+      break;
+
+    case 'init':
+      if (data && typeof data.is_running === 'boolean') {
+        setRunningState(data.is_running);
+        if (data.is_running && data.current_goal) {
+          executionSection.style.display = 'block';
+          executionStatusText.textContent = `Helper is executing: "${data.current_goal}"`;
+        }
+      }
+      break;
+
+    case 'memory_limit_reached':
+      fetchMemoryStatus();
+      if (memoryAlertModal) memoryAlertModal.style.display = 'flex';
+      break;
+
+    case 'memory_reset':
+      fetchMemoryStatus();
       break;
 
     case 'cancelled':
+      if (permissionModal) permissionModal.style.display = 'none';
       setRunningState(false);
       executionStatusText.textContent = 'Goal Cancelled';
+      fetchMemoryStatus();
       break;
 
     case 'error':
+      if (permissionModal) permissionModal.style.display = 'none';
       setRunningState(false);
       alert('Error: ' + data.error);
       break;
+  }
+}
+
+async function respondPermission(approved) {
+  if (!currentPermissionRequestId) {
+    // Check if there is an active pending request from backend
+    try {
+      const res = await fetch('/api/permission/pending');
+      const data = await res.json();
+      if (data.pending) {
+        currentPermissionRequestId = data.pending.request_id;
+      }
+    } catch (e) {
+      console.warn('Failed to fetch pending permission:', e);
+    }
+  }
+
+  if (!currentPermissionRequestId) {
+    if (permissionModal) permissionModal.style.display = 'none';
+    return;
+  }
+
+  try {
+    await fetch('/api/permission/respond', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        request_id: currentPermissionRequestId,
+        approved: approved
+      })
+    });
+    if (permissionModal) permissionModal.style.display = 'none';
+    currentPermissionRequestId = null;
+  } catch (e) {
+    console.error('Error responding to permission:', e);
   }
 }
 
@@ -223,6 +379,12 @@ async function handleRun() {
     return;
   }
 
+  setRunningState(true);
+  executionSection.style.display = 'block';
+  executionStatusText.textContent = `Helper is executing: "${goal}"`;
+  completionBox.style.display = 'none';
+  timeline.innerHTML = '';
+
   try {
     const res = await fetch('/api/run', {
       method: 'POST',
@@ -235,9 +397,11 @@ async function handleRun() {
     });
     const data = await res.json();
     if (!res.ok) {
+      setRunningState(false);
       alert(data.error || 'Failed to start agent.');
     }
   } catch (e) {
+    setRunningState(false);
     alert('Network error starting agent: ' + e.message);
   }
 }
@@ -257,6 +421,7 @@ async function handleSaveSettings() {
     openai_key: settingOpenaiKey.value || null,
     groq_key: settingGroqKey.value || null,
     ollama_url: settingOllamaUrl.value || null,
+    ollama_model: settingOllamaModel ? (settingOllamaModel.value || null) : null,
     safe_mode: settingSafeMode.checked
   };
 
@@ -353,5 +518,46 @@ async function downloadReport(format) {
     URL.revokeObjectURL(url);
   } catch (e) {
     alert('Export failed: ' + e.message);
+  }
+}
+
+// Markdown Memory (agent_memory.md) Management
+async function fetchMemoryStatus() {
+  try {
+    const res = await fetch('/api/memory/status');
+    const data = await res.json();
+    if (memorySizeBadge) memorySizeBadge.textContent = `${data.size_mb} MB`;
+    if (memoryStatSize) memoryStatSize.textContent = `${data.size_mb} MB / ${data.limit_mb} MB`;
+    if (memoryProgressBar) {
+      const pct = Math.min(100, Math.max(1, (data.size_mb / data.limit_mb) * 100));
+      memoryProgressBar.style.width = `${pct}%`;
+      if (pct > 90) memoryProgressBar.style.background = '#ef4444';
+      else if (pct > 70) memoryProgressBar.style.background = '#f59e0b';
+      else memoryProgressBar.style.background = '#3b82f6';
+    }
+    if (data.is_limit_reached && memoryAlertModal) {
+      memoryAlertModal.style.display = 'flex';
+    }
+  } catch (e) {
+    console.error('Failed to fetch memory status:', e);
+  }
+}
+
+async function handleOpenMemory() {
+  await fetchMemoryStatus();
+  if (memoryModal) memoryModal.style.display = 'flex';
+}
+
+async function handleResetMemory() {
+  if (!confirm('Are you sure you want to clear and reset agent_memory.md? All recorded prompts in this file will be wiped.')) return;
+  try {
+    const res = await fetch('/api/memory/reset', { method: 'POST' });
+    if (res.ok) {
+      alert('Memory file cleared and reset successfully.');
+      await fetchMemoryStatus();
+      if (memoryModal) memoryModal.style.display = 'none';
+    }
+  } catch (e) {
+    alert('Failed to reset memory: ' + e.message);
   }
 }

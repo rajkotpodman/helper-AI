@@ -25,6 +25,12 @@
           <div class="status-dot" id="system-dot"></div>
           <span id="system-status">System Ready</span>
         </div>
+        <button class="btn-icon" id="btn-open-browser" title="Open Project Chrome Browser on your screen to log in or inspect" style="color: #60a5fa; border-color: rgba(96,165,250,0.3);">
+          🌐 <span>Project Browser</span>
+        </button>
+        <button class="btn-icon" id="btn-open-memory" title="View & Download Markdown Memory Log (agent_memory.md)">
+          🧠 <span>Memory (<span id="memory-size-badge">0 MB</span>)</span>
+        </button>
         <button class="btn-icon" id="btn-open-metrics">
           📊 <span>Metrics</span>
         </button>
@@ -101,6 +107,99 @@
       </section>
     </main>
 
+    <!-- Human-in-the-Loop Permission Modal (1-Click Authorization) -->
+    <div class="modal-overlay" id="permission-modal" style="display: none;">
+      <div class="modal" style="border: 2px solid #f59e0b; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2);">
+        <div class="modal-header">
+          <h2 style="font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem; color: #f59e0b;">
+            🛡️ <span>Authorization Request</span>
+          </h2>
+          <span id="permission-timer-badge" style="font-size: 0.8rem; background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 0.2rem 0.5rem; border-radius: 4px;">Pending User</span>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">
+          Helper-AI has paused execution to request your approval for this action:
+        </p>
+        <div id="permission-description" style="font-size: 1rem; font-weight: 600; margin: 1rem 0; padding: 0.75rem; background: var(--bg-primary); border-radius: 8px; border-left: 4px solid #f59e0b;">
+          Loading...
+        </div>
+        <div id="permission-details-box" style="font-family: var(--code-font); font-size: 0.8rem; background: var(--bg-secondary); padding: 0.75rem; border-radius: 6px; max-height: 150px; overflow-y: auto; margin-bottom: 1.25rem; color: var(--text-secondary);">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button class="btn-danger" id="btn-deny-permission" style="padding: 0.6rem 1.2rem; font-size: 0.9rem;">
+            ✕ Deny Action
+          </button>
+          <button class="btn-primary" id="btn-approve-permission" style="background: #10b981; border-color: #10b981; padding: 0.6rem 1.4rem; font-size: 0.95rem; font-weight: 600;">
+            ✓ One-Click Approve
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 20 MB Memory Limit Alert Modal -->
+    <div class="modal-overlay" id="memory-alert-modal" style="display: none;">
+      <div class="modal" style="border: 2px solid #ef4444; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.25);">
+        <div class="modal-header">
+          <h2 style="font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem; color: #ef4444;">
+            ⚠️ <span>20 MB Memory Limit Reached!</span>
+          </h2>
+          <button class="btn-icon" id="btn-close-memory-alert" style="padding: 0.2rem 0.5rem;">✕</button>
+        </div>
+        <p style="font-size: 0.95rem; line-height: 1.5; margin: 1rem 0; color: var(--text-primary);">
+          Your AI agent memory file (<code>agent_memory.md</code>) has reached <strong>20 MB</strong>!
+          Please <strong>copy and store/backup</strong> this file now before starting a fresh cycle.
+        </p>
+        <div style="background: var(--bg-primary); padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+          💡 <strong>What happened:</strong> An automatic backup archive was saved. The memory file is being cleared to start a brand new 20 MB memory log.
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+          <button class="btn-primary" id="btn-download-memory-alert" style="background: #3b82f6; border-color: #3b82f6;">
+            📥 Download agent_memory.md
+          </button>
+          <button class="btn-icon" id="btn-dismiss-memory-alert">
+            Understood
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Memory Management Modal -->
+    <div class="modal-overlay" id="memory-modal" style="display: none;">
+      <div class="modal" style="max-width: 600px;">
+        <div class="modal-header">
+          <h2 style="font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+            🧠 <span>AI Agent Markdown Memory (agent_memory.md)</span>
+          </h2>
+          <button class="btn-icon" id="btn-close-memory" style="padding: 0.2rem 0.5rem;">✕</button>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0.5rem 0 1rem 0;">
+          Helper-AI automatically records all prompts and final replies to <code>agent_memory.md</code>.
+        </p>
+        <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+            <span>Current Size:</span>
+            <strong id="memory-stat-size">0.0 MB / 20.0 MB</strong>
+          </div>
+          <div style="background: var(--bg-secondary); border-radius: 4px; height: 8px; overflow: hidden; margin-bottom: 0.5rem;">
+            <div id="memory-progress-bar" style="background: #3b82f6; height: 100%; width: 1%;"></div>
+          </div>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">
+            When size reaches 20 MB, the system prompts you to copy & store the file, then automatically starts a new 20 MB log.
+          </span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+          <button class="btn-danger" id="btn-reset-memory" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
+            🗑️ Clear & Reset File Now
+          </button>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn-icon" id="btn-close-memory-btn">Close</button>
+            <a class="btn-primary" id="btn-download-memory" href="/api/memory/download" download="agent_memory.md" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
+              📥 <span>Download File</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Metrics Modal -->
     <div class="modal-overlay" id="metrics-modal">
       <div class="modal">
@@ -151,6 +250,9 @@
         <div class="form-group" id="group-ollama" style="display: none;">
           <label>Ollama Endpoint URL</label>
           <input type="text" id="setting-ollama-url" value="http://localhost:11434">
+          <label style="margin-top: 0.5rem;">Ollama Model (e.g. qwen2.5:1.5b)</label>
+          <input type="text" id="setting-ollama-model" value="qwen2.5:1.5b" placeholder="qwen2.5:1.5b">
+          <div id="ollama-detected-models" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;"></div>
         </div>
 
         <div class="form-group">

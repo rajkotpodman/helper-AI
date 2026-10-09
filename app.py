@@ -18,10 +18,14 @@ from core.llm import LLMClient
 from core.tools import ToolRegistry
 from core.metrics import metrics
 from core.audit import audit_logger
+from core.permissions import PermissionManager
+from core.memory_recorder import MarkdownMemoryRecorder
 
 app = FastAPI(title="Helper-AI Dashboard")
 
 # Global agent manager state
+permission_manager = PermissionManager()
+memory_recorder = MarkdownMemoryRecorder()
 active_agent: HelperAgent = None
 active_task: asyncio.Task = None
 connected_websockets: list[WebSocket] = []
@@ -31,18 +35,25 @@ current_goal_info = {
     "history": []
 }
 
+from typing import Optional
+
 class GoalRequest(BaseModel):
     goal: str
-    provider: str = None
+    provider: Optional[str] = None
     safe_mode: bool = False
     max_steps: int = 25
 
+class PermissionRespondRequest(BaseModel):
+    request_id: str
+    approved: bool
+
 class SettingsRequest(BaseModel):
     provider: str
-    gemini_key: str = None
-    openai_key: str = None
-    groq_key: str = None
-    ollama_url: str = None
+    gemini_key: Optional[str] = None
+    openai_key: Optional[str] = None
+    groq_key: Optional[str] = None
+    ollama_url: Optional[str] = None
+    ollama_model: Optional[str] = None
     safe_mode: bool = False
 
 async def broadcast_event(event_type: str, data: dict):
@@ -56,6 +67,16 @@ async def broadcast_event(event_type: str, data: dict):
     for ws in disconnected:
         if ws in connected_websockets:
             connected_websockets.remove(ws)
+
+def _notify_permission_req(req_data: dict):
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            asyncio.create_task(broadcast_event("permission_requested", req_data))
+    except Exception:
+        pass
+
+permission_manager.set_listener(_notify_permission_req)
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -86,10 +107,23 @@ async def get_status():
         "goal": current_goal_info["goal"],
         "tools_count": len(tools.get_all_tools()),
         "provider": os.getenv("LLM_PROVIDER", "gemini"),
+        "ollama_model": os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b"),
         "has_gemini_key": bool(os.getenv("GEMINI_API_KEY")),
         "has_openai_key": bool(os.getenv("OPENAI_API_KEY")),
         "has_groq_key": bool(os.getenv("GROQ_API_KEY"))
     }
+
+@app.get("/api/ollama/models")
+async def get_ollama_models():
+    import requests
+    base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    try:
+        r = requests.get(f"{base_url.rstrip('/')}/api/tags", timeout=3)
+        if r.status_code == 200:
+            return {"models": [m.get("name") for m in r.json().get("models", [])]}
+    except Exception:
+        pass
+    return {"models": []}
 
 @app.get("/api/tools")
 async def get_tools():
@@ -123,6 +157,53 @@ async def export_history(format: str = "json"):
         return JSONResponse(content={"markdown": md})
     return {"goal": current_goal_info["goal"], "history": current_goal_info["history"]}
 
+@app.get("/api/permission/pending")
+async def get_pending_permission():
+    pending = permission_manager.get_pending()
+    return {"pending": pending}
+
+@app.post("/api/permission/respond")
+async def respond_to_permission(req: PermissionRespondRequest):
+    success = permission_manager.respond(req.request_id, req.approved)
+    await broadcast_event("permission_decided", {
+        "request_id": req.request_id,
+        "approved": req.approved,
+        "success": success
+    })
+    return {
+        "success": success,
+        "request_id": req.request_id,
+        "approved": req.approved,
+        "message": "Authorization recorded." if success else "Request not found or already closed."
+    }
+
+@app.get("/api/memory/status")
+async def get_memory_status():
+    return {
+        "file_path": str(memory_recorder.file_path),
+        "file_name": memory_recorder.file_path.name,
+        "size_bytes": memory_recorder.get_size_bytes(),
+        "size_mb": memory_recorder.get_size_mb(),
+        "limit_mb": round(memory_recorder.max_bytes / (1024 * 1024), 1),
+        "is_limit_reached": memory_recorder.is_limit_reached()
+    }
+
+@app.get("/api/memory/download")
+async def download_memory_file():
+    if not memory_recorder.file_path.exists():
+        memory_recorder._init_file()
+    return FileResponse(
+        path=str(memory_recorder.file_path),
+        filename=memory_recorder.file_path.name,
+        media_type="text/markdown"
+    )
+
+@app.post("/api/memory/reset")
+async def reset_memory_file():
+    memory_recorder.reset_file()
+    await broadcast_event("memory_reset", {"message": "Memory log file has been reset."})
+    return {"success": True, "message": "Memory file has been reset to 0 bytes with a fresh header."}
+
 @app.post("/api/run")
 async def start_goal(req: GoalRequest):
     global active_agent, active_task, current_goal_info
@@ -135,7 +216,13 @@ async def start_goal(req: GoalRequest):
         return JSONResponse(status_code=400, content={"error": "Goal cannot be empty."})
 
     llm = LLMClient(provider=req.provider)
-    active_agent = HelperAgent(llm_client=llm, safe_mode=req.safe_mode, max_steps=req.max_steps)
+    active_agent = HelperAgent(
+        llm_client=llm,
+        safe_mode=req.safe_mode,
+        max_steps=req.max_steps,
+        permission_manager=permission_manager,
+        memory_recorder=memory_recorder
+    )
 
     current_goal_info["is_running"] = True
     current_goal_info["goal"] = goal_str
@@ -146,12 +233,13 @@ async def start_goal(req: GoalRequest):
         try:
             async def on_event(ev_type: str, data: dict):
                 await broadcast_event(ev_type, data)
-                if ev_type == "action_result":
+                if ev_type in ("action_result", "thought"):
                     current_goal_info["history"].append(data)
 
             result = await active_agent.run(goal_str, on_event=on_event)
-            await broadcast_event("finished", result)
+            await broadcast_event("finished", result or {"success": True, "message": "Goal finished."})
         except Exception as e:
+            logger.error(f"Exception during agent run: {e}", exc_info=True)
             await broadcast_event("error", {"error": str(e)})
         finally:
             current_goal_info["is_running"] = False
@@ -162,6 +250,7 @@ async def start_goal(req: GoalRequest):
 @app.post("/api/cancel")
 async def cancel_goal():
     global active_agent, current_goal_info
+    permission_manager.cancel_all()
     if active_agent and current_goal_info["is_running"]:
         active_agent.cancel()
         current_goal_info["is_running"] = False
@@ -190,11 +279,28 @@ async def update_settings(req: SettingsRequest):
     if req.ollama_url:
         os.environ["OLLAMA_BASE_URL"] = req.ollama_url
         set_key(str(env_file), "OLLAMA_BASE_URL", req.ollama_url)
+    if req.ollama_model:
+        os.environ["OLLAMA_MODEL"] = req.ollama_model
+        set_key(str(env_file), "OLLAMA_MODEL", req.ollama_model)
 
     os.environ["SAFE_MODE"] = str(req.safe_mode).lower()
     set_key(str(env_file), "SAFE_MODE", str(req.safe_mode).lower())
 
     return {"success": True, "message": "Settings updated successfully."}
+
+@app.post("/api/browser/launch")
+async def launch_project_browser():
+    try:
+        from core.browser_driver import ProjectBrowser
+        browser = ProjectBrowser.get_instance()
+        res = browser.navigate("https://www.blogger.com")
+        browser.bring_to_front()
+        return {
+            "success": True,
+            "message": "Project Chrome Browser is now open on your screen showing Blogger. You can sign into your Google account directly in that window."
+        }
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 # Mount static files and serve index.html
 static_dir = Path(__file__).parent / "static"

@@ -61,12 +61,25 @@ Whether you need to clean up messy folders, diagnose system performance, researc
 - **Process & Health Monitoring:** Real-time CPU, RAM, and Disk inspection with the ability to locate and terminate frozen processes.
 - **App & Document Launching:** Opens desktop apps, URLs, folders, or documents seamlessly.
 
-### 🌐 2. Internet & Web Automation
+### 🌐 2. Internet & Browser Automation
+- **Browser Automation & Social Media:** Prepares and launches draft posts for Twitter/X, LinkedIn, Threads, Reddit, Facebook, and interacts with web forms.
+- **Dedicated Persistent Profile:** Uses a safe persistent browser profile so your logins and sessions remain intact across runs.
+- **Challenge & Verification Detection:** Automatically detects CAPTCHAs, two-factor authentication, or security verification screens and prompts for seamless Human-in-the-Loop resolution.
 - **Built-in Web Search:** Searches DuckDuckGo for live internet answers and documentation without requiring any paid search API keys.
 - **Web Content Extraction:** Fetches and parses articles, documentation, or websites into clean, ad-free text.
 - **Direct File Downloads:** Streams and downloads files directly from the web into designated folders.
 
-### 🚀 3. Autonomous "No-Questions" Execution
+### 🛡️ 3. 1-Click Human-in-the-Loop (HITL) Authorization
+- **Non-Technical One-Click Approvals:** Whenever high-risk commands or social media publications are queued, Helper-AI pauses and displays a clean 1-click authorization modal in the Web Dashboard.
+- **REST & WebSocket API:** Allows external apps or mobile webhooks to authorize or deny actions with a single request via `/api/permission/respond`.
+- **Autonomous & Safe:** Provides full autonomous power without sacrificing user safety or control.
+
+### 🧠 4. Persistent Markdown Memory & 20 MB Auto-Rotation
+- **Automatic Interaction Logging:** Logs every user prompt/goal, execution status, steps taken, and final agent reply directly into a simple, human-readable [`agent_memory.md`](agent_memory.md) file.
+- **20 MB Memory Threshold:** Continuously monitors memory file size. When the file reaches 20 MB, Helper-AI prompts the user to copy and store the file, automatically creates a backup archive, and resets the active file to start a fresh 20 MB memory log.
+- **One-Click Download & Reset:** Easily view live memory size, download the `.md` log, or reset memory from the Web Dashboard or API.
+
+### 🚀 5. Autonomous "No-Questions" Execution
 - **Autonomous ReAct Engine:** Plans → Acts → Observes → Self-Corrects.
 - **Error Recovery:** If a command fails or a file isn't found, Helper analyzes the error and formulates an alternative approach instead of giving up.
 - **Non-Technical Friendly:** Features both a **1-click Web Dashboard** and a powerful CLI. Anyone can use it without prior coding knowledge.

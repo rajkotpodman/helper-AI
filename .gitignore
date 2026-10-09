@@ -33,3 +33,14 @@ $RECYCLE.BIN/
 .idea/
 *.sublime-project
 *.sublime-workspace
+
+# Browser profiles and drivers
+chrome_profile/
+browser_data/
+drivers/
+*.exe
+
+# Temporary files
+agent_memory.md
+newfile.txt
+
