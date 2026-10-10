@@ -5,6 +5,7 @@ import json
 import asyncio
 import webbrowser
 from pathlib import Path
+from typing import Dict, Any, List, Optional
 from dotenv import load_dotenv, set_key
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
@@ -40,6 +41,7 @@ from typing import Optional
 class GoalRequest(BaseModel):
     goal: str
     provider: Optional[str] = None
+    engine: Optional[str] = "native"
     safe_mode: bool = False
     max_steps: int = 25
 
@@ -185,6 +187,7 @@ async def get_memory_status():
         "size_bytes": memory_recorder.get_size_bytes(),
         "size_mb": memory_recorder.get_size_mb(),
         "limit_mb": round(memory_recorder.max_bytes / (1024 * 1024), 1),
+        "total_prompts": memory_recorder.get_entry_count(),
         "is_limit_reached": memory_recorder.is_limit_reached()
     }
 
@@ -203,6 +206,14 @@ async def reset_memory_file():
     memory_recorder.reset_file()
     await broadcast_event("memory_reset", {"message": "Memory log file has been reset."})
     return {"success": True, "message": "Memory file has been reset to 0 bytes with a fresh header."}
+
+@app.get("/api/engines")
+async def get_available_engines():
+    return {
+        "status": "ready",
+        "engine": "native",
+        "description": "Helper-AI Autonomous PC Control & Internet Agent"
+    }
 
 @app.post("/api/run")
 async def start_goal(req: GoalRequest):
@@ -233,7 +244,7 @@ async def start_goal(req: GoalRequest):
         try:
             async def on_event(ev_type: str, data: dict):
                 await broadcast_event(ev_type, data)
-                if ev_type in ("action_result", "thought"):
+                if ev_type in ("action_result", "thought", "step_start"):
                     current_goal_info["history"].append(data)
 
             result = await active_agent.run(goal_str, on_event=on_event)
@@ -246,6 +257,7 @@ async def start_goal(req: GoalRequest):
 
     active_task = asyncio.create_task(run_worker())
     return {"success": True, "message": "Agent execution initiated."}
+
 
 @app.post("/api/cancel")
 async def cancel_goal():
@@ -301,6 +313,37 @@ async def launch_project_browser():
         }
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+@app.post("/api/voice/speak")
+async def api_voice_speak(payload: Dict[str, Any]):
+    from core.voice_engine import VoiceEngine, DEFAULT_VOICE
+    text = payload.get("text", "")
+    voice = payload.get("voice", DEFAULT_VOICE)
+    if not text:
+        return JSONResponse(status_code=400, content={"error": "Text is required"})
+    res = await VoiceEngine.speak_on_pc(text, voice)
+    return {"success": res, "text": text, "voice": voice}
+
+@app.get("/api/voice/voices")
+async def api_voice_voices():
+    from core.voice_engine import VoiceEngine
+    return {"voices": VoiceEngine.list_voices()}
+
+@app.get("/api/mcp/servers")
+async def api_mcp_servers():
+    from core.mcp_manager import MCPManager
+    return {"servers": MCPManager.get_instance().list_servers()}
+
+@app.get("/api/mcp/tools")
+async def api_mcp_tools():
+    from core.mcp_manager import MCPManager
+    tools = await MCPManager.get_instance().list_tools_async()
+    return {"tools": tools}
+
+# Mount screenshots directory
+screenshots_dir = Path(__file__).parent / "screenshots"
+screenshots_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/screenshots", StaticFiles(directory=str(screenshots_dir)), name="screenshots")
 
 # Mount static files and serve index.html
 static_dir = Path(__file__).parent / "static"

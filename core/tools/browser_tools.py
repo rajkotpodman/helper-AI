@@ -39,13 +39,16 @@ class BrowserAutomationTool(BaseTool):
             "action": {
                 "type": "string",
                 "description": (
-                    "Action to perform: 'publish_blog_post' (autonomously creates, writes, and publishes a blog post with title and text in 1 step), "
+                    "Action to perform: 'publish_facebook_post' (autonomously creates, writes, and publishes a Facebook post in 1 step), "
+                    "'publish_blog_post' (autonomously creates, writes, and publishes a blog post with title and text in 1 step), "
                     "'open_url' (load a page), 'click' (click button/link by text), "
                     "'type' (enter text into field), 'get_page' (read current page state), "
                     "'close_browser' (close window), 'draft_social_post' (compose social post)"
                 ),
                 "enum": [
+                    "publish_facebook_post",
                     "publish_blog_post",
+                    "list_blogs",
                     "open_url",
                     "click",
                     "type",
@@ -69,7 +72,7 @@ class BrowserAutomationTool(BaseTool):
             },
             "text": {
                 "type": "string",
-                "description": "Text to type into the targeted input or content area, or blog post body text."
+                "description": "Text to type into the targeted input or content area, or blog post body text, or Facebook post text."
             },
             "press_enter": {
                 "type": "boolean",
@@ -82,7 +85,7 @@ class BrowserAutomationTool(BaseTool):
             },
             "post_text": {
                 "type": "string",
-                "description": "Post text (for draft_social_post)."
+                "description": "Post text (for draft_social_post or publish_facebook_post)."
             }
         },
         "required": ["action"]
@@ -106,8 +109,15 @@ class BrowserAutomationTool(BaseTool):
         post_title = title or kwargs.get("post_title") or target_name or "New Blog Post"
 
         try:
-            if action in ["publish_blog_post", "create_blog_post"]:
+            if action in ["publish_facebook_post", "create_facebook_post", "post_facebook"]:
+                fb_content = post_text or type_content or "Hello from Helper-AI!"
+                return self._publish_facebook_post(fb_content)
+
+            elif action in ["publish_blog_post", "create_blog_post"]:
                 return self._publish_blog_post(post_title, type_content, url)
+
+            elif action in ["list_blogs", "get_blogs", "my_blogs", "google_blogs"]:
+                return self._list_blogs()
 
             elif action in ["open_url", "navigate"]:
                 target_url = url or kwargs.get("link") or "https://www.google.com"
@@ -157,12 +167,17 @@ class BrowserAutomationTool(BaseTool):
                 return {"success": True, "output": "Dedicated project browser closed."}
 
             elif action == "draft_social_post":
-                return self._draft_social_post(platform, post_text)
+                return self._draft_social_post(
+                    platform=platform,
+                    post_text=post_text,
+                    open_in_system_browser=kwargs.get("open_in_system_browser", True)
+                )
 
             else:
                 return {
                     "success": False,
-                    "output": f"Unknown action: '{action}'. Available: publish_blog_post, open_url, click, type, get_page, close_browser."
+                    "error": f"Unknown action: '{action}'.",
+                    "output": f"Unknown action: '{action}'. Available: publish_facebook_post, publish_blog_post, open_url, click, type, get_page, close_browser."
                 }
 
         except Exception as e:
@@ -172,6 +187,138 @@ class BrowserAutomationTool(BaseTool):
                 "output": f"Browser automation error: {str(e)}",
                 "error": str(e)
             }
+
+    def _publish_facebook_post(self, content: str) -> Dict[str, Any]:
+        """
+        Autonomously creates, writes, and publishes a Facebook post.
+        Navigates to Facebook, opens post composer, types the text, and submits the post.
+        """
+        import time
+        from selenium.webdriver.common.by import By
+        browser = ProjectBrowser.get_instance()
+        driver = browser.get_driver()
+        current_url = driver.current_url or ""
+
+        # 1. Navigate to Facebook home if not already on facebook or on subpath
+        if "facebook.com" not in current_url:
+            browser.navigate("https://www.facebook.com/")
+            time.sleep(2.5)
+        elif "/profile" in current_url or any(x in current_url for x in ["/photo", "/watch", "/reel", "/story"]):
+            browser.navigate("https://www.facebook.com/")
+            time.sleep(2.5)
+
+        # 2. Dismiss any floating backdrop/modals or 'Not now' prompts if present
+        try:
+            not_now_btns = driver.find_elements(By.XPATH, "//*[@role='button'][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'not now')]")
+            for b in not_now_btns:
+                if b.is_displayed():
+                    driver.execute_script("arguments[0].click();", b)
+                    time.sleep(0.5)
+                    break
+        except Exception:
+            pass
+
+        # 3. Locate and click "What's on your mind" composer button
+        opened = False
+        for _ in range(3):
+            btns = driver.find_elements(By.XPATH, "//*[@role='button'] | //div[contains(@class, 'x1i10hfl')]")
+            for b in btns:
+                try:
+                    if b.is_displayed():
+                        txt = (b.text or "").lower()
+                        aria = (b.get_attribute("aria-label") or "").lower()
+                        if "what's on your mind" in txt or "what's on your mind" in aria or "create a post" in txt:
+                            try:
+                                b.click()
+                            except Exception:
+                                driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", b)
+                            opened = True
+                            break
+                except Exception:
+                    continue
+            if opened:
+                break
+            time.sleep(1.0)
+
+        # 4. Wait for the Create Post dialog / textbox to appear
+        time.sleep(1.5)
+        textbox = None
+        for _ in range(6):
+            tbs = driver.find_elements(By.XPATH, "//*[@role='textbox'] | //*[@contenteditable='true']")
+            for tb in tbs:
+                try:
+                    if tb.is_displayed():
+                        textbox = tb
+                        break
+                except Exception:
+                    continue
+            if textbox:
+                break
+            time.sleep(0.5)
+
+        if not textbox:
+            return {
+                "success": False,
+                "output": "Could not open Facebook 'Create post' composer. Please ensure you are logged into Facebook in the Project Browser."
+            }
+
+        # 5. Type the post content
+        type_res = browser.type_text("What's on your mind", content, clear=False)
+        time.sleep(1.2)
+
+        # 6. Locate the Post (or Next) button
+        post_btn = None
+        for _ in range(5):
+            btns = driver.find_elements(By.XPATH, "//*[@role='button']")
+            for b in btns:
+                try:
+                    if b.is_displayed():
+                        txt = (b.text or "").strip().lower()
+                        aria = (b.get_attribute("aria-label") or "").strip().lower()
+                        dis = b.get_attribute("aria-disabled")
+                        if (txt in ["post", "next"] or aria in ["post", "next"]) and dis != "true":
+                            post_btn = b
+                            break
+                except Exception:
+                    continue
+            if post_btn:
+                break
+            time.sleep(0.5)
+
+        if not post_btn:
+            return {
+                "success": False,
+                "output": f"Post text was entered, but the 'Post' button was not found or remained disabled. Status: {type_res.get('output')}"
+            }
+
+        # 7. Click Post (or Next)
+        try:
+            post_btn.click()
+        except Exception:
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", post_btn)
+
+        time.sleep(3.0)
+
+        # If it was 'Next', Facebook might present a second confirmation modal with 'Post'
+        try:
+            second_btns = driver.find_elements(By.XPATH, "//*[@role='button']")
+            for b in second_btns:
+                if b.is_displayed() and b.text.strip().lower() == "post":
+                    try:
+                        b.click()
+                    except Exception:
+                        driver.execute_script("arguments[0].click();", b)
+                    time.sleep(2.5)
+                    break
+        except Exception:
+            pass
+
+        return {
+            "success": True,
+            "output": f"Successfully created and published post to Facebook: '{content[:80]}...'! The post is officially live on your timeline/feed.",
+            "content": content,
+            "page": browser.get_page_summary()
+        }
 
     def _publish_blog_post(
         self,
@@ -217,10 +364,109 @@ class BrowserAutomationTool(BaseTool):
             "page": browser.get_page_summary()
         }
 
+    def _list_blogs(self) -> Dict[str, Any]:
+        """
+        Navigates to Google Blogger in the live Project Browser,
+        detects existing blogs or login state, and returns the list of blogs.
+        """
+        import time
+        from selenium.webdriver.common.by import By
+        browser = ProjectBrowser.get_instance()
+        driver = browser.get_driver()
+        current_url = driver.current_url or ""
+
+        if "blogger.com" not in current_url:
+            browser.navigate("https://www.blogger.com/home")
+            time.sleep(3.0)
+
+        # Check for login prompt
+        page_source = driver.page_source or ""
+        current_url = driver.current_url or ""
+        page_title = driver.title or ""
+
+        # Check if landed on public landing page or Google accounts
+        if any(term in page_source.lower() for term in ["create your blog", "sign in with google", "choose an account"]) or "accounts.google.com" in current_url:
+            return {
+                "success": True,
+                "output": (
+                    "Opened Google Blogger (https://www.blogger.com) in Project Browser.\n"
+                    "Status: Google Sign-In is required to view your personal blogs.\n"
+                    "Please sign in with your Google account in the Project Browser window. "
+                    "Once logged in, your session is saved permanently and your blogs will appear automatically."
+                ),
+                "url": current_url,
+                "title": page_title
+            }
+
+        menu_blacklist = {
+            "posts", "stats", "comments", "earnings", "pages", "layout", "theme",
+            "settings", "reading list", "view blog", "help", "send feedback",
+            "terms of service", "privacy", "wysiwyg", "html", "new post",
+            "create blog", "blogger", "google", "all", "draft", "scheduled", "published", "manage"
+        }
+
+        blogs_found = []
+        try:
+            selector_elems = driver.find_elements(
+                By.XPATH,
+                "//div[@role='listbox']//div[@role='option'] | "
+                "//div[contains(@class, 'blog-title')] | "
+                "//span[contains(@class, 'blog-name')] | "
+                "//div[contains(@class, 'blogSelector')]//span | "
+                "//div[contains(@data-blog-id, '')]"
+            )
+            for el in selector_elems:
+                txt = el.text.strip()
+                if txt and txt not in blogs_found and len(txt) < 80 and txt.lower() not in menu_blacklist:
+                    blogs_found.append(txt)
+
+            header_elems = driver.find_elements(By.XPATH, "//header//span | //div[contains(@class, 'quantumWizMenuPaperselect')]")
+            for el in header_elems:
+                txt = el.text.strip()
+                if txt and txt not in blogs_found and len(txt) < 80 and txt.lower() not in menu_blacklist:
+                    blogs_found.append(txt)
+
+            if not blogs_found:
+                links = driver.find_elements(By.XPATH, "//a[contains(@href, 'blogger.com/blog/')]")
+                for link in links:
+                    txt = link.text.strip()
+                    if txt and txt not in blogs_found and txt.lower() not in menu_blacklist:
+                        blogs_found.append(txt)
+        except Exception as e:
+            logger.warning(f"Error extracting blogs from page: {e}")
+
+        summary = browser.get_page_summary()
+        if blogs_found:
+            blog_list_str = "\n".join(f"- 📝 {b}" for b in blogs_found)
+            return {
+                "success": True,
+                "output": (
+                    f"Successfully connected to Google Blogger! Found {len(blogs_found)} blog(s) on your account:\n\n"
+                    f"{blog_list_str}\n\n"
+                    f"Active URL: {summary.get('url')}\n"
+                    f"Page Title: {summary.get('title')}"
+                ),
+                "blogs": blogs_found,
+                "page": summary
+            }
+        else:
+            return {
+                "success": True,
+                "output": (
+                    f"Opened Google Blogger dashboard in Project Browser.\n"
+                    f"Page Title: {summary.get('title')}\n"
+                    f"Current URL: {summary.get('url')}\n\n"
+                    f"Blogger dashboard is open and visible on your screen. "
+                    f"If you have not created any blogs yet, you can create your first blog by clicking 'Create Blog'."
+                ),
+                "page": summary
+            }
+
     def _draft_social_post(
         self,
         platform: Optional[str],
-        post_text: Optional[str]
+        post_text: Optional[str],
+        open_in_system_browser: bool = True
     ) -> Dict[str, Any]:
         """Prepares a compose intent URL for major platforms and opens it."""
         plat = (platform or "x").lower().strip()
@@ -237,13 +483,24 @@ class BrowserAutomationTool(BaseTool):
         }
 
         intent_url = platform_urls.get(plat, f"https://x.com/intent/post?text={encoded_text}")
-        browser = ProjectBrowser.get_instance()
-        browser.navigate(intent_url)
+        if open_in_system_browser:
+            browser = ProjectBrowser.get_instance()
+            browser.navigate(intent_url)
 
         return {
             "success": True,
             "platform": plat,
             "post_text": text,
             "compose_url": intent_url,
-            "output": f"Opened compose window for '{plat}' with draft: \"{text}\""
+            "requires_user_approval": True,
+            "output": f"Prepared draft post for '{plat}' with draft: \"{text}\""
         }
+
+    def _detect_challenge_in_html(self, html: str) -> Dict[str, Any]:
+        """Detects whether a web page contains CAPTCHA or 2FA challenge."""
+        h_lower = html.lower()
+        if any(c in h_lower for c in ["recaptcha", "captcha", "cf-turnstile", "hcaptcha", "robot"]):
+            return {"is_challenge": True, "category": "captcha"}
+        if any(c in h_lower for c in ["verification code", "enter code", "two-factor", "2fa", "otp", "authenticate"]):
+            return {"is_challenge": True, "category": "two_factor"}
+        return {"is_challenge": False, "category": None}

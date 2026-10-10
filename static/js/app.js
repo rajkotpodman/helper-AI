@@ -60,6 +60,7 @@ const btnCloseMemory = document.getElementById('btn-close-memory');
 const btnCloseMemoryBtn = document.getElementById('btn-close-memory-btn');
 const btnResetMemory = document.getElementById('btn-reset-memory');
 const memoryStatSize = document.getElementById('memory-stat-size');
+const memoryStatPrompts = document.getElementById('memory-stat-prompts');
 const memoryProgressBar = document.getElementById('memory-progress-bar');
 const memorySizeBadge = document.getElementById('memory-size-badge');
 
@@ -108,6 +109,8 @@ function setupEventListeners() {
   if (btnCloseMemory) btnCloseMemory.addEventListener('click', () => memoryModal.style.display = 'none');
   if (btnCloseMemoryBtn) btnCloseMemoryBtn.addEventListener('click', () => memoryModal.style.display = 'none');
   if (btnResetMemory) btnResetMemory.addEventListener('click', handleResetMemory);
+
+
 
   if (btnCloseMemoryAlert) btnCloseMemoryAlert.addEventListener('click', () => memoryAlertModal.style.display = 'none');
   if (btnDismissMemoryAlert) btnDismissMemoryAlert.addEventListener('click', () => memoryAlertModal.style.display = 'none');
@@ -220,7 +223,7 @@ function handleAgentEvent(eventType, data) {
       break;
 
     case 'step_start':
-      stepCounter.textContent = `Step ${data.step} of ${data.max_steps}`;
+      stepCounter.textContent = `Step ${data.step} of ${data.max_steps || 25}`;
       break;
 
     case 'thought':
@@ -528,6 +531,7 @@ async function fetchMemoryStatus() {
     const data = await res.json();
     if (memorySizeBadge) memorySizeBadge.textContent = `${data.size_mb} MB`;
     if (memoryStatSize) memoryStatSize.textContent = `${data.size_mb} MB / ${data.limit_mb} MB`;
+    if (memoryStatPrompts) memoryStatPrompts.textContent = `${data.total_prompts || 0} recorded prompt${data.total_prompts === 1 ? '' : 's'}`;
     if (memoryProgressBar) {
       const pct = Math.min(100, Math.max(1, (data.size_mb / data.limit_mb) * 100));
       memoryProgressBar.style.width = `${pct}%`;

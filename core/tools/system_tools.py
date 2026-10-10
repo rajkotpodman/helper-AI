@@ -135,6 +135,8 @@ class ExecutePowerShellTool(BaseTool):
                     hint = "\n[SELF-HEALING HINT]: 'Get-InstalledModule' only checks PowerShell Gallery modules and is not available on this system. If you want to check Ollama models, run 'ollama list' or use the 'manage_ollama' tool. For installed Windows applications, run 'winget list' or 'Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*'."
                 elif "ollama" in cmd_lower and ("not recognized" in output.lower() or "not found" in output.lower()):
                     hint = "\n[SELF-HEALING HINT]: 'ollama' is at 'C:\\Users\\DELL\\AppData\\Local\\Programs\\Ollama\\ollama.exe', or check 'http://localhost:11434/api/tags' via curl/Invoke-RestMethod."
+                elif "sendkeys" in cmd_lower or "sendwait" in cmd_lower or "uiautomation" in cmd_lower:
+                    hint = "\n[SELF-HEALING HINT]: PowerShell SendKeys/UIAutomation is blocked by Windows UI security or process isolation. Use the 'browser_automation' tool directly (with action 'type', 'click', or 'publish_facebook_post') to interact with browser web pages!"
                 if hint:
                     output += hint
 

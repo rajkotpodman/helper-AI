@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "sqlite_demo": {
+      "description": "Local SQLite database inspector (MCP reference)",
+      "command": "python",
+      "args": [
+        "-m",
+        "sqlite3"
+      ],
+      "enabled": false
+    }
+  }
+}

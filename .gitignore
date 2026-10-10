@@ -44,3 +44,11 @@ drivers/
 agent_memory.md
 newfile.txt
 
+# External Frameworks Repositories
+frameworks/
+
+# Screenshots
+screenshots/*.png
+
+
+

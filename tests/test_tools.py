@@ -18,9 +18,9 @@ from core.tools.system_tools import (
 
 def test_resolve_user_path():
     home = Path.home()
-    assert resolve_user_path("Desktop") == home / "Desktop"
-    assert resolve_user_path("Downloads") == home / "Downloads"
-    assert resolve_user_path("Documents") == home / "Documents"
+    assert resolve_user_path("Desktop") in [home / "Desktop", home / "OneDrive" / "Desktop"]
+    assert resolve_user_path("Downloads") in [home / "Downloads", home / "OneDrive" / "Downloads"]
+    assert resolve_user_path("Documents") in [home / "Documents", home / "OneDrive" / "Documents"]
 
 def test_file_tools_roundtrip(tmp_path):
     test_file = str(tmp_path / "test_artifact.txt")

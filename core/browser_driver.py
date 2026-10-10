@@ -181,20 +181,23 @@ class ProjectBrowser:
     def click(self, target: str) -> Dict[str, Any]:
         """
         Clicks an element by visible text, aria-label, ID, or CSS selector.
-        Automatically handles confirmation modals (e.g. Blogger 'Publish post? CONFIRM').
+        Automatically handles modern SPAs (Facebook, Twitter, Blogger) with nested spans,
+        resolves click interception with JavaScript and ActionChains, and auto-confirms modals.
         """
         driver = self.get_driver()
         target_lower = target.lower().strip()
+        import re
+        target_clean = re.sub(r"[?!.,:;]+$", "", target_lower).strip()
 
-        # Prioritize exact aria-label, role='button', and button elements
+        # Prioritize exact aria-label, role='button', and button elements using descendant text (.)
         xpath_candidates = [
-            f"//*[@role='button'][@aria-label and contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_lower}')]",
-            f"//button[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_lower}')]",
-            f"//*[@role='button'][contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_lower}')]",
-            f"//a[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_lower}')]",
-            f"//*[@aria-label and contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_lower}')]",
-            f"//input[@type='submit' or @type='button'][contains(translate(@value, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_lower}')]",
-            f"//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_lower}')]"
+            f"//*[@role='button'][@aria-label and contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//*[@role='button'][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//a[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//*[@aria-label and contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//input[@type='submit' or @type='button'][contains(translate(@value, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]"
         ]
 
         element = None
@@ -219,41 +222,72 @@ class ProjectBrowser:
             except Exception:
                 pass
 
+        # Try JavaScript fuzzy DOM search across interactive buttons and spans
+        if not element:
+            try:
+                js_find = """
+                    const query = arguments[0];
+                    const elements = Array.from(document.querySelectorAll('button, [role="button"], a, [role="textbox"], span, div'));
+                    for (const el of elements) {
+                        if (el.offsetParent === null) continue;
+                        const txt = (el.innerText || '').toLowerCase();
+                        const aria = (el.getAttribute('aria-label') || '').toLowerCase();
+                        if (txt.includes(query) || aria.includes(query)) {
+                            return el.closest('[role="button"]') || el.closest('button') || el;
+                        }
+                    }
+                    return null;
+                """
+                element = driver.execute_script(js_find, target_clean)
+            except Exception:
+                pass
+
         if not element:
             return {
                 "success": False,
                 "output": f"Could not find clickable element matching '{target}' on the current page."
             }
 
-        # Scroll into view and click
+        # Scroll into view and click with multi-tier fallback for intercepted clicks
         clicked = False
         try:
             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
             time.sleep(0.3)
             element.click()
             clicked = True
-        except Exception:
+        except Exception as e1:
+            # Tier 2: JS Click & Focus
             try:
-                driver.execute_script("arguments[0].click();", element)
+                driver.execute_script("arguments[0].focus(); arguments[0].click();", element)
                 clicked = True
-            except Exception as e:
-                return {
-                    "success": False,
-                    "output": f"Found '{target}' but click failed: {str(e)}"
-                }
+            except Exception:
+                # Tier 3: ActionChains move and click
+                try:
+                    from selenium.webdriver.common.action_chains import ActionChains
+                    ActionChains(driver).move_to_element(element).click().perform()
+                    clicked = True
+                except Exception as e3:
+                    return {
+                        "success": False,
+                        "output": f"Found '{target}' but click failed: {str(e1)} | {str(e3)}"
+                    }
 
-        # If opening new post, wait for editor to load
-        if any(k in target_lower for k in ["new post", "create post", "create new post"]):
-            for _ in range(10):
+        # If opening new post, wait for editor/composer to load
+        if any(k in target_lower for k in ["new post", "create post", "create new post", "what's on your mind", "mind"]):
+            for _ in range(8):
                 time.sleep(0.5)
-                if "/post/edit/" in (driver.current_url or "") or driver.find_elements(By.XPATH, "//input[@aria-label='Title']"):
+                if (
+                    "/post/edit/" in (driver.current_url or "")
+                    or driver.find_elements(By.XPATH, "//input[@aria-label='Title']")
+                    or driver.find_elements(By.XPATH, "//*[@role='dialog']//*[@role='textbox'] | //*[@contenteditable='true']")
+                ):
                     break
 
         # If clicking Publish, auto-confirm any confirmation modal (e.g. Blogger "Publish post? CONFIRM")
         if "publish" in target_lower:
             time.sleep(1.2)
             try:
-                confirm_xpath = "//*[@role='dialog']//*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'confirm')] | //*[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'confirm') and @role='button'] | //button[contains(translate(text(), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'confirm')]"
+                confirm_xpath = "//*[@role='dialog']//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'confirm')] | //*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'confirm') and @role='button'] | //button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'confirm')]"
                 confirm_btns = [btn for btn in driver.find_elements(By.XPATH, confirm_xpath) if btn.is_displayed()]
                 if confirm_btns:
                     driver.execute_script("arguments[0].click();", confirm_btns[0])
@@ -276,7 +310,7 @@ class ProjectBrowser:
     def type_text(self, target: str, text: str, press_enter: bool = False, clear: bool = True) -> Dict[str, Any]:
         """
         Types text into an input, textarea, or contenteditable field.
-        Prioritizes rich text editor iframes when targeting body/content.
+        Robustly supports modern rich editors (Lexical, Draft.js, ProseMirror, Blogger iframes).
         """
         driver = self.get_driver()
         current_url = driver.current_url or ""
@@ -292,9 +326,11 @@ class ProjectBrowser:
             }
 
         target_lower = target.lower().strip()
+        import re
+        target_clean = re.sub(r"[?!.,:;]+$", "", target_lower).strip()
 
-        # 1. If targeting body/content, go directly to rich text iframe
-        if any(k in target_lower for k in ["body", "content", "post body", "editor", "article"]):
+        # 1. If targeting body/content in Blogger, prioritize rich text iframe
+        if any(k in target_lower for k in ["body", "content", "post body", "editor", "article"]) and "blogger.com" in current_url:
             for iframe in driver.find_elements(By.TAG_NAME, "iframe"):
                 try:
                     driver.switch_to.frame(iframe)
@@ -338,13 +374,18 @@ class ProjectBrowser:
                     except Exception:
                         pass
 
-        # 3. Try XPath for specific placeholder, name, label
+        # 3. Try XPath for specific placeholder, name, label, textbox, contenteditable
         xpath_candidates = [
-            f"//input[contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_lower}')]",
-            f"//input[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_lower}')]",
-            f"//textarea[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_lower}')]",
-            f"//input[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_lower}')]",
-            f"//*[@contenteditable='true']"
+            f"//*[@role='textbox'][contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//*[@role='textbox'][contains(translate(@aria-placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//input[contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//input[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//textarea[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//textarea[contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//input[contains(translate(@name, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//*[@role='dialog']//*[@role='textbox' or @contenteditable='true']",
+            f"//*[@contenteditable='true']",
+            f"//*[@role='textbox']"
         ]
 
         element = None
@@ -403,15 +444,77 @@ class ProjectBrowser:
                 "output": f"Could not find input field matching '{target}' to type text."
             }
 
+        # Multi-tier typing handling
         try:
             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
             time.sleep(0.2)
-            element.click()
+            # Focus and click (safely catching intercept issues)
+            try:
+                element.click()
+            except Exception:
+                try:
+                    driver.execute_script("arguments[0].focus(); arguments[0].click();", element)
+                except Exception:
+                    pass
+
+            is_contenteditable = (
+                element.get_attribute("contenteditable") == "true"
+                or element.get_attribute("role") == "textbox"
+                or element.tag_name in ["div", "span", "p"]
+            )
+
             if clear:
-                element.clear()
-            element.send_keys(text)
+                if is_contenteditable:
+                    try:
+                        element.send_keys(Keys.CONTROL + "a")
+                        element.send_keys(Keys.BACKSPACE)
+                    except Exception:
+                        try:
+                            driver.execute_script("arguments[0].innerText = '';", element)
+                        except Exception:
+                            pass
+                else:
+                    try:
+                        element.clear()
+                    except Exception:
+                        pass
+
+            # Type text: Tier 1 send_keys
+            typed = False
+            try:
+                element.send_keys(text)
+                typed = True
+            except Exception:
+                # Tier 2 ActionChains
+                try:
+                    from selenium.webdriver.common.action_chains import ActionChains
+                    ActionChains(driver).move_to_element(element).click().send_keys(text).perform()
+                    typed = True
+                except Exception:
+                    # Tier 3 document.execCommand for Lexical / contenteditable
+                    try:
+                        driver.execute_script("""
+                            const el = arguments[0];
+                            const val = arguments[1];
+                            el.focus();
+                            document.execCommand('selectAll', false, null);
+                            document.execCommand('insertText', false, val);
+                            el.dispatchEvent(new Event('input', { bubbles: true }));
+                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                        """, element, text)
+                        typed = True
+                    except Exception as e3:
+                        return {
+                            "success": False,
+                            "output": f"Failed to type into '{target}': {str(e3)}"
+                        }
+
             if press_enter:
-                element.send_keys(Keys.RETURN)
+                try:
+                    element.send_keys(Keys.RETURN)
+                except Exception:
+                    pass
+
             time.sleep(0.5)
             return {
                 "success": True,
@@ -424,7 +527,7 @@ class ProjectBrowser:
             }
 
     def get_page_summary(self) -> Dict[str, Any]:
-        """Extracts current URL, title, and interactive buttons/inputs on screen."""
+        """Extracts current URL, title, and interactive buttons/inputs on screen (including role=button and contenteditable)."""
         try:
             driver = self.get_driver()
         except Exception:
@@ -438,38 +541,51 @@ class ProjectBrowser:
             if not val:
                 return ""
             # Strip non-ASCII or private-use icon glyphs
-            return "".join(c for c in val if ord(c) < 128 or c.isprintable() and not (0xE000 <= ord(c) <= 0xF8FF)).strip()
+            cleaned = "".join(c for c in val if ord(c) < 128 or c.isprintable() and not (0xE000 <= ord(c) <= 0xF8FF)).strip()
+            import re
+            return re.sub(r"\s+", " ", cleaned).strip()
 
-        # Extract visible buttons
+        # Extract visible buttons: <button> AND [role='button']
         buttons = []
-        for btn in driver.find_elements(By.TAG_NAME, "button")[:15]:
+        found_btns = driver.find_elements(By.XPATH, "//button | //*[@role='button'] | //input[@type='submit' or @type='button']")
+        for btn in found_btns[:30]:
             try:
-                if btn.is_displayed() and btn.text.strip():
+                if btn.is_displayed():
                     txt = _clean(btn.text)
-                    if txt:
-                        buttons.append(txt)
+                    aria = _clean(btn.get_attribute("aria-label") or "")
+                    candidate = txt or aria
+                    if candidate and len(candidate) < 60 and candidate not in buttons:
+                        buttons.append(candidate)
             except Exception:
                 pass
 
         # Extract visible links with text
         links = []
-        for a in driver.find_elements(By.TAG_NAME, "a")[:15]:
+        for a in driver.find_elements(By.TAG_NAME, "a")[:20]:
             try:
                 if a.is_displayed() and a.text.strip() and len(a.text.strip()) < 30:
                     txt = _clean(a.text)
-                    if txt:
+                    if txt and txt not in links:
                         links.append(txt)
             except Exception:
                 pass
 
-        # Extract visible inputs
+        # Extract visible inputs: input, textarea, role=textbox, contenteditable
         inputs = []
-        for inp in driver.find_elements(By.TAG_NAME, "input")[:10]:
+        found_inputs = driver.find_elements(By.XPATH, "//input | //textarea | //*[@role='textbox'] | //*[@contenteditable='true']")
+        for inp in found_inputs[:15]:
             try:
                 if inp.is_displayed():
-                    ph = inp.get_attribute("placeholder") or inp.get_attribute("name") or inp.get_attribute("type") or "input"
+                    ph = (
+                        inp.get_attribute("aria-placeholder")
+                        or inp.get_attribute("placeholder")
+                        or inp.get_attribute("aria-label")
+                        or inp.get_attribute("name")
+                        or inp.get_attribute("type")
+                        or "textbox"
+                    )
                     txt = _clean(ph)
-                    if txt:
+                    if txt and txt not in inputs:
                         inputs.append(txt)
             except Exception:
                 pass
@@ -489,9 +605,9 @@ class ProjectBrowser:
         return {
             "title": _clean(title),
             "url": url,
-            "buttons": list(set(buttons))[:10],
-            "links": list(set(links))[:10],
-            "inputs": inputs[:8],
+            "buttons": buttons[:15],
+            "links": links[:10],
+            "inputs": inputs[:10],
             "snippet": body_text
         }
 

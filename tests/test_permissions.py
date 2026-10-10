@@ -78,11 +78,16 @@ def test_api_permission_endpoints():
     assert res2.status_code == 200
     assert res2.json()["success"] is False
 
+from core.memory_recorder import MarkdownMemoryRecorder
+
 @pytest.mark.asyncio
-async def test_agent_human_in_the_loop_permission_flow():
+async def test_agent_human_in_the_loop_permission_flow(tmp_path):
     pm = PermissionManager()
     llm = LLMClient(provider="rule_engine")
-    agent = HelperAgent(llm_client=llm, permission_manager=pm, max_steps=1)
+    mem_file = tmp_path / "perm_mem.md"
+    temp_recorder = MarkdownMemoryRecorder(file_path=mem_file)
+    agent = HelperAgent(llm_client=llm, permission_manager=pm, memory_recorder=temp_recorder, max_steps=1)
+
 
     # Mock LLM decision requiring permission
     llm.generate_step = lambda **kwargs: {

@@ -79,24 +79,32 @@ def test_manual_reset_file(tmp_path):
     assert "Old prompt" not in recorder.read_content()
     assert "# 🧠 Helper-AI Memory Log" in recorder.read_content()
 
-def test_api_memory_endpoints():
-    # 1. Test status
-    res = client.get("/api/memory/status")
-    assert res.status_code == 200
-    data = res.json()
-    assert "file_name" in data
-    assert "size_bytes" in data
-    assert "limit_mb" in data
+def test_api_memory_endpoints(tmp_path):
+    import app as app_module
+    orig_recorder = app_module.memory_recorder
+    temp_mem = tmp_path / "test_api_memory.md"
+    app_module.memory_recorder = MarkdownMemoryRecorder(file_path=temp_mem)
+    try:
+        # 1. Test status
+        res = client.get("/api/memory/status")
+        assert res.status_code == 200
+        data = res.json()
+        assert "file_name" in data
+        assert "size_bytes" in data
+        assert "limit_mb" in data
 
-    # 2. Test download
-    res_dl = client.get("/api/memory/download")
-    assert res_dl.status_code == 200
-    assert "text/markdown" in res_dl.headers.get("content-type", "")
+        # 2. Test download
+        res_dl = client.get("/api/memory/download")
+        assert res_dl.status_code == 200
+        assert "text/markdown" in res_dl.headers.get("content-type", "")
 
-    # 3. Test reset
-    res_rst = client.post("/api/memory/reset")
-    assert res_rst.status_code == 200
-    assert res_rst.json()["success"] is True
+        # 3. Test reset
+        res_rst = client.post("/api/memory/reset")
+        assert res_rst.status_code == 200
+        assert res_rst.json()["success"] is True
+    finally:
+        app_module.memory_recorder = orig_recorder
+
 
 @pytest.mark.asyncio
 async def test_agent_memory_recording_integration(tmp_path):

@@ -143,7 +143,7 @@ class HelperAgent:
                             })
                             break
 
-                has_succeeded = any(s.success for s in memory.history) if memory.history else True
+                has_succeeded = memory.history[-1].success if memory.history else True
                 success = has_succeeded
                 final_message = completion_msg or (
                     f"Goal '{goal}' has been completed successfully." if success else f"Goal '{goal}' could not be completed."

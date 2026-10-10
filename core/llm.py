@@ -5,7 +5,7 @@ import re
 from typing import Dict, Any, Optional
 import requests
 
-SYSTEM_PROMPT = """You are Helper, an autonomous AI assistant with full control of the user's running PC and internet access.
+SYSTEM_PROMPT = r"""You are Helper, an autonomous AI assistant with full control of the user's running PC and internet access.
 Your mandate is to accomplish the user's GOAL completely, reliably, and autonomously WITHOUT asking redundant questions.
 
 You have access to the following tools:
@@ -20,15 +20,22 @@ You have access to the following tools:
 6. Completion & Persistence: Only set `is_complete` to true when the goal has actually succeeded. If a previous tool or command had an error, DO NOT give up or declare completion — analyze the error, fix the parameters, and try again!
 7. Folder Paths with Spaces: When checking the contents of ANY folder (e.g. `E:\Freelancer Crack The Deal`), ALWAYS use the `list_directory` tool with `path: "E:\\Freelancer Crack The Deal"`. Do NOT run raw PowerShell commands like `Get-ChildItem` for listing files. If you do use PowerShell, paths with spaces MUST be wrapped in double quotes: `Get-ChildItem "E:\Freelancer Crack The Deal"`.
 8. Opening Applications: When the user's goal is to open or launch an application (e.g. 'open edge', 'launch notepad', 'open browser'), use the `open_app_or_file` tool with target='edge' (or target='notepad', target='chrome', etc.). Once launched successfully, the goal IS COMPLETE! Immediately set `is_complete: true`, `action: 'none'`, and inform the user. DO NOT close or terminate the app, and DO NOT loop checking processes!
-9. Live Project Browser Control: To automate websites, create blogs, click buttons, or fill forms (e.g. Blogger, Google), use `browser_automation`:
-- Open URL: Action: "browser_automation", Action args: {{ "action": "open_url", "url": "https://www.blogger.com" }}
-- Click button/link by text: Action: "browser_automation", Action args: {{ "action": "click", "target": "Create Blog" }} (or "Sign in", "New Post", "Publish")
-- Type into text boxes: Action: "browser_automation", Action args: {{ "action": "type", "target": "Title", "text": "My Blog Title" }}
+9. Live Project Browser Control: To automate websites, create blogs, post to Facebook, click buttons, or fill forms (e.g. Facebook, Blogger, Google), use `browser_automation`:
+- Create & Publish Facebook Post (1-step autonomous): Action: "browser_automation", Action args: {{ "action": "publish_facebook_post", "post_text": "My Facebook post text..." }}
+- Create & Publish Blogger Post (1-step autonomous): Action: "browser_automation", Action args: {{ "action": "publish_blog_post", "title": "My Blog Title", "text": "My post body..." }}
+- List Google Blogs / View Blogger Dashboard: Action: "browser_automation", Action args: {{ "action": "list_blogs" }}
+- Open URL: Action: "browser_automation", Action args: {{ "action": "open_url", "url": "https://www.facebook.com" }}
+- Click button/link by text: Action: "browser_automation", Action args: {{ "action": "click", "target": "What's on your mind" }} (or "Post", "Sign in", "New Post")
+- Type into text boxes: Action: "browser_automation", Action args: {{ "action": "type", "target": "What's on your mind", "text": "My post content" }}
 This controls the live project browser where logins and cookies are permanently remembered.
 
 ### QUICK TOOL ROUTING CHEATSHEET:
-- Live Web browsing / clicking buttons / web forms / Blogger:
-  Action: "browser_automation", Action args: {{ "action": "open_url", "url": "https://www.blogger.com" }}
+- Facebook post creation & publishing:
+  Action: "browser_automation", Action args: {{ "action": "publish_facebook_post", "post_text": "..." }}
+- Blogger post creation & publishing:
+  Action: "browser_automation", Action args: {{ "action": "publish_blog_post", "title": "...", "text": "..." }}
+- Live Web browsing / clicking buttons / web forms:
+  Action: "browser_automation", Action args: {{ "action": "open_url", "url": "https://www.facebook.com" }}
 - Opening / Launching applications:
   Action: "open_app_or_file", Action args: {{ "target": "edge" }}
 - Checking Ollama models / local models / AI status:
@@ -41,6 +48,14 @@ This controls the live project browser where logins and cookies are permanently 
   Action: "search_web", Action args: {{ "query": "..." }}
 - Managing processes:
   Action: "manage_processes", Action args: {{ "action": "list", "sort_by": "memory", "limit": 10 }}
+- Voice speech synthesis / speak aloud:
+  Action: "speak_aloud", Action args: {{ "text": "..." }}
+- Playwright vision browser / visual screenshot:
+  Action: "vision_browser", Action args: {{ "action": "screenshot" }}
+- Model Context Protocol (MCP) servers & tools:
+  Action: "manage_mcp", Action args: {{ "action": "list_servers" }}
+- Desktop GUI control / keyboard / mouse / desktop screenshot:
+  Action: "desktop_gui_control", Action args: {{ "action": "get_screen_info" }}
 
 ### RESPONSE FORMAT:
 You MUST respond ONLY with a valid JSON object matching this exact schema:
@@ -57,7 +72,17 @@ Do NOT include markdown formatting like ```json or any text outside the JSON obj
 class LLMClient:
     def __init__(self, provider: str = None, api_key: str = None, model: str = None, base_url: str = None):
         self.provider = (provider or os.getenv("LLM_PROVIDER", "gemini")).lower().strip().strip("'").strip('"')
-        raw_key = api_key or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("GROQ_API_KEY") or ""
+        if not api_key:
+            if self.provider == "groq":
+                raw_key = os.getenv("GROQ_API_KEY") or ""
+            elif self.provider == "gemini":
+                raw_key = os.getenv("GEMINI_API_KEY") or ""
+            elif self.provider == "openai":
+                raw_key = os.getenv("OPENAI_API_KEY") or ""
+            else:
+                raw_key = os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
+        else:
+            raw_key = api_key
         self.api_key = raw_key.strip().strip("'").strip('"')
         self.model = model
         self.base_url = base_url
@@ -161,9 +186,17 @@ class LLMClient:
             raw_text = resp.choices[0].message.content
             return self._parse_json_response(raw_text)
         except Exception as e:
-            err_str = str(e)
-            if "model_not_found" in err_str or "404" in err_str or "does not exist" in err_str:
-                for alt in ["openai/gpt-oss-120b", "qwen/qwen3.8-27b", "openai/gpt-oss-20b"]:
+            err_str = str(e).lower()
+            # If rate limit (429 / TPD / TPM) or model not found, try alternative models
+            if any(k in err_str for k in ["429", "rate_limit", "rate limit", "tpd", "tokens per day", "model_not_found", "404", "does not exist"]):
+                alt_candidates = [
+                    "openai/gpt-oss-120b",
+                    "openai/gpt-oss-20b",
+                    "llama-3.3-70b-versatile",
+                    "llama-3.1-8b-instant",
+                    "qwen/qwen3.8-27b"
+                ]
+                for alt in alt_candidates:
                     if alt == target_model:
                         continue
                     try:
@@ -315,6 +348,63 @@ class LLMClient:
         # Check if any step has already been executed in trajectory (prevents loop when earlier steps are truncated)
         has_run = bool(trajectory_summary and ("Step " in trajectory_summary or "earlier steps" in trajectory_summary) and trajectory_summary != "No previous steps executed yet.")
 
+        # 1. Specialized handling for Facebook posting
+        if re.search(r"\b(facebook|fb)\b", lower) and re.search(r"\b(post|publish|share|create post|status)\b", lower):
+            if "successfully created and published post to facebook" in trajectory_summary.lower():
+                return {
+                    "thought": "Facebook post has been successfully created and published. The goal is achieved.",
+                    "action": "none",
+                    "action_args": {},
+                    "is_complete": True,
+                    "completion_message": f"Helper has successfully created and published your post to Facebook! The post is now live."
+                }
+            # Extract post content if given, or generate clean default
+            fb_text = "🚀 Testing Facebook publishing via Helper-AI! Autonomous AI Agent is working smoothly."
+            text_match = re.search(r'(?:saying|content|with text|message)[:\s]+["\']?([^"\']+)["\']?', goal, re.IGNORECASE)
+            if text_match:
+                fb_text = text_match.group(1).strip()
+            return {
+                "thought": "I will autonomously create and publish the requested post to Facebook using browser_automation.",
+                "action": "browser_automation",
+                "action_args": {"action": "publish_facebook_post", "post_text": fb_text},
+                "is_complete": False,
+                "completion_message": ""
+            }
+
+        # 2. Specialized handling for Blogger / Google Blogs
+        if re.search(r"\b(blogger|blog|google blog|google blogs|my blogs)\b", lower):
+            if "successfully created and published blog post" in trajectory_summary.lower():
+                return {
+                    "thought": "Blog post has been successfully published on Blogger. Goal is achieved.",
+                    "action": "none",
+                    "action_args": {},
+                    "is_complete": True,
+                    "completion_message": f"Helper has successfully published your blog post on Blogger! The post is live."
+                }
+            if re.search(r"\b(list|show|get|names|blogs|my)\b", lower):
+                if "list_blogs" in trajectory_summary.lower() or "blogger.com" in trajectory_summary.lower() or "found" in trajectory_summary.lower():
+                    return {
+                        "thought": "I have accessed Google Blogger and retrieved the blog status for the user.",
+                        "action": "none",
+                        "action_args": {},
+                        "is_complete": True,
+                        "completion_message": "Helper has accessed Google Blogger in your live Project Browser and inspected your blogs."
+                    }
+                return {
+                    "thought": "I will inspect the user's Google Blogger account and list their blogs using browser_automation.",
+                    "action": "browser_automation",
+                    "action_args": {"action": "list_blogs"},
+                    "is_complete": False,
+                    "completion_message": ""
+                }
+            return {
+                "thought": "I will open Blogger in the live Project Browser so the user can create and manage their blog with persistent login.",
+                "action": "browser_automation",
+                "action_args": {"action": "open_url", "url": "https://www.blogger.com"},
+                "is_complete": False,
+                "completion_message": ""
+            }
+
         if not has_run:
             if re.search(r"\b(open|launch|start|run)\s+(edge|chrome|browser|notepad|calc|calculator|explorer|terminal)\b", lower) or (lower.startswith("open ") or lower.startswith("launch ")):
                 target_app = "edge" if "edge" in lower else ("chrome" if "chrome" in lower else ("notepad" if "notepad" in lower else ("calc" if "calc" in lower else lower.replace("open ", "").replace("launch ", "").strip())))
@@ -325,11 +415,36 @@ class LLMClient:
                     "is_complete": False,
                     "completion_message": ""
                 }
-            elif re.search(r"\b(blogger|blog|google blog)\b", lower):
+            elif re.search(r"\b(speak|say|voice output|tell me)\b", lower):
+                spoken_text = re.sub(r"^(speak|say|tell me|voice output)\s+", "", goal, flags=re.IGNORECASE).strip()
                 return {
-                    "thought": "I will open Blogger in the live Project Browser so the user can create and manage their blog with persistent login.",
-                    "action": "browser_automation",
-                    "action_args": {"action": "open_url", "url": "https://www.blogger.com"},
+                    "thought": f"I will speak aloud the message: '{spoken_text}' using the speak_aloud tool.",
+                    "action": "speak_aloud",
+                    "action_args": {"text": spoken_text or "Hello from Helper-AI voice engine!"},
+                    "is_complete": False,
+                    "completion_message": ""
+                }
+            elif re.search(r"\b(mcp|model context protocol|mcp tools|mcp servers)\b", lower):
+                return {
+                    "thought": "I will inspect the configured Model Context Protocol (MCP) servers.",
+                    "action": "manage_mcp",
+                    "action_args": {"action": "list_servers"},
+                    "is_complete": False,
+                    "completion_message": ""
+                }
+            elif re.search(r"\b(screenshot|capture screen|screen shot)\b", lower):
+                return {
+                    "thought": "I will capture a desktop screenshot using desktop_gui_control.",
+                    "action": "desktop_gui_control",
+                    "action_args": {"action": "take_screenshot"},
+                    "is_complete": False,
+                    "completion_message": ""
+                }
+            elif re.search(r"\b(resolution|screen size|mouse pos|cursor)\b", lower):
+                return {
+                    "thought": "I will get screen resolution and cursor position using desktop_gui_control.",
+                    "action": "desktop_gui_control",
+                    "action_args": {"action": "get_screen_info"},
                     "is_complete": False,
                     "completion_message": ""
                 }
@@ -402,7 +517,7 @@ class LLMClient:
                     "completion_message": ""
                 }
         else:
-            # Second step in rule engine completes the goal
+            # Second step verification
             return {
                 "thought": "The requested action has been performed and verified. Goal is achieved.",
                 "action": "none",

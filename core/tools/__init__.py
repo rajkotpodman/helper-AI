@@ -21,6 +21,10 @@ from core.tools.web_tools import (
     DownloadFileTool
 )
 from core.tools.browser_tools import BrowserAutomationTool
+from core.tools.voice_tools import VoiceSpeechTool
+from core.tools.playwright_tools import VisionBrowserTool
+from core.tools.mcp_tools import MCPTool
+from core.tools.desktop_gui_tools import DesktopGUIControlTool
 
 class ToolRegistry:
     """Central registry of all tools available to Helper-AI."""
@@ -47,7 +51,11 @@ class ToolRegistry:
             DownloadFileTool(),
             OpenAppOrFileTool(),
             BrowserAutomationTool(),
-            ExecutePowerShellTool()
+            ExecutePowerShellTool(),
+            VoiceSpeechTool(),
+            VisionBrowserTool(),
+            MCPTool(),
+            DesktopGUIControlTool()
         ]
         for t in defaults:
             self.register(t)

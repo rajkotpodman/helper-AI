@@ -52,14 +52,15 @@
               🎙️ <span>Voice Input</span>
             </button>
           </div>
-          <textarea id="goal-input" placeholder="Example: Clean up temporary files, or research the top 5 AI models and write a summary to my Desktop..."></textarea>
+
+          <textarea id="goal-input" placeholder="Example: give me the list of my google blogs, or research AI models and write a report to my Desktop..."></textarea>
           
           <div class="quick-prompts">
             <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">Quick Ideas:</span>
+            <div class="chip" onclick="setGoal('give me the list of my google blogs')">🌐 List My Google Blogs</div>
             <div class="chip" onclick="setGoal('Check my PC health, CPU, RAM and disk usage')">💻 PC Health Diagnostic</div>
-            <div class="chip" onclick="setGoal('Search the web for latest AI agent frameworks and create a research report on my Desktop')">🔍 Web Research Report</div>
+            <div class="chip" onclick="setGoal('Search the web for latest AI news and save summary to Desktop/ai_news.txt')">🔍 Web Research Report</div>
             <div class="chip" onclick="setGoal('List the largest files in my Downloads folder')">📂 Inspect Downloads</div>
-            <div class="chip" onclick="setGoal('List top running processes using high memory')">⚡ Inspect Processes</div>
             <div class="chip" onclick="setGoal('Open PowerShell, test git version and write system info to Desktop/sysinfo.txt')">📝 System Info to Desktop</div>
           </div>
         </div>
@@ -175,6 +176,10 @@
           Helper-AI automatically records all prompts and final replies to <code>agent_memory.md</code>.
         </p>
         <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+            <span>Saved Interactions:</span>
+            <strong id="memory-stat-prompts" style="color: #10b981;">0 recorded prompts</strong>
+          </div>
           <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
             <span>Current Size:</span>
             <strong id="memory-stat-size">0.0 MB / 20.0 MB</strong>

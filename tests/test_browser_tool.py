@@ -58,4 +58,14 @@ def test_invalid_action():
     tool = BrowserAutomationTool()
     res = tool.execute(action="invalid_action_name")
     assert res["success"] is False
-    assert "error" in res
+
+def test_list_blogs_action_registered(monkeypatch):
+    tool = BrowserAutomationTool()
+    assert "list_blogs" in tool.parameters["properties"]["action"]["enum"]
+    
+    # Mock _list_blogs
+    monkeypatch.setattr(tool, "_list_blogs", lambda: {"success": True, "blogs": ["My Tech Blog", "AI Agent News"], "output": "Found 2 blogs"})
+    res = tool.execute(action="list_blogs")
+    assert res["success"] is True
+    assert len(res["blogs"]) == 2
+

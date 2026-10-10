@@ -7,9 +7,11 @@ user to copy and store the file, archives/clears the file, and starts a fresh
 """
 
 import os
+import sys
 import time
 import shutil
 import logging
+import tempfile
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, Dict, Any
@@ -20,6 +22,13 @@ DEFAULT_MEMORY_FILE = Path("agent_memory.md")
 DEFAULT_MAX_BYTES = 20 * 1024 * 1024  # 20 MB (20,971,520 bytes)
 
 
+def get_default_memory_file() -> Path:
+    """Returns test-isolated temp file during pytest runs, or default workspace agent_memory.md."""
+    if "PYTEST_CURRENT_TEST" in os.environ or "HELPER_AI_TEST_MODE" in os.environ:
+        return Path(tempfile.gettempdir()) / "helper_ai_test_agent_memory.md"
+    return DEFAULT_MEMORY_FILE
+
+
 class MarkdownMemoryRecorder:
     """Manages persistent logging of prompts and final replies to a markdown memory file."""
 
@@ -28,7 +37,7 @@ class MarkdownMemoryRecorder:
         file_path: Optional[Path] = None,
         max_bytes: int = DEFAULT_MAX_BYTES
     ):
-        self.file_path = Path(file_path or DEFAULT_MEMORY_FILE)
+        self.file_path = Path(file_path or get_default_memory_file())
         self.max_bytes = max_bytes
         self._ensure_file_exists()
 
@@ -47,6 +56,11 @@ class MarkdownMemoryRecorder:
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.file_path, "w", encoding="utf-8") as f:
             f.write(header)
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except Exception:
+                pass
 
     def get_size_bytes(self) -> int:
         """Returns the current size of the memory file in bytes."""
@@ -57,6 +71,17 @@ class MarkdownMemoryRecorder:
     def get_size_mb(self) -> float:
         """Returns the current size in megabytes (MB)."""
         return round(self.get_size_bytes() / (1024 * 1024), 2)
+
+    def get_entry_count(self) -> int:
+        """Counts how many prompts have been logged so far in the memory file."""
+        if not self.file_path.exists():
+            return 0
+        try:
+            with open(self.file_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            return content.count("## 🎯 Prompt")
+        except Exception:
+            return 0
 
     def is_limit_reached(self) -> bool:
         """Checks if the file has reached or exceeded max_bytes (20 MB default)."""
@@ -70,7 +95,7 @@ class MarkdownMemoryRecorder:
         steps_executed: int = 0
     ) -> Dict[str, Any]:
         """
-        Appends prompt and final reply to the markdown memory file.
+        Appends prompt and final reply to the markdown memory file one by one.
         Checks if file size reached the 20 MB limit.
         If limit is reached:
           - Generates user alert asking to copy and store the file.
@@ -80,9 +105,10 @@ class MarkdownMemoryRecorder:
         self._ensure_file_exists()
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         status_text = "✅ SUCCESS" if success else "❌ FAILED / INCOMPLETE"
+        prompt_number = self.get_entry_count() + 1
 
         entry = (
-            f"## 🎯 Prompt [{timestamp}]\n\n"
+            f"## 🎯 Prompt #{prompt_number} [{timestamp}]\n\n"
             f"> **User Prompt / Goal:** {prompt.strip()}\n\n"
             f"- **Execution Status:** {status_text}\n"
             f"- **Steps Executed:** {steps_executed}\n\n"
@@ -93,6 +119,11 @@ class MarkdownMemoryRecorder:
 
         with open(self.file_path, "a", encoding="utf-8") as f:
             f.write(entry)
+            f.flush()
+            try:
+                os.fsync(f.fileno())
+            except Exception:
+                pass
 
         current_size = self.get_size_bytes()
         limit_reached = current_size >= self.max_bytes
@@ -123,6 +154,7 @@ class MarkdownMemoryRecorder:
 
         return {
             "recorded": True,
+            "prompt_number": prompt_number,
             "timestamp": timestamp,
             "file_path": str(self.file_path),
             "size_bytes": self.get_size_bytes(),
@@ -142,3 +174,4 @@ class MarkdownMemoryRecorder:
             return ""
         with open(self.file_path, "r", encoding="utf-8") as f:
             return f.read()
+
