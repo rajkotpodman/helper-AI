@@ -44,7 +44,16 @@ class ProjectBrowser:
         if self._driver is None:
             return False
         try:
-            _ = self._driver.title
+            handles = self._driver.window_handles
+            if not handles:
+                self._driver = None
+                return False
+            try:
+                _ = self._driver.title
+            except Exception:
+                # If current window was closed (e.g. popup closed), switch to remaining valid handle
+                self._driver.switch_to.window(handles[-1])
+                _ = self._driver.title
             return True
         except Exception:
             self._driver = None
@@ -185,6 +194,8 @@ class ProjectBrowser:
         resolves click interception with JavaScript and ActionChains, and auto-confirms modals.
         """
         driver = self.get_driver()
+        initial_handles = list(driver.window_handles)
+        before_url = driver.current_url or ""
         target_lower = target.lower().strip()
         import re
         target_clean = re.sub(r"[?!.,:;]+$", "", target_lower).strip()
@@ -196,6 +207,9 @@ class ProjectBrowser:
             f"//*[@role='button'][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
             f"//a[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
             f"//*[@aria-label and contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//*[@data-identifier and contains(translate(@data-identifier, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//*[@data-email and contains(translate(@data-email, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//li[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
             f"//input[@type='submit' or @type='button'][contains(translate(@value, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
             f"//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]"
         ]
@@ -204,12 +218,49 @@ class ProjectBrowser:
         for xpath in xpath_candidates:
             try:
                 found = driver.find_elements(By.XPATH, xpath)
+                valid_found = []
                 for el in found:
-                    if el.is_displayed():
-                        element = el
-                        break
-                if element:
-                    break
+                    try:
+                        if el.tag_name.lower() in ["html", "body", "head"]:
+                            continue
+                        if el.is_displayed():
+                            valid_found.append(el)
+                    except Exception:
+                        continue
+
+                if not valid_found:
+                    continue
+
+                # Sort: prioritize interactive tags, then closest text length
+                def score_el(e):
+                    try:
+                        t = (e.text or "").strip()
+                        is_interactive = e.tag_name.lower() in ["button", "a", "input"] or e.get_attribute("role") == "button"
+                        is_disabled = bool(e.get_attribute("disabled") or e.get_attribute("aria-disabled") == "true")
+                        prio = 2 if is_disabled else (0 if is_interactive else 1)
+                        return (prio, len(t) if t else 9999)
+                    except Exception:
+                        return (3, 9999)
+
+                valid_found.sort(key=score_el)
+                best = valid_found[0]
+
+                # Resolve clickable ancestor if best is span/p/i/div
+                try:
+                    anc = driver.execute_script("""
+                        let el = arguments[0];
+                        while (el && el !== document.body) {
+                            if (el.tagName === 'BUTTON' || el.getAttribute('role') === 'button' || el.tagName === 'A') {
+                                return el;
+                            }
+                            el = el.parentElement;
+                        }
+                        return arguments[0];
+                    """, best)
+                    element = anc or best
+                except Exception:
+                    element = best
+                break
             except Exception:
                 continue
 
@@ -300,6 +351,28 @@ class ProjectBrowser:
             except Exception:
                 pass
 
+        # Check if click opened a new popup/tab (e.g. Google Sign-In or OAuth flow)
+        try:
+            current_handles = list(driver.window_handles)
+            if len(current_handles) > len(initial_handles):
+                new_h = [h for h in current_handles if h not in initial_handles]
+                target_handle = new_h[-1] if new_h else current_handles[-1]
+                driver.switch_to.window(target_handle)
+                self.bring_to_front()
+                time.sleep(1.2)
+        except Exception:
+            pass
+
+        # If clicked element was an <a> tag and URL did not change, follow href directly
+        try:
+            if element and element.tag_name.lower() == "a":
+                href = element.get_attribute("href")
+                if href and href.startswith("http") and (driver.current_url or "") == before_url:
+                    driver.get(href)
+                    time.sleep(1.2)
+        except Exception:
+            pass
+
         time.sleep(1.0)
         return {
             "success": True,
@@ -376,8 +449,10 @@ class ProjectBrowser:
 
         # 3. Try XPath for specific placeholder, name, label, textbox, contenteditable
         xpath_candidates = [
+            f"//div[contains(@class, 'tiptap') or contains(@class, 'ProseMirror')]",
             f"//*[@role='textbox'][contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
             f"//*[@role='textbox'][contains(translate(@aria-placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//p[contains(@class, 'is-editor-empty')]/..",
             f"//input[contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
             f"//input[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
             f"//textarea[contains(translate(@placeholder, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
@@ -410,8 +485,8 @@ class ProjectBrowser:
             except Exception:
                 pass
 
-        # 4. Fallback: check iframes if still not found
-        if not element:
+        # 4. Fallback: check iframes only if explicitly on Blogger or rich editor iframe
+        if not element and ("blogger.com" in current_url or "blog" in current_url):
             for iframe in driver.find_elements(By.TAG_NAME, "iframe"):
                 try:
                     driver.switch_to.frame(iframe)
@@ -590,7 +665,7 @@ class ProjectBrowser:
             except Exception:
                 pass
 
-        # Snippet of body text
+        # Full body text extraction
         body_text = ""
         if "accounts.google.com" in url or "signin" in url.lower():
             self.bring_to_front()
@@ -598,17 +673,241 @@ class ProjectBrowser:
         else:
             try:
                 body = driver.find_element(By.TAG_NAME, "body")
-                body_text = _clean(body.text[:500].replace("\n", " "))
+                body_raw = body.text or ""
+                # Preserve paragraph structure while cleaning excessive whitespace
+                lines = [l.strip() for l in body_raw.splitlines() if l.strip()]
+                body_text = "\n".join(lines[:120])  # Up to 120 readable lines
             except Exception:
                 pass
 
         return {
             "title": _clean(title),
             "url": url,
-            "buttons": buttons[:15],
-            "links": links[:10],
-            "inputs": inputs[:10],
-            "snippet": body_text
+            "buttons": buttons[:20],
+            "links": links[:15],
+            "inputs": inputs[:15],
+            "snippet": body_text[:3000]
+        }
+
+    def get_full_page_content(self, max_chars: int = 25000) -> Dict[str, Any]:
+        """Extracts complete readable webpage content including text, headings, links, and forms."""
+        driver = self.get_driver()
+        title = driver.title or ""
+        url = driver.current_url or ""
+
+        # Extract headings, links, and text via JavaScript
+        data = driver.execute_script("""
+            const headings = Array.from(document.querySelectorAll('h1, h2, h3'))
+                .map(h => (h.innerText || '').trim())
+                .filter(h => h.length > 0 && h.length < 120);
+
+            const links = Array.from(document.querySelectorAll('a[href]'))
+                .map(a => ({text: (a.innerText || '').trim(), href: a.href}))
+                .filter(l => l.text.length > 1 && l.text.length < 80 && !l.href.startsWith('javascript:'))
+                .slice(0, 30);
+
+            const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]'))
+                .map(b => (b.innerText || b.getAttribute('aria-label') || '').trim())
+                .filter(b => b.length > 0 && b.length < 60)
+                .slice(0, 30);
+
+            const inputs = Array.from(document.querySelectorAll('input, textarea, select'))
+                .map(i => ({
+                    tag: i.tagName.toLowerCase(),
+                    type: i.type || 'text',
+                    name: i.name || '',
+                    placeholder: i.placeholder || i.getAttribute('aria-label') || '',
+                    value: i.value || ''
+                }))
+                .slice(0, 20);
+
+            // Get clean body text
+            let bodyText = document.body ? document.body.innerText : '';
+            return {
+                headings: headings,
+                links: links,
+                buttons: buttons,
+                inputs: inputs,
+                bodyText: bodyText
+            };
+        """)
+
+        body_text = data.get("bodyText", "")
+        # Clean blank lines
+        lines = [l.strip() for l in body_text.splitlines() if l.strip()]
+        clean_text = "\n".join(lines)
+        if max_chars and len(clean_text) > max_chars:
+            trimmed_text = clean_text[:max_chars] + f"\n\n... [Content truncated at {max_chars} characters. Total page length: {len(clean_text)} characters]"
+        else:
+            trimmed_text = clean_text
+
+        return {
+            "title": title,
+            "url": url,
+            "total_characters": len(clean_text),
+            "headings": data.get("headings", [])[:15],
+            "links": data.get("links", [])[:25],
+            "buttons": data.get("buttons", [])[:25],
+            "inputs": data.get("inputs", [])[:15],
+            "content": trimmed_text
+        }
+
+    def scroll(self, direction: str = "down", pixels: int = 800) -> Dict[str, Any]:
+        """Scrolls the current webpage down or up."""
+        driver = self.get_driver()
+        dy = pixels if direction.lower() in ["down", "bottom"] else -pixels
+        if direction.lower() == "bottom":
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        elif direction.lower() == "top":
+            driver.execute_script("window.scrollTo(0, 0);")
+        else:
+            driver.execute_script(f"window.scrollBy(0, {dy});")
+        time.sleep(1.0)
+        return {
+            "success": True,
+            "output": f"Scrolled page {direction} by {pixels} pixels."
+        }
+
+    def take_screenshot(self, filename: Optional[str] = None) -> Dict[str, Any]:
+        """Takes a screenshot of the current browser tab and saves it."""
+        from pathlib import Path
+        driver = self.get_driver()
+        sc_dir = Path("screenshots")
+        sc_dir.mkdir(parents=True, exist_ok=True)
+        fn = filename or f"browser_{int(time.time())}.png"
+        out_path = sc_dir / fn
+        driver.save_screenshot(str(out_path))
+        return {
+            "success": True,
+            "output": f"Browser screenshot saved to '{out_path.resolve()}'.",
+            "file_path": str(out_path.resolve())
+        }
+
+    def select_dropdown_option(self, target: str, option_text: str) -> Dict[str, Any]:
+        """Selects an option from a dropdown or <select> element."""
+        driver = self.get_driver()
+        res = driver.execute_script("""
+            const target = arguments[0].toLowerCase();
+            const optionText = arguments[1].toLowerCase();
+            
+            const selects = Array.from(document.querySelectorAll('select'));
+            let found = null;
+            for (let s of selects) {
+                const name = (s.name || '').toLowerCase();
+                const id = (s.id || '').toLowerCase();
+                const aria = (s.getAttribute('aria-label') || '').toLowerCase();
+                if (name.includes(target) || id.includes(target) || aria.includes(target)) {
+                    found = s;
+                    break;
+                }
+            }
+            if (!found && selects.length > 0) found = selects[0];
+            if (!found) return {success: false, error: 'No matching <select> element found'};
+
+            for (let i = 0; i < found.options.length; i++) {
+                const opt = found.options[i];
+                if ((opt.text || '').toLowerCase().includes(optionText) || (opt.value || '').toLowerCase().includes(optionText)) {
+                    found.selectedIndex = i;
+                    found.dispatchEvent(new Event('change', { bubbles: true }));
+                    found.dispatchEvent(new Event('input', { bubbles: true }));
+                    return {success: true, selected: opt.text};
+                }
+            }
+            return {success: false, error: 'Option not found in dropdown'};
+        """, target, option_text)
+        return res
+
+    def list_tabs(self) -> Dict[str, Any]:
+        """Lists all open browser tabs and windows."""
+        driver = self.get_driver()
+        handles = list(driver.window_handles)
+        current_handle = driver.current_window_handle
+        tabs = []
+        for i, h in enumerate(handles):
+            try:
+                driver.switch_to.window(h)
+                tabs.append({
+                    "index": i,
+                    "title": driver.title,
+                    "url": driver.current_url,
+                    "is_current": (h == current_handle)
+                })
+            except Exception:
+                pass
+        try:
+            driver.switch_to.window(current_handle)
+        except Exception:
+            if handles:
+                driver.switch_to.window(handles[-1])
+
+        summary = "\n".join(f"Tab {t['index']}: '{t['title']}' ({t['url']}){' [ACTIVE]' if t['is_current'] else ''}" for t in tabs)
+        return {
+            "success": True,
+            "tabs": tabs,
+            "total_tabs": len(tabs),
+            "output": f"Found {len(tabs)} open browser tab(s):\n{summary}"
+        }
+
+    def switch_tab(self, target: Any) -> Dict[str, Any]:
+        """Switches to a browser tab by numeric index (0, 1, 2) or title/URL keyword."""
+        driver = self.get_driver()
+        handles = list(driver.window_handles)
+        if not handles:
+            return {"success": False, "output": "No open browser tabs found."}
+
+        target_str = str(target).lower().strip()
+        matched_handle = None
+
+        if target_str.isdigit():
+            idx = int(target_str)
+            if 0 <= idx < len(handles):
+                matched_handle = handles[idx]
+
+        if not matched_handle:
+            for h in handles:
+                try:
+                    driver.switch_to.window(h)
+                    if target_str in driver.title.lower() or target_str in driver.current_url.lower():
+                        matched_handle = h
+                        break
+                except Exception:
+                    pass
+
+        if matched_handle:
+            driver.switch_to.window(matched_handle)
+            self.bring_to_front()
+            time.sleep(0.5)
+            return {
+                "success": True,
+                "output": f"Switched to tab '{driver.title}' ({driver.current_url}).",
+                "page": self.get_page_summary()
+            }
+
+        return {
+            "success": False,
+            "output": f"Could not find any tab matching '{target}'."
+        }
+
+    def close_tab(self, target: Optional[Any] = None) -> Dict[str, Any]:
+        """Closes a specific tab or the current tab."""
+        driver = self.get_driver()
+        handles = list(driver.window_handles)
+        if len(handles) <= 1:
+            return {"success": False, "output": "Cannot close the only open tab."}
+
+        if target:
+            self.switch_tab(target)
+
+        closed_title = driver.title
+        driver.close()
+        time.sleep(0.5)
+        rem = driver.window_handles
+        if rem:
+            driver.switch_to.window(rem[-1])
+        return {
+            "success": True,
+            "output": f"Closed tab '{closed_title}'. Switched back to '{driver.title}'.",
+            "page": self.get_page_summary()
         }
 
     def close(self) -> None:

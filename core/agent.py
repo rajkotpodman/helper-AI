@@ -27,7 +27,7 @@ class HelperAgent:
         tool_registry: Optional[ToolRegistry] = None,
         permission_manager: Optional[PermissionManager] = None,
         memory_recorder: Optional[MarkdownMemoryRecorder] = None,
-        max_steps: int = 25,
+        max_steps: int = 50,
         safe_mode: bool = False
     ):
         self.llm_client = llm_client or LLMClient()
@@ -61,6 +61,12 @@ class HelperAgent:
         self._is_running = True
         memory = AgentMemory(goal)
         metrics.record_goal_start()
+
+        # Dynamically scale step limits for /goal or multi-item tasks
+        clean_goal = goal.strip()
+        lower_g = clean_goal.lower()
+        if "/goal" in lower_g or "5 " in lower_g or "apply" in lower_g:
+            self.max_steps = max(self.max_steps, 100)
 
         def emit(event_type: str, data: Dict[str, Any]):
             if on_event:
@@ -112,6 +118,24 @@ class HelperAgent:
 
             # 2. Check if goal was declared completed
             if is_complete or action == "none":
+                # Check if the goal specifies a target loop count or number of items/jobs
+                import re
+                count_match = re.search(r'\b(?:loop|repeat|do|apply)\s*(?:in\s*)?(?:more\s*)?(\d+)\s*(?:times|space|jobs|items|positions)?\b', lower_goal)
+                if not count_match:
+                    count_match = re.search(r'\b(\d+)\s*(?:times|space|jobs|positions)\b', lower_goal)
+
+                if count_match:
+                    target_count = int(count_match.group(1))
+                    total_applied = 0
+                    for s in memory.history:
+                        if s.success:
+                            app_m = re.search(r'successfully applied to (\d+) job', str(s.observation).lower())
+                            if app_m:
+                                total_applied += int(app_m.group(1))
+                    if target_count > 1 and total_applied > 0 and total_applied < target_count and step_idx < self.max_steps:
+                        logger.info(f"Goal requested {target_count} items but only {total_applied} completed so far. Continuing loop.")
+                        continue
+
                 # Prevent premature surrender when previous step failed
                 if memory.history and not any(s.success for s in memory.history) and step_idx <= 3:
                     import re
@@ -142,6 +166,14 @@ class HelperAgent:
                                 "total_steps": step_idx
                             })
                             break
+
+                # Prevent premature surrender when goal requires a concrete outcome but roadblocks were encountered
+                if memory.history and step_idx < self.max_steps:
+                    last_obs = str(memory.history[-1].observation).lower()
+                    if any(k in lower_goal for k in ["give me", "create", "register", "sign up", "find", "extract", "address", "email"]):
+                        if any(err in last_obs for err in ["closed", "404", "could not find", "error", "please wait", "failed", "forbidden", "403"]):
+                            logger.info(f"Roadblock detected in trajectory ('{last_obs[:60]}...'). Forcing autonomous self-healing continuation.")
+                            continue
 
                 has_succeeded = memory.history[-1].success if memory.history else True
                 success = has_succeeded
@@ -284,7 +316,61 @@ class HelperAgent:
                     })
                     break
 
-            # E. Loop breaker: Stop execution if the same action fails 3 times consecutively
+            # E. Browser Automation (e.g. LinkedIn job applications or posts)
+            if action == "browser_automation" and action_success:
+                b_act = action_args.get("action")
+                if b_act in ["publish_linkedin_post", "publish_facebook_post", "publish_blog_post"]:
+                    success = True
+                    final_message = output_str
+                    metrics.record_goal_complete(success=True)
+                    emit("completed", {
+                        "success": True,
+                        "message": final_message,
+                        "total_steps": step_idx
+                    })
+                    break
+                elif b_act == "apply_linkedin_jobs":
+                    req_count = int(action_args.get("count") or 5)
+                    applied_cnt = tool_result.get("applied_count", 0) if isinstance(tool_result, dict) else 0
+                    if applied_cnt >= req_count or applied_cnt >= 5:
+                        success = True
+                        final_message = output_str
+                        metrics.record_goal_complete(success=True)
+                        emit("completed", {
+                            "success": True,
+                            "message": final_message,
+                            "total_steps": step_idx
+                        })
+                        break
+
+            # G. Web Content Fetching (e.g. fetch web, read url, read article, scrape)
+            if action in ["fetch_web_content", "search_web"] and action_success:
+                if any(w in lower_goal for w in ["fetch", "read", "get web", "search", "lookup", "look up", "find online", "scrape", "http"]):
+                    success = True
+                    final_message = output_str
+                    metrics.record_goal_complete(success=True)
+                    emit("completed", {
+                        "success": True,
+                        "message": final_message,
+                        "total_steps": step_idx
+                    })
+                    break
+
+            # H. Desktop GUI Control (e.g. hotkeys, screenshot, screen info, clipboard, list windows)
+            if action == "desktop_gui_control" and action_success:
+                gui_act = action_args.get("action", "")
+                if gui_act in ["get_screen_info", "take_screenshot", "list_windows", "clipboard_paste", "hotkey"]:
+                    success = True
+                    final_message = output_str
+                    metrics.record_goal_complete(success=True)
+                    emit("completed", {
+                        "success": True,
+                        "message": final_message,
+                        "total_steps": step_idx
+                    })
+                    break
+
+            # I. Loop breaker: Stop execution if the same action fails 3 times consecutively
             if len(memory.history) >= 3:
                 last_3 = memory.history[-3:]
                 if all(not s.success and s.action == action for s in last_3):

@@ -223,7 +223,7 @@ function handleAgentEvent(eventType, data) {
       break;
 
     case 'step_start':
-      stepCounter.textContent = `Step ${data.step} of ${data.max_steps || 25}`;
+      stepCounter.textContent = `Step ${data.step} of ${data.max_steps || 50}`;
       break;
 
     case 'thought':
@@ -252,9 +252,15 @@ function handleAgentEvent(eventType, data) {
     case 'finished':
       if (permissionModal) permissionModal.style.display = 'none';
       setRunningState(false);
-      executionStatusText.textContent = 'Goal Finished';
+      const isSuccess = data.success !== false;
+      executionStatusText.textContent = isSuccess ? 'Goal Completed' : 'Goal Execution Halted';
       completionBox.style.display = 'block';
-      completionMessage.textContent = data.message || 'Execution finished successfully.';
+      const titleElem = completionBox.querySelector('h3');
+      if (titleElem) {
+        titleElem.textContent = isSuccess ? '🎉 Mission Accomplished!' : '⚠️ Goal Execution Incomplete / Limit Reached';
+        titleElem.style.color = isSuccess ? '#10b981' : '#f59e0b';
+      }
+      completionMessage.textContent = data.message || (isSuccess ? 'Execution finished successfully.' : 'Goal was not fully completed before reaching step limit.');
       completionBox.scrollIntoView({ behavior: 'smooth' });
       fetchMemoryStatus();
       break;

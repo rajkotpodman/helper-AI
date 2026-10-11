@@ -39,21 +39,42 @@ class BrowserAutomationTool(BaseTool):
             "action": {
                 "type": "string",
                 "description": (
-                    "Action to perform: 'publish_facebook_post' (autonomously creates, writes, and publishes a Facebook post in 1 step), "
+                    "Action to perform: 'apply_linkedin_jobs' (autonomously searches and applies to LinkedIn jobs with CV via Easy Apply in 1 step), "
+                    "'publish_linkedin_post' (autonomously creates, writes, and publishes a LinkedIn post in 1 step), "
+                    "'publish_facebook_post' (autonomously creates, writes, and publishes a Facebook post in 1 step), "
                     "'publish_blog_post' (autonomously creates, writes, and publishes a blog post with title and text in 1 step), "
                     "'open_url' (load a page), 'click' (click button/link by text), "
-                    "'type' (enter text into field), 'get_page' (read current page state), "
+                    "'type' (enter text into field), 'press_enter' (press Enter key on current page), 'get_page' (read current page state), "
+                    "'fetch_full_page' (extract complete readable webpage text, headings, buttons, and links), "
+                    "'scroll' (scroll page up or down), 'take_screenshot' (capture browser screenshot), "
+                    "'select_dropdown' (select option from dropdown/select), 'execute_script' (run JavaScript on page), "
                     "'close_browser' (close window), 'draft_social_post' (compose social post)"
                 ),
                 "enum": [
+                    "apply_linkedin_jobs",
+                    "publish_linkedin_post",
                     "publish_facebook_post",
                     "publish_blog_post",
                     "list_blogs",
                     "open_url",
                     "click",
                     "type",
+                    "press_enter",
+                    "enter",
                     "get_page",
                     "read_page",
+                    "fetch_full_page",
+                    "get_full_page",
+                    "fetch_full_web",
+                    "scroll",
+                    "take_screenshot",
+                    "screenshot",
+                    "select_dropdown",
+                    "execute_script",
+                    "dismiss_popups",
+                    "list_tabs",
+                    "switch_tab",
+                    "close_tab",
                     "close_browser",
                     "draft_social_post"
                 ]
@@ -69,6 +90,22 @@ class BrowserAutomationTool(BaseTool):
             "target": {
                 "type": "string",
                 "description": "Button text, link text, input placeholder, name, or CSS selector to click or type into (e.g. 'Create Blog', 'NEW POST', 'Title', 'Publish')."
+            },
+            "direction": {
+                "type": "string",
+                "description": "Direction to scroll for 'scroll' action ('down', 'up', 'top', 'bottom'). Default 'down'."
+            },
+            "pixels": {
+                "type": "integer",
+                "description": "Number of pixels to scroll (default 800)."
+            },
+            "option": {
+                "type": "string",
+                "description": "Option text or value to choose for 'select_dropdown' action."
+            },
+            "script": {
+                "type": "string",
+                "description": "JavaScript code snippet to run for 'execute_script' action."
             },
             "text": {
                 "type": "string",
@@ -86,6 +123,19 @@ class BrowserAutomationTool(BaseTool):
             "post_text": {
                 "type": "string",
                 "description": "Post text (for draft_social_post or publish_facebook_post)."
+            },
+            "keywords": {
+                "type": "string",
+                "description": "Job search keywords or title for apply_linkedin_jobs (e.g. 'Technical Support', 'Infrastructure Engineer')."
+            },
+            "resume_path": {
+                "type": "string",
+                "description": "Absolute path to CV or resume (.docx or .pdf) for apply_linkedin_jobs."
+            },
+            "count": {
+                "type": "integer",
+                "description": "Number of job openings to apply to for apply_linkedin_jobs (default 5).",
+                "default": 5
             }
         },
         "required": ["action"]
@@ -101,6 +151,9 @@ class BrowserAutomationTool(BaseTool):
         press_enter: bool = False,
         platform: Optional[str] = None,
         post_text: Optional[str] = None,
+        keywords: Optional[str] = None,
+        resume_path: Optional[str] = None,
+        count: Optional[int] = 5,
         **kwargs
     ) -> Dict[str, Any]:
         browser = ProjectBrowser.get_instance()
@@ -109,7 +162,17 @@ class BrowserAutomationTool(BaseTool):
         post_title = title or kwargs.get("post_title") or target_name or "New Blog Post"
 
         try:
-            if action in ["publish_facebook_post", "create_facebook_post", "post_facebook"]:
+            if action in ["apply_linkedin_jobs", "apply_linkedin", "linkedin_apply", "apply_jobs"]:
+                kw = keywords or kwargs.get("role") or target_name or "Technical Support"
+                cv = resume_path or kwargs.get("cv_path") or kwargs.get("file_path") or url
+                num = int(count or kwargs.get("num") or 5)
+                return self._apply_linkedin_jobs(keywords=kw, resume_path=cv, count=num)
+
+            elif action in ["publish_linkedin_post", "create_linkedin_post", "post_linkedin"]:
+                li_content = post_text or type_content or "Hello from Helper-AI!"
+                return self._publish_linkedin_post(li_content)
+
+            elif action in ["publish_facebook_post", "create_facebook_post", "post_facebook"]:
                 fb_content = post_text or type_content or "Hello from Helper-AI!"
                 return self._publish_facebook_post(fb_content)
 
@@ -148,6 +211,13 @@ class BrowserAutomationTool(BaseTool):
                 res = browser.type_text(target_name, type_content, press_enter=press_enter)
                 return res
 
+            elif action in ["press_enter", "enter"]:
+                driver = browser.get_driver()
+                from selenium.webdriver.common.keys import Keys
+                from selenium.webdriver.common.action_chains import ActionChains
+                ActionChains(driver).send_keys(Keys.ENTER).perform()
+                return {"success": True, "output": "Pressed Enter key in live Project Browser."}
+
             elif action in ["get_page", "read_page", "inspect_page"]:
                 res = browser.get_page_summary()
                 return {
@@ -157,10 +227,84 @@ class BrowserAutomationTool(BaseTool):
                         f"Title: {res.get('title')}\n"
                         f"Buttons on page: {res.get('buttons')}\n"
                         f"Inputs on page: {res.get('inputs')}\n"
-                        f"Content snippet: {res.get('snippet', '')[:400]}"
+                        f"Content snippet: {res.get('snippet', '')[:1000]}"
                     ),
                     "page": res
                 }
+
+            elif action in ["fetch_full_page", "get_full_page", "fetch_full_web", "full_page"]:
+                target_url = url or kwargs.get("link")
+                if target_url and target_url != browser.get_driver().current_url:
+                    browser.navigate(target_url)
+                res = browser.get_full_page_content()
+                headings_preview = "\n- ".join(res.get("headings", [])[:8]) or "None"
+                links_preview = "\n".join(f"- {l['text']}: {l['href']}" for l in res.get("links", [])[:10]) or "None"
+                buttons_preview = ", ".join(res.get("buttons", [])[:12]) or "None"
+                return {
+                    "success": True,
+                    "title": res.get("title", ""),
+                    "url": res.get("url", ""),
+                    "total_characters": res.get("total_characters", 0),
+                    "output": (
+                        f"🌐 Full Webpage Content: '{res.get('title')}'\n"
+                        f"URL: {res.get('url')}\n"
+                        f"Total characters: {res.get('total_characters')}\n\n"
+                        f"### Key Headings:\n- {headings_preview}\n\n"
+                        f"### Interactive Buttons:\n[{buttons_preview}]\n\n"
+                        f"### Main Page Text:\n{res.get('content', '')}\n\n"
+                        f"### Top Navigation Links:\n{links_preview}"
+                    ),
+                    "page": res
+                }
+
+            elif action in ["scroll", "scroll_page"]:
+                scroll_dir = kwargs.get("direction") or "down"
+                scroll_px = int(kwargs.get("pixels") or 800)
+                return browser.scroll(direction=scroll_dir, pixels=scroll_px)
+
+            elif action in ["take_screenshot", "screenshot", "capture_screen"]:
+                fn = kwargs.get("filename")
+                return browser.take_screenshot(filename=fn)
+
+            elif action in ["select_dropdown", "select_option", "choose_option"]:
+                opt = kwargs.get("option") or type_content or ""
+                if not opt:
+                    return {"success": False, "output": "Please specify 'option' to select."}
+                return browser.select_dropdown_option(target_name or "", opt)
+
+            elif action in ["dismiss_popups", "close_popups"]:
+                driver = browser.get_driver()
+                cnt = driver.execute_script("""
+                    let count = 0;
+                    const popups = Array.from(document.querySelectorAll('button, [role="button"]')).filter(b => {
+                        const t = (b.innerText || '').trim().toLowerCase();
+                        const a = (b.getAttribute('aria-label') || '').toLowerCase();
+                        return (t === 'done' || t === 'close' || t === 'not now' || t === 'dismiss' || t === 'skip' || t === 'cancel' || a === 'dismiss' || a === 'close') && b.offsetParent !== null;
+                    });
+                    popups.forEach(p => { try { p.click(); count++; } catch(e) {} });
+                    document.querySelectorAll('.artdeco-toast, [data-test-artdeco-toast], .modal-backdrop, .artdeco-modal-overlay').forEach(t => { try { t.remove(); count++; } catch(e) {} });
+                    return count;
+                """)
+                return {"success": True, "output": f"Dismissed/cleared {cnt} popups or modal overlays in the browser."}
+
+            elif action in ["execute_script", "run_script", "eval_js"]:
+                js_code = kwargs.get("script") or kwargs.get("code") or type_content
+                if not js_code:
+                    return {"success": False, "output": "Please provide 'script' code to execute."}
+                driver = browser.get_driver()
+                eval_res = driver.execute_script(js_code)
+                return {"success": True, "output": f"Script executed successfully. Result: {eval_res}", "result": eval_res}
+
+            elif action in ["list_tabs", "get_tabs", "tabs"]:
+                return browser.list_tabs()
+
+            elif action in ["switch_tab", "focus_tab", "select_tab"]:
+                tab_target = target_name or kwargs.get("index") or kwargs.get("tab") or type_content or "0"
+                return browser.switch_tab(tab_target)
+
+            elif action in ["close_tab"]:
+                tab_target = target_name or kwargs.get("index") or kwargs.get("tab")
+                return browser.close_tab(tab_target)
 
             elif action == "close_browser":
                 browser.close()
@@ -177,7 +321,7 @@ class BrowserAutomationTool(BaseTool):
                 return {
                     "success": False,
                     "error": f"Unknown action: '{action}'.",
-                    "output": f"Unknown action: '{action}'. Available: publish_facebook_post, publish_blog_post, open_url, click, type, get_page, close_browser."
+                    "output": f"Unknown action: '{action}'. Available: fetch_full_page, open_url, click, type, select_dropdown, scroll, take_screenshot, dismiss_popups, execute_script, press_enter, get_page, apply_linkedin_jobs, publish_linkedin_post, publish_facebook_post, publish_blog_post, close_browser."
                 }
 
         except Exception as e:
@@ -316,6 +460,227 @@ class BrowserAutomationTool(BaseTool):
         return {
             "success": True,
             "output": f"Successfully created and published post to Facebook: '{content[:80]}...'! The post is officially live on your timeline/feed.",
+            "content": content,
+            "page": browser.get_page_summary()
+        }
+
+    def _publish_linkedin_post(self, raw_content: str) -> Dict[str, Any]:
+        """Autonomously creates, writes, and publishes a post on LinkedIn in 1 step with full verification."""
+        import time
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.common.action_chains import ActionChains
+
+        browser = ProjectBrowser.get_instance()
+        driver = browser.get_driver()
+
+        # 1. Content preparation and smart character limit enforcement (LinkedIn post limit = 3,000 chars)
+        content = raw_content.strip()
+        # If content refers to a file path on disk (e.g. HOW_TO_USE.md), check if file exists
+        if os.path.exists(content):
+            try:
+                with open(content, "r", encoding="utf-8") as f:
+                    file_text = f.read()
+                content = file_text
+            except Exception as e:
+                logger.warning(f"Could not read file {content}: {e}")
+
+        # Check if content exceeds LinkedIn's 3,000 character limit
+        if len(content) > 2800:
+            # Craft an optimized, high-converting LinkedIn post highlighting Helper-AI
+            content = (
+                "🚀 Proud to introduce Helper-AI: Autonomous PC Control & Internet Agent!\n\n"
+                "As an AI automation engineer & freelancer, I built this open-source autonomous agent "
+                "designed to complete real-world computer tasks without asking repetitive questions.\n\n"
+                "⚡ KEY CAPABILITIES:\n"
+                "• Full PC & PowerShell Automation: Execute commands, manage system health & software\n"
+                "• Autonomous Web & Social Media Automation: LinkedIn, Facebook, Blogger posting with persistent sessions\n"
+                "• Zero Redundant Questioning: Self-healing error correction & goal-oriented execution\n"
+                "• 1-Click Human Approval: Safe mode & 1-click approvals for critical tasks\n"
+                "• Offline & Cloud LLMs: Runs 100% offline on Ollama, or with Groq, Gemini, and OpenAI\n\n"
+                "💼 OPEN FOR FREELANCE & CONTRACT WORK:\n"
+                "Looking to automate business workflows, build customized AI assistants, or integrate autonomous agents? "
+                "Feel free to connect or reach out directly!\n\n"
+                "🔗 Open Source Repository: https://github.com/rajkotpodman/helper-AI\n\n"
+                "#AIAgent #Automation #Freelancer #Python #ArtificialIntelligence #Innovation #OpenSource"
+            )
+
+        # 2. Navigate to LinkedIn feed if not already on LinkedIn
+        current_url = driver.current_url or ""
+        if "linkedin.com/feed" not in current_url:
+            browser.navigate("https://www.linkedin.com/feed/")
+            time.sleep(3.5)
+
+        # Check for login requirement
+        page_src = (driver.page_source or "").lower()
+        if any(term in page_src for term in ["sign in to linkedin", "join now", "sign in with google"]) or "login" in (driver.current_url or ""):
+            browser.bring_to_front()
+            return {
+                "success": False,
+                "output": (
+                    "⚠️ USER ACTION REQUIRED: LinkedIn Sign-In is required in the Project Browser. "
+                    "Please log into your LinkedIn account in the Project Browser window. "
+                    "Once logged in, your session is saved permanently and your posts will publish automatically."
+                )
+            }
+
+        # 3. Locate and click 'Start a post'
+        opened = False
+        for _ in range(3):
+            p_elems = driver.find_elements(By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'start a post')]")
+            target_btn = None
+            for el in reversed(p_elems):
+                try:
+                    if el.is_displayed() and "start a post" in el.text.strip().lower() and len(el.text.strip()) < 60:
+                        anc = driver.execute_script("""
+                            let el = arguments[0];
+                            while (el && el !== document.body) {
+                                if (el.tagName === 'BUTTON' || el.getAttribute('role') === 'button') return el;
+                                el = el.parentElement;
+                            }
+                            return arguments[0];
+                        """, el)
+                        target_btn = anc
+                        break
+                except Exception:
+                    pass
+
+            if target_btn:
+                try:
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", target_btn)
+                except Exception:
+                    ActionChains(driver).move_to_element(target_btn).click().perform()
+                opened = True
+                break
+            time.sleep(1.0)
+
+        if not opened:
+            return {
+                "success": False,
+                "output": "Could not find 'Start a post' button on LinkedIn feed. Please make sure LinkedIn feed is loaded and you are logged in."
+            }
+
+        # 4. Wait for post editor dialog to appear
+        time.sleep(2.0)
+        editor = None
+        for _ in range(8):
+            tbs = driver.find_elements(
+                By.XPATH,
+                "//div[contains(@class, 'tiptap') or contains(@class, 'ProseMirror')]//p | "
+                "//div[contains(@class, 'tiptap') or contains(@class, 'ProseMirror')] | "
+                "//*[@role='dialog']//*[@role='textbox' or @contenteditable='true'] | "
+                "//div[@role='textbox' and @contenteditable='true'] | "
+                "//p[contains(@class, 'is-editor-empty')]/.. | "
+                "//*[@contenteditable='true']"
+            )
+            for tb in tbs:
+                try:
+                    is_vis = driver.execute_script("""
+                        const el = arguments[0];
+                        const r = el.getBoundingClientRect();
+                        return (r.width > 0 && r.height > 0) || (el.offsetParent !== null);
+                    """, tb)
+                    if is_vis:
+                        editor = tb
+                        break
+                except Exception:
+                    if tb.is_displayed():
+                        editor = tb
+                        break
+            if editor:
+                break
+            time.sleep(0.5)
+
+        if not editor:
+            return {
+                "success": False,
+                "output": "Post creation modal opened, but the rich text editor field was not found."
+            }
+
+        # 5. Focus and type post content into editor via ActionChains
+        try:
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].focus();", editor)
+            time.sleep(0.3)
+            ActionChains(driver).move_to_element(editor).click().perform()
+            time.sleep(0.3)
+        except Exception:
+            pass
+
+        try:
+            ActionChains(driver).send_keys(content).perform()
+        except Exception:
+            try:
+                editor.send_keys(content)
+            except Exception as e:
+                return {
+                    "success": False,
+                    "output": f"Failed to type content into LinkedIn post editor: {e}"
+                }
+
+        time.sleep(1.5)
+
+        # 6. Locate the Post button and ensure it is ENABLED
+        post_btn = None
+        for _ in range(8):
+            btns = driver.find_elements(By.XPATH, "//button[contains(., 'Post')]")
+            for b in btns:
+                try:
+                    is_vis = driver.execute_script("""
+                        const el = arguments[0];
+                        const r = el.getBoundingClientRect();
+                        return (r.width > 0 && r.height > 0) || (el.offsetParent !== null);
+                    """, b)
+                    if is_vis:
+                        txt = b.text.strip()
+                        if txt == "Post" or (txt.startswith("Post") and "anyone" not in txt.lower()):
+                            dis = b.get_attribute("disabled")
+                            aria_dis = b.get_attribute("aria-disabled")
+                            if dis is None and aria_dis != "true":
+                                post_btn = b
+                                break
+                except Exception:
+                    continue
+            if post_btn:
+                break
+            time.sleep(0.5)
+
+        if not post_btn:
+            return {
+                "success": False,
+                "output": "Post text was typed into LinkedIn, but the 'Post' button remained disabled or was not found. Please verify the post length does not exceed LinkedIn's 3,000 character limit."
+            }
+
+        # 7. Click Post button
+        try:
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", post_btn)
+        except Exception:
+            post_btn.click()
+
+        # 8. VERIFY publication: Wait up to 6 seconds and verify the modal dialog is closed
+        published = False
+        for _ in range(12):
+            time.sleep(0.5)
+            still_open = False
+            for tb in driver.find_elements(By.XPATH, "//div[contains(@class, 'tiptap') or contains(@class, 'ProseMirror')]"):
+                try:
+                    if tb.is_displayed():
+                        still_open = True
+                        break
+                except Exception:
+                    pass
+            if not still_open:
+                published = True
+                break
+
+        if not published:
+            return {
+                "success": False,
+                "output": "Clicked 'Post', but the LinkedIn post composer is still open. LinkedIn may have shown a verification prompt or character limit alert."
+            }
+
+        time.sleep(1.5)
+        return {
+            "success": True,
+            "output": f"Successfully created and published post to LinkedIn: '{content[:80]}...'! The post is officially live on your LinkedIn feed.",
             "content": content,
             "page": browser.get_page_summary()
         }
@@ -504,3 +869,477 @@ class BrowserAutomationTool(BaseTool):
         if any(c in h_lower for c in ["verification code", "enter code", "two-factor", "2fa", "otp", "authenticate"]):
             return {"is_challenge": True, "category": "two_factor"}
         return {"is_challenge": False, "category": None}
+
+    def _apply_linkedin_jobs(
+        self,
+        keywords: str = "Technical Support",
+        resume_path: Optional[str] = None,
+        count: int = 5
+    ) -> Dict[str, Any]:
+        """
+        Autonomously searches and applies to job openings on LinkedIn using Easy Apply and attaches the user's CV.
+        """
+        import os
+        import time
+        import urllib.parse
+        from pathlib import Path
+        from selenium.webdriver.common.by import By
+
+        browser = ProjectBrowser.get_instance()
+        driver = browser.get_driver()
+
+        # 1. Resolve Resume Path
+        resolved_resume = None
+        candidates = [
+            resume_path,
+            r"C:\Users\DELL\Downloads\Jignesh_Kariya_CV (1).docx",
+            str(Path.home() / "Downloads" / "Jignesh_Kariya_CV (1).docx"),
+        ]
+        for c in candidates:
+            if c and os.path.exists(c):
+                resolved_resume = c
+                break
+
+        if not resolved_resume:
+            # Search Downloads directory
+            dl_dir = Path.home() / "Downloads"
+            if dl_dir.exists():
+                for f in list(dl_dir.glob("*CV*.docx")) + list(dl_dir.glob("*CV*.pdf")) + list(dl_dir.glob("*Resume*.docx")) + list(dl_dir.glob("*Resume*.pdf")):
+                    resolved_resume = str(f.resolve())
+                    break
+
+        if not resolved_resume:
+            return {
+                "success": False,
+                "error": "CV file not found.",
+                "output": "Could not locate CV/resume file. Please specify a valid 'resume_path' to a .docx or .pdf file."
+            }
+
+        # 2. Switch to LinkedIn tab or navigate
+        for h in driver.window_handles:
+            try:
+                driver.switch_to.window(h)
+                if "linkedin.com" in driver.current_url:
+                    break
+            except Exception:
+                pass
+
+        # 3. Clean search keywords
+        clean_kw = (keywords or "").strip()
+        if "http" in clean_kw:
+            clean_kw = "Technical Support"
+        import re
+        role_match = re.search(r'\b(technical support|system administrator|infrastructure engineer|manager|engineer|developer|analyst)\b', clean_kw, re.IGNORECASE)
+        if role_match:
+            clean_kw = role_match.group(1).title()
+        elif len(clean_kw) > 35 or not clean_kw:
+            clean_kw = "Technical Support"
+
+        search_url = f"https://www.linkedin.com/jobs/search/?keywords={urllib.parse.quote(clean_kw)}&f_AL=true"
+        logger.info(f"Navigating to LinkedIn jobs search: {search_url}")
+        driver.get(search_url)
+        time.sleep(3.5)
+
+        # Check for login requirement
+        page_src = (driver.page_source or "").lower()
+        if any(term in page_src for term in ["sign in to linkedin", "join now", "sign in with google"]) or "login" in (driver.current_url or ""):
+            browser.bring_to_front()
+            return {
+                "success": False,
+                "output": (
+                    "⚠️ USER ACTION REQUIRED: LinkedIn Sign-In is required in the Project Browser. "
+                    "Please log into your LinkedIn account in the Project Browser window."
+                )
+            }
+
+        applied_jobs = []
+        attempted_titles = set()
+        page_offset = 0
+
+        max_rounds = max(count * 6, 30)
+        consecutive_no_candidates = 0
+
+        for round_idx in range(max_rounds):
+            if len(applied_jobs) >= count:
+                break
+
+            # 1. Dismiss any lingering popups or overlays before inspecting jobs
+            driver.execute_script("""
+                const popups = Array.from(document.querySelectorAll('button')).filter(b => {
+                    const t = (b.innerText || '').trim().toLowerCase();
+                    const a = (b.getAttribute('aria-label') || '').toLowerCase();
+                    return (t === 'done' || t === 'close' || t === 'not now') && b.offsetParent !== null;
+                });
+                popups.forEach(p => { try { p.click(); } catch(e) {} });
+                const toasts = document.querySelectorAll('.artdeco-toast, [data-test-artdeco-toast]');
+                toasts.forEach(t => { try { t.remove(); } catch(e) {} });
+            """)
+            time.sleep(0.8)
+
+            # 2. Find next eligible candidate job card
+            candidate = driver.execute_script("""
+                let listContainer = Array.from(document.querySelectorAll('div, ul')).find(d => 
+                    (d.scrollHeight > 1500 || d.getAttribute('data-view-name')?.includes('job-search-results')) &&
+                    d.getBoundingClientRect().left < 450 &&
+                    d.children.length > 5
+                );
+                
+                let items = [];
+                let isContainer = false;
+                if (listContainer) {
+                    items = Array.from(listContainer.children);
+                    isContainer = true;
+                } else {
+                    items = Array.from(document.querySelectorAll('li[data-occludable-job-id], div.job-card-container, li.jobs-search-results__list-item'));
+                }
+
+                for (let i = 0; i < items.length; i++) {
+                    const it = items[i];
+                    const itText = it.innerText || '';
+                    const title = itText.trim().split('\\n')[0];
+                    const hasEasyApply = itText.includes('Easy Apply');
+                    const isApplied = itText.includes('Applied');
+                    const isAttempted = it.getAttribute('data-helper-attempted') === 'true';
+
+                    if (title && hasEasyApply && !isApplied && !isAttempted) {
+                        return { found: true, idx: i, title: title, isContainer: isContainer };
+                    }
+                }
+                return { found: false };
+            """)
+
+            if not candidate or not candidate.get("found"):
+                consecutive_no_candidates += 1
+                logger.info(f"No more visible unattempted candidate jobs on page. Scrolling down ({consecutive_no_candidates}/3)...")
+                # Scroll container
+                driver.execute_script("""
+                    let listContainer = Array.from(document.querySelectorAll('div, ul')).find(d => 
+                        (d.scrollHeight > 1500 || d.getAttribute('data-view-name')?.includes('job-search-results')) &&
+                        d.getBoundingClientRect().left < 450
+                    );
+                    if (listContainer) {
+                        listContainer.scrollTop += 800;
+                    } else {
+                        window.scrollBy(0, 800);
+                    }
+                """)
+                time.sleep(2.0)
+
+                if consecutive_no_candidates >= 3:
+                    # Try navigating to next pagination page
+                    page_offset += 25
+                    consecutive_no_candidates = 0
+                    paged_url = f"{search_url}&start={page_offset}"
+                    logger.info(f"Navigating to next search page: {paged_url}")
+                    driver.get(paged_url)
+                    time.sleep(3.5)
+                continue
+
+            consecutive_no_candidates = 0
+            job_title = candidate.get("title", "").strip()
+
+            if job_title in attempted_titles:
+                # Mark in DOM as attempted
+                driver.execute_script("""
+                    let listContainer = Array.from(document.querySelectorAll('div, ul')).find(d => 
+                        (d.scrollHeight > 1500 || d.getAttribute('data-view-name')?.includes('job-search-results')) &&
+                        d.getBoundingClientRect().left < 450
+                    );
+                    if (arguments[1] && listContainer && listContainer.children[arguments[0]]) {
+                        listContainer.children[arguments[0]].setAttribute('data-helper-attempted', 'true');
+                    }
+                """, candidate["idx"], candidate.get("isContainer", False))
+                continue
+
+            attempted_titles.add(job_title)
+            logger.info(f"Inspecting job {len(applied_jobs) + 1}/{count}: '{job_title}'")
+
+            # 3. Click card to open in details pane
+            driver.execute_script("""
+                let target;
+                if (arguments[1]) {
+                    let listContainer = Array.from(document.querySelectorAll('div, ul')).find(d => 
+                        (d.scrollHeight > 1500 || d.getAttribute('data-view-name')?.includes('job-search-results')) &&
+                        d.getBoundingClientRect().left < 450
+                    );
+                    target = listContainer ? listContainer.children[arguments[0]] : null;
+                } else {
+                    let items = Array.from(document.querySelectorAll('li[data-occludable-job-id], div.job-card-container, li.jobs-search-results__list-item'));
+                    target = items[arguments[0]];
+                }
+                if (target) {
+                    target.setAttribute('data-helper-attempted', 'true');
+                    target.scrollIntoView({block: 'center'});
+                    target.click();
+                }
+            """, candidate["idx"], candidate.get("isContainer", False))
+            time.sleep(2.5)
+
+            # Get company name
+            company_name = ""
+            try:
+                comp_el = driver.find_elements(By.XPATH, "//*[contains(@class, 'company-name') or contains(@class, 'employer')]")
+                if comp_el:
+                    company_name = comp_el[0].text.strip()
+            except Exception:
+                pass
+
+            # 4. Check for Easy Apply button on details pane (rect.left > 450)
+            has_apply = False
+            for _ in range(3):
+                has_apply = driver.execute_script("""
+                    const btn = Array.from(document.querySelectorAll('button, [role="button"]')).find(b => {
+                        const txt = (b.innerText || '').trim();
+                        const aria = (b.getAttribute('aria-label') || '').trim();
+                        return (txt.includes('Easy Apply') || aria.includes('Easy Apply')) && 
+                               !txt.includes('Applied') && 
+                               b.getBoundingClientRect().left > 450 &&
+                               b.offsetParent !== null;
+                    });
+                    if (btn) {
+                        btn.scrollIntoView({block: 'center'});
+                        btn.click();
+                        return true;
+                    }
+                    return false;
+                """)
+                if has_apply:
+                    break
+                time.sleep(1.0)
+
+            if not has_apply:
+                logger.info(f"No active Easy Apply button on details pane for '{job_title}'. Skipping.")
+                continue
+
+            logger.info(f"Clicked Easy Apply for '{job_title}'. Navigating application modal...")
+            time.sleep(2.0)
+
+            # 5. Modal flow with full form filling & popup handling
+            modal_applied = False
+            for step in range(12):
+                time.sleep(1.2)
+
+                # Check for 'Submit application' button
+                submitted = driver.execute_script("""
+                    const submitBtn = Array.from(document.querySelectorAll('button')).find(b => 
+                        b.innerText.trim() === 'Submit application' && 
+                        b.getBoundingClientRect().left > 450 &&
+                        b.offsetParent !== null
+                    );
+                    if (submitBtn) {
+                        submitBtn.scrollIntoView({block: 'center'});
+                        submitBtn.click();
+                        return true;
+                    }
+                    return false;
+                """)
+                if submitted:
+                    time.sleep(3.0)
+                    # Clean up post-submit dialogs and toasts
+                    driver.execute_script("""
+                        const popups = Array.from(document.querySelectorAll('button')).filter(b => {
+                            const t = (b.innerText || '').trim().toLowerCase();
+                            const a = (b.getAttribute('aria-label') || '').toLowerCase();
+                            return (t === 'done' || t === 'close' || t === 'not now' || a === 'dismiss') && b.offsetParent !== null;
+                        });
+                        popups.forEach(p => { try { p.click(); } catch(e) {} });
+                        const toasts = document.querySelectorAll('.artdeco-toast, [data-test-artdeco-toast]');
+                        toasts.forEach(t => { try { t.remove(); } catch(e) {} });
+                    """)
+                    modal_applied = True
+                    applied_jobs.append({"title": job_title, "company": company_name or "LinkedIn Employer"})
+                    logger.info(f"Successfully applied to: {job_title} ({len(applied_jobs)}/{count})")
+                    break
+
+                # Resume upload handling
+                file_inputs = driver.find_elements(By.XPATH, "//input[@type='file']")
+                for fi in file_inputs:
+                    try:
+                        fi.send_keys(resolved_resume)
+                        time.sleep(0.5)
+                    except Exception:
+                        pass
+
+                # Comprehensive form element filling (dropdowns, comboboxes, radio, inputs, checkboxes)
+                driver.execute_script("""
+                    function setNativeVal(el, val) {
+                        try {
+                            const setter = Object.getOwnPropertyDescriptor(el.constructor.prototype, 'value')?.set;
+                            if (setter) {
+                                setter.call(el, val);
+                            } else {
+                                el.value = val;
+                            }
+                            el.dispatchEvent(new Event('input', { bubbles: true }));
+                            el.dispatchEvent(new Event('change', { bubbles: true }));
+                        } catch(e) {}
+                    }
+
+                    // Upload resume button if present
+                    const upBtn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.trim() === 'Upload resume' && b.offsetParent !== null);
+                    if (upBtn) upBtn.click();
+
+                    // 1. <select> Dropdowns
+                    const selects = Array.from(document.querySelectorAll('select')).filter(s => s.offsetParent !== null);
+                    selects.forEach(sel => {
+                        if (!sel.value || sel.selectedIndex <= 0) {
+                            for (let i = 1; i < sel.options.length; i++) {
+                                const optTxt = (sel.options[i].text || '').toLowerCase();
+                                const optVal = sel.options[i].value;
+                                if (optVal && !optTxt.includes('select') && !optTxt.includes('choose')) {
+                                    sel.selectedIndex = i;
+                                    sel.dispatchEvent(new Event('change', { bubbles: true }));
+                                    sel.dispatchEvent(new Event('input', { bubbles: true }));
+                                    break;
+                                }
+                            }
+                        }
+                    });
+
+                    // 2. Comboboxes & Autocompletes
+                    const comboboxes = Array.from(document.querySelectorAll('input[role="combobox"], [role="combobox"]')).filter(c => c.offsetParent !== null);
+                    comboboxes.forEach(cb => {
+                        if (cb.tagName === 'INPUT' && !cb.value) {
+                            cb.focus();
+                            setNativeVal(cb, 'Yes');
+                            setTimeout(() => {
+                                const opt = document.querySelector('[role="option"], .basic-typeahead__selectable');
+                                if (opt) opt.click();
+                            }, 150);
+                        }
+                    });
+
+                    // 3. Radio Buttons (grouped by name, default to Yes or first option)
+                    const radioGroups = {};
+                    document.querySelectorAll('input[type="radio"]').forEach(r => {
+                        if (r.offsetParent !== null) {
+                            const name = r.name || 'default';
+                            if (!radioGroups[name]) radioGroups[name] = [];
+                            radioGroups[name].push(r);
+                        }
+                    });
+                    Object.values(radioGroups).forEach(group => {
+                        if (!group.some(r => r.checked)) {
+                            const yesR = group.find(r => {
+                                const lbl = (r.labels && r.labels[0]) ? r.labels[0].innerText.toLowerCase() : '';
+                                const pTxt = (r.parentElement?.innerText || '').toLowerCase();
+                                return lbl.includes('yes') || pTxt.includes('yes');
+                            });
+                            const target = yesR || group[0];
+                            target.click();
+                        }
+                    });
+
+                    // 4. Inputs and Textareas
+                    const inps = Array.from(document.querySelectorAll('input[type="text"], input[type="number"], textarea')).filter(i => i.offsetParent !== null);
+                    inps.forEach(i => {
+                        if (!i.value) {
+                            const pText = (i.closest('div')?.innerText || '').toLowerCase();
+                            if (pText.includes('notice')) {
+                                setNativeVal(i, '30');
+                            } else if (pText.includes('fixed') || pText.includes('ctc') || pText.includes('salary') || pText.includes('compensation')) {
+                                setNativeVal(i, '500000');
+                            } else if (pText.includes('experience') || pText.includes('year')) {
+                                setNativeVal(i, '5');
+                            } else if (pText.includes('phone') || pText.includes('mobile')) {
+                                setNativeVal(i, '9876543210');
+                            } else if (pText.includes('city') || pText.includes('location')) {
+                                setNativeVal(i, 'Rajkot');
+                            } else {
+                                setNativeVal(i, '3');
+                            }
+                        }
+                    });
+
+                    // 5. Checkboxes (terms / agreement / consent)
+                    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                        if (cb.offsetParent !== null && !cb.checked) cb.click();
+                    });
+                """)
+
+                # Advance modal with 'Next' or 'Review'
+                advanced = driver.execute_script("""
+                    const nextModal = Array.from(document.querySelectorAll('button')).find(b => 
+                        (b.innerText.trim() === 'Next' || b.innerText.trim() === 'Review') &&
+                        !b.getAttribute('data-testid')?.includes('pagination') &&
+                        b.getBoundingClientRect().left > 450 &&
+                        b.offsetParent !== null
+                    );
+                    if (nextModal) {
+                        nextModal.click();
+                        return true;
+                    }
+                    return false;
+                """)
+
+                if not advanced:
+                    time.sleep(1.0)
+                    check_sub = driver.execute_script("""
+                        const sub = Array.from(document.querySelectorAll('button')).find(b => 
+                            b.innerText.trim() === 'Submit application' && 
+                            b.getBoundingClientRect().left > 450 &&
+                            b.offsetParent !== null
+                        );
+                        if (sub) { sub.click(); return true; }
+                        return false;
+                    """)
+                    if check_sub:
+                        time.sleep(3.0)
+                        driver.execute_script("""
+                            const popups = Array.from(document.querySelectorAll('button')).filter(b => {
+                                const t = (b.innerText || '').trim().toLowerCase();
+                                const a = (b.getAttribute('aria-label') || '').toLowerCase();
+                                return (t === 'done' || t === 'close' || t === 'not now' || a === 'dismiss') && b.offsetParent !== null;
+                            });
+                            popups.forEach(p => { try { p.click(); } catch(e) {} });
+                            const toasts = document.querySelectorAll('.artdeco-toast, [data-test-artdeco-toast]');
+                            toasts.forEach(t => { try { t.remove(); } catch(e) {} });
+                        """)
+                        modal_applied = True
+                        applied_jobs.append({"title": job_title, "company": company_name or "LinkedIn Employer"})
+                        logger.info(f"Successfully applied to: {job_title} ({len(applied_jobs)}/{count})")
+                        break
+                    break
+
+            # If modal could not be submitted, cleanly discard and continue to next job
+            if not modal_applied:
+                logger.info(f"Could not complete modal for '{job_title}'. Discarding application to proceed to next listing.")
+                driver.execute_script("""
+                    const dismiss = Array.from(document.querySelectorAll('button')).find(b => 
+                        b.getAttribute('aria-label') === 'Dismiss' && 
+                        b.getBoundingClientRect().left > 450 &&
+                        b.offsetParent !== null
+                    );
+                    if (dismiss) dismiss.click();
+                """)
+                time.sleep(1.0)
+                driver.execute_script("""
+                    const discard = Array.from(document.querySelectorAll('button')).find(b => 
+                        (b.innerText.trim() === 'Discard' || b.innerText.trim() === 'Discard draft') && 
+                        b.offsetParent !== null
+                    );
+                    if (discard) discard.click();
+                """)
+                time.sleep(1.0)
+
+        # Output report
+        if applied_jobs:
+            summary = "\n".join(f"• {j['title']} (Company: {j['company']})" for j in applied_jobs)
+            return {
+                "success": True,
+                "applied_count": len(applied_jobs),
+                "applied_jobs": applied_jobs,
+                "resume_used": resolved_resume,
+                "output": (
+                    f"🎉 Successfully applied to {len(applied_jobs)} job(s) on LinkedIn with Easy Apply!\n\n"
+                    f"📄 Resume Attached: {resolved_resume}\n\n"
+                    f"Positions Applied:\n{summary}"
+                )
+            }
+        else:
+            return {
+                "success": False,
+                "error": "No jobs could be completed via Easy Apply.",
+                "output": f"Inspected LinkedIn job listings for '{clean_kw}', but no openings could be automatically submitted. All available listings were evaluated."
+            }
+

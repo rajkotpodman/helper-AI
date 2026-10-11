@@ -43,7 +43,7 @@ class GoalRequest(BaseModel):
     provider: Optional[str] = None
     engine: Optional[str] = "native"
     safe_mode: bool = False
-    max_steps: int = 25
+    max_steps: int = 50
 
 class PermissionRespondRequest(BaseModel):
     request_id: str
@@ -226,11 +226,17 @@ async def start_goal(req: GoalRequest):
     if not goal_str:
         return JSONResponse(status_code=400, content={"error": "Goal cannot be empty."})
 
+    steps = req.max_steps
+    if steps <= 25:
+        steps = 50
+    if "/goal" in goal_str.lower() or "5 " in goal_str.lower() or "apply" in goal_str.lower():
+        steps = max(steps, 100)
+
     llm = LLMClient(provider=req.provider)
     active_agent = HelperAgent(
         llm_client=llm,
         safe_mode=req.safe_mode,
-        max_steps=req.max_steps,
+        max_steps=steps,
         permission_manager=permission_manager,
         memory_recorder=memory_recorder
     )

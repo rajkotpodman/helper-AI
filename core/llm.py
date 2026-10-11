@@ -18,34 +18,69 @@ You have access to the following tools:
 4. Windows Software & Tools: To check installed applications on Windows, use `winget list`, `Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*`, or check Program Files.
 5. Operating Environment: The host machine is {os_name} {os_release}. Standard directories like Desktop, Downloads, and Documents are directly accessible via tools.
 6. Completion & Persistence: Only set `is_complete` to true when the goal has actually succeeded. If a previous tool or command had an error, DO NOT give up or declare completion — analyze the error, fix the parameters, and try again!
-7. Folder Paths with Spaces: When checking the contents of ANY folder (e.g. `E:\Freelancer Crack The Deal`), ALWAYS use the `list_directory` tool with `path: "E:\\Freelancer Crack The Deal"`. Do NOT run raw PowerShell commands like `Get-ChildItem` for listing files. If you do use PowerShell, paths with spaces MUST be wrapped in double quotes: `Get-ChildItem "E:\Freelancer Crack The Deal"`.
-8. Opening Applications: When the user's goal is to open or launch an application (e.g. 'open edge', 'launch notepad', 'open browser'), use the `open_app_or_file` tool with target='edge' (or target='notepad', target='chrome', etc.). Once launched successfully, the goal IS COMPLETE! Immediately set `is_complete: true`, `action: 'none'`, and inform the user. DO NOT close or terminate the app, and DO NOT loop checking processes!
-9. Live Project Browser Control: To automate websites, create blogs, post to Facebook, click buttons, or fill forms (e.g. Facebook, Blogger, Google), use `browser_automation`:
+7. Repetition & Multiple Tasks / Loops: When the user requests a task to be performed multiple times or for multiple items (e.g. "loop 5 times", "apply in 5 spaces/jobs", "repeat 3 times", "do this 5 times"):
+- You MUST ensure the task runs for the FULL requested count (e.g. all 5 items).
+- NEVER declare completion (`is_complete: true`) or stop after just 1 item if the user requested 5.
+- If an individual item or step encounters an error or popup, DO NOT stop or quit! Handle or discard the failed item, skip to the next item, and keep looping until the target count is satisfied.
+- In tool parameters, pass the full requested count (e.g. "count": 5).
+8. Form Filling & Browser Popups: When automating browser forms, always handle modal popups, dropdown `<select>` options, comboboxes, and post-submission dialogs ("Done", "Close", "Not now", "Dismiss") cleanly so you can proceed to the next step.
+9. Folder Paths with Spaces: When checking the contents of ANY folder (e.g. `E:\Freelancer Crack The Deal`), ALWAYS use the `list_directory` tool with `path: "E:\\Freelancer Crack The Deal"`. Do NOT run raw PowerShell commands like `Get-ChildItem` for listing files. If you do use PowerShell, paths with spaces MUST be wrapped in double quotes: `Get-ChildItem "E:\Freelancer Crack The Deal"`.
+10. Opening Applications: When the user's goal is to open or launch an application (e.g. 'open edge', 'launch notepad', 'open browser'), use the `open_app_or_file` tool with target='edge' (or target='notepad', target='chrome', etc.). Once launched successfully, the goal IS COMPLETE! Immediately set `is_complete: true`, `action: 'none'`, and inform the user. DO NOT close or terminate the app, and DO NOT loop checking processes!
+11. Live Project Browser Control: To automate websites, create blogs, post to LinkedIn/Facebook, click buttons, or fill forms, use `browser_automation`:
+- Apply to LinkedIn Jobs with CV (1-step autonomous): Action: "browser_automation", Action args: {{ "action": "apply_linkedin_jobs", "keywords": "Technical Support", "resume_path": "C:\\Users\\DELL\\Downloads\\Jignesh_Kariya_CV (1).docx", "count": 5 }}
+- Create & Publish LinkedIn Post (1-step autonomous): Action: "browser_automation", Action args: {{ "action": "publish_linkedin_post", "post_text": "My LinkedIn post text..." }}
 - Create & Publish Facebook Post (1-step autonomous): Action: "browser_automation", Action args: {{ "action": "publish_facebook_post", "post_text": "My Facebook post text..." }}
 - Create & Publish Blogger Post (1-step autonomous): Action: "browser_automation", Action args: {{ "action": "publish_blog_post", "title": "My Blog Title", "text": "My post body..." }}
-- List Google Blogs / View Blogger Dashboard: Action: "browser_automation", Action args: {{ "action": "list_blogs" }}
-- Open URL: Action: "browser_automation", Action args: {{ "action": "open_url", "url": "https://www.facebook.com" }}
-- Click button/link by text: Action: "browser_automation", Action args: {{ "action": "click", "target": "What's on your mind" }} (or "Post", "Sign in", "New Post")
-- Type into text boxes: Action: "browser_automation", Action args: {{ "action": "type", "target": "What's on your mind", "text": "My post content" }}
+- Read / Fetch Full Webpage Content: Action: "browser_automation", Action args: {{ "action": "fetch_full_page", "url": "https://..." }} (or use tool "fetch_web_content", args: {{ "url": "https://..." }})
+- Scroll Webpage: Action: "browser_automation", Action args: {{ "action": "scroll", "direction": "down", "pixels": 800 }}
+- Open URL: Action: "browser_automation", Action args: {{ "action": "open_url", "url": "https://www.linkedin.com/feed" }}
+- Click button/link by text: Action: "browser_automation", Action args: {{ "action": "click", "target": "Start a post" }} (or "Post", "Sign in", "New Post")
+- Type into text boxes: Action: "browser_automation", Action args: {{ "action": "type", "target": "Share your thoughts", "text": "My post content" }}
+- Select dropdown option: Action: "browser_automation", Action args: {{ "action": "select_dropdown", "target": "country", "option": "India" }}
+- Dismiss popups/modals: Action: "browser_automation", Action args: {{ "action": "dismiss_popups" }}
+- List open browser tabs: Action: "browser_automation", Action args: {{ "action": "list_tabs" }}
+- Switch to a browser tab: Action: "browser_automation", Action args: {{ "action": "switch_tab", "target": "Google" }} (or index "0", "1")
+- Close a browser tab: Action: "browser_automation", Action args: {{ "action": "close_tab" }}
+- Sign up / Sign in with Google (Yahoo, etc.):
+  Start at the main login page (e.g. "https://login.yahoo.com/"), click "Sign in with Google" (DO NOT use /registration URLs which block automated traffic with 403 Forbidden). When Google Accounts chooser opens, select the logged-in Google account or click "Continue as".
 This controls the live project browser where logins and cookies are permanently remembered.
 
 ### QUICK TOOL ROUTING CHEATSHEET:
+- Fetching / Reading full web page content:
+  Action: "fetch_web_content", Action args: {{ "url": "https://..." }} OR Action: "browser_automation", Action args: {{ "action": "fetch_full_page", "url": "https://..." }}
+- Searching the web or internet:
+  Action: "search_web", Action args: {{ "query": "..." }}
+- Downloading internet files:
+  Action: "download_file", Action args: {{ "url": "https://...", "destination_path": "Downloads/file.pdf" }}
+- LinkedIn job applications with CV / Easy Apply:
+  Action: "browser_automation", Action args: {{ "action": "apply_linkedin_jobs", "keywords": "...", "resume_path": "C:\\Users\\DELL\\Downloads\\Jignesh_Kariya_CV (1).docx", "count": 5 }}
+- LinkedIn post creation & publishing:
+  Action: "browser_automation", Action args: {{ "action": "publish_linkedin_post", "post_text": "..." }}
 - Facebook post creation & publishing:
   Action: "browser_automation", Action args: {{ "action": "publish_facebook_post", "post_text": "..." }}
 - Blogger post creation & publishing:
   Action: "browser_automation", Action args: {{ "action": "publish_blog_post", "title": "...", "text": "..." }}
 - Live Web browsing / clicking buttons / web forms:
-  Action: "browser_automation", Action args: {{ "action": "open_url", "url": "https://www.facebook.com" }}
+  Action: "browser_automation", Action args: {{ "action": "open_url", "url": "https://..." }}
+- Desktop PC Human Automation (Keyboard shortcuts, Mouse clicks, Windows):
+  - Hotkey / Shortcut (Ctrl+C, Ctrl+V, Alt+Tab, Win+R, Ctrl+S): Action: "desktop_gui_control", Action args: {{ "action": "hotkey", "keys": "ctrl+c" }}
+  - Click anywhere on screen: Action: "desktop_gui_control", Action args: {{ "action": "click_screen", "x": 500, "y": 300 }}
+  - Right click or Double click: Action: "desktop_gui_control", Action args: {{ "action": "right_click" }} / {{ "action": "double_click" }}
+  - Scroll mouse wheel: Action: "desktop_gui_control", Action args: {{ "action": "scroll", "clicks": -500 }}
+  - Copy/Read Windows Clipboard: Action: "desktop_gui_control", Action args: {{ "action": "clipboard_copy", "text": "..." }} / {{ "action": "clipboard_paste" }}
+  - List open desktop applications/windows: Action: "desktop_gui_control", Action args: {{ "action": "list_windows" }}
+  - Focus / Switch to a window: Action: "desktop_gui_control", Action args: {{ "action": "focus_window", "target": "Notepad" }}
+  - Take desktop screenshot: Action: "desktop_gui_control", Action args: {{ "action": "take_screenshot" }}
 - Opening / Launching applications:
-  Action: "open_app_or_file", Action args: {{ "target": "edge" }}
+  Action: "open_app_or_file", Action args: {{ "target": "edge" }} (or "notepad", "chrome", "calc")
 - Checking Ollama models / local models / AI status:
   Action: "manage_ollama", Action args: {{ "action": "list_models" }}
 - Inspecting or listing files in a folder (especially with spaces):
   Action: "list_directory", Action args: {{ "path": "E:\\Freelancer Crack The Deal" }}
 - Checking PC health, RAM, CPU, or hardware:
   Action: "get_system_health", Action args: {{}}
-- Searching the web or internet:
-  Action: "search_web", Action args: {{ "query": "..." }}
+- Running PowerShell / CMD scripts:
+  Action: "execute_powershell", Action args: {{ "command": "..." }}
 - Managing processes:
   Action: "manage_processes", Action args: {{ "action": "list", "sort_by": "memory", "limit": 10 }}
 - Voice speech synthesis / speak aloud:
@@ -54,8 +89,6 @@ This controls the live project browser where logins and cookies are permanently 
   Action: "vision_browser", Action args: {{ "action": "screenshot" }}
 - Model Context Protocol (MCP) servers & tools:
   Action: "manage_mcp", Action args: {{ "action": "list_servers" }}
-- Desktop GUI control / keyboard / mouse / desktop screenshot:
-  Action: "desktop_gui_control", Action args: {{ "action": "get_screen_info" }}
 
 ### RESPONSE FORMAT:
 You MUST respond ONLY with a valid JSON object matching this exact schema:
@@ -89,7 +122,7 @@ class LLMClient:
 
         if not self.model:
             if self.provider == "gemini":
-                self.model = os.getenv("GEMINI_MODEL") or "gemini-1.5-flash"
+                self.model = os.getenv("GEMINI_MODEL") or "gemini-flash-latest"
             elif self.provider == "openai":
                 self.model = os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
             elif self.provider == "groq":
@@ -138,21 +171,48 @@ class LLMClient:
             return step
 
     def _call_gemini(self, system_instruction: str, user_prompt: str) -> Dict[str, Any]:
-        # Direct REST API call for maximum reliability without SDK version conflicts
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
-        payload = {
-            "systemInstruction": {"parts": [{"text": system_instruction}]},
-            "contents": [{"parts": [{"text": user_prompt}]}],
-            "generationConfig": {
-                "temperature": 0.2,
-                "responseMimeType": "application/json"
-            }
-        }
-        resp = requests.post(url, json=payload, timeout=45)
-        resp.raise_for_status()
-        data = resp.json()
-        raw_text = data["candidates"][0]["content"]["parts"][0]["text"]
-        return self._parse_json_response(raw_text)
+        target_model = self.model or "gemini-flash-latest"
+        gemini_candidates = [
+            target_model,
+            "gemini-flash-latest",
+            "gemini-flash-lite-latest",
+            "gemini-3.5-flash",
+            "gemini-3-flash-preview",
+            "gemini-2.5-flash"
+        ]
+        # Deduplicate
+        seen = set()
+        candidates = []
+        for c in gemini_candidates:
+            if c not in seen:
+                seen.add(c)
+                candidates.append(c)
+
+        last_error = None
+        for m in candidates:
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
+                payload = {
+                    "systemInstruction": {"parts": [{"text": system_instruction}]},
+                    "contents": [{"parts": [{"text": user_prompt}]}],
+                    "generationConfig": {
+                        "temperature": 0.2,
+                        "responseMimeType": "application/json"
+                    }
+                }
+                resp = requests.post(url, json=payload, timeout=45)
+                if resp.status_code == 200:
+                    self.model = m
+                    data = resp.json()
+                    raw_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                    return self._parse_json_response(raw_text)
+                else:
+                    last_error = f"HTTP {resp.status_code}: {resp.text[:150]}"
+            except Exception as e:
+                last_error = str(e)
+                continue
+
+        raise RuntimeError(f"Gemini API call failed across models {candidates}. Last error: {last_error}")
 
     def _call_openai(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
         from openai import OpenAI
@@ -186,15 +246,37 @@ class LLMClient:
             raw_text = resp.choices[0].message.content
             return self._parse_json_response(raw_text)
         except Exception as e:
+            # 1. Check if Groq returned failed_generation inside a tool_use_failed 400 error
+            failed_gen = None
+            if hasattr(e, "body") and isinstance(e.body, dict):
+                failed_gen = e.body.get("error", {}).get("failed_generation")
+            elif hasattr(e, "response"):
+                try:
+                    err_json = e.response.json()
+                    failed_gen = err_json.get("error", {}).get("failed_generation")
+                except Exception:
+                    pass
+            if not failed_gen:
+                m = re.search(r"['\"]failed_generation['\"]:\s*['\"](\{.*?\})['\"]", str(e))
+                if m:
+                    failed_gen = m.group(1)
+
+            if failed_gen:
+                try:
+                    parsed = self._parse_json_response(failed_gen)
+                    if parsed.get("action") and parsed.get("action") != "none":
+                        return parsed
+                except Exception:
+                    pass
+
             err_str = str(e).lower()
-            # If rate limit (429 / TPD / TPM) or model not found, try alternative models
-            if any(k in err_str for k in ["429", "rate_limit", "rate limit", "tpd", "tokens per day", "model_not_found", "404", "does not exist"]):
+            # If rate limit (429 / TPD / TPM), model not found, or tool_use_failed (400), try alternative models
+            if any(k in err_str for k in ["429", "rate_limit", "rate limit", "tpd", "tokens per day", "model_not_found", "404", "does not exist", "tool_use_failed", "tool choice is none", "400"]):
                 alt_candidates = [
                     "openai/gpt-oss-120b",
                     "openai/gpt-oss-20b",
-                    "llama-3.3-70b-versatile",
-                    "llama-3.1-8b-instant",
-                    "qwen/qwen3.8-27b"
+                    "qwen/qwen3.8-27b",
+                    "allam-2-7b"
                 ]
                 for alt in alt_candidates:
                     if alt == target_model:
@@ -212,7 +294,15 @@ class LLMClient:
                         self.model = alt
                         raw_text = resp.choices[0].message.content
                         return self._parse_json_response(raw_text)
-                    except Exception:
+                    except Exception as alt_err:
+                        alt_failed = None
+                        if hasattr(alt_err, "body") and isinstance(alt_err.body, dict):
+                            alt_failed = alt_err.body.get("error", {}).get("failed_generation")
+                        if alt_failed:
+                            try:
+                                return self._parse_json_response(alt_failed)
+                            except Exception:
+                                pass
                         continue
             raise
 
@@ -307,37 +397,52 @@ class LLMClient:
             text = re.sub(r"\n?```$", "", text)
             text = text.strip()
 
+        parsed = None
         try:
             parsed = json.loads(text)
-            return {
-                "thought": parsed.get("thought", "Analyzing situation."),
-                "action": parsed.get("action", "none"),
-                "action_args": parsed.get("action_args", {}),
-                "is_complete": bool(parsed.get("is_complete", False)),
-                "completion_message": parsed.get("completion_message", "")
-            }
         except json.JSONDecodeError:
             # Attempt to extract JSON substring
             match = re.search(r"\{.*\}", text, re.DOTALL)
             if match:
                 try:
                     parsed = json.loads(match.group(0))
-                    return {
-                        "thought": parsed.get("thought", "Analyzing situation."),
-                        "action": parsed.get("action", "none"),
-                        "action_args": parsed.get("action_args", {}),
-                        "is_complete": bool(parsed.get("is_complete", False)),
-                        "completion_message": parsed.get("completion_message", "")
-                    }
                 except Exception:
                     pass
+
+        if isinstance(parsed, dict):
+            # Normalize action name across Helper-AI, OpenAI, Groq, and function-call schemas
+            action = parsed.get("action") or parsed.get("name") or parsed.get("tool") or "none"
+            # Normalize action args
+            action_args = parsed.get("action_args") or parsed.get("arguments") or parsed.get("parameters") or parsed.get("args") or {}
+            if isinstance(action_args, str):
+                try:
+                    action_args = json.loads(action_args)
+                except Exception:
+                    action_args = {}
+            if not isinstance(action_args, dict):
+                action_args = {}
+
+            # Normalize thought
+            thought = parsed.get("thought") or parsed.get("reasoning") or parsed.get("description") or f"Executing tool '{action}'."
+            is_complete = bool(parsed.get("is_complete", False))
+            if str(action).lower() in ["none", "complete", "finish", "done"] and not is_complete:
+                is_complete = True
+
             return {
-                "thought": "Failed to parse model output into JSON. Terminating gracefully.",
-                "action": "none",
-                "action_args": {},
-                "is_complete": True,
-                "completion_message": f"Execution halted due to formatting error: {text[:200]}"
+                "thought": thought,
+                "action": action,
+                "action_args": action_args,
+                "is_complete": is_complete,
+                "completion_message": parsed.get("completion_message") or parsed.get("message") or ""
             }
+
+        return {
+            "thought": "Failed to parse model output into JSON. Terminating gracefully.",
+            "action": "none",
+            "action_args": {},
+            "is_complete": True,
+            "completion_message": f"Execution halted due to formatting error: {text[:200]}"
+        }
 
     def _rule_engine_step(self, goal: str, trajectory_summary: str) -> Dict[str, Any]:
         """
@@ -348,7 +453,91 @@ class LLMClient:
         # Check if any step has already been executed in trajectory (prevents loop when earlier steps are truncated)
         has_run = bool(trajectory_summary and ("Step " in trajectory_summary or "earlier steps" in trajectory_summary) and trajectory_summary != "No previous steps executed yet.")
 
-        # 1. Specialized handling for Facebook posting
+        # 1. Specialized handling for LinkedIn Job Applications with CV
+        if re.search(r"\b(linkedin|linked in|linkdin)\b", lower) and re.search(r"\b(apply|job|jobs|opening|openings|cv|resume)\b", lower):
+            # Extract count (e.g. 5 space, 5 jobs, loop 5 times)
+            count = 5
+            count_match = re.search(r'\b(\d+)\s*(?:space|job|jobs|position|positions|opening|openings|times)?\b', lower)
+            if count_match:
+                try:
+                    count = int(count_match.group(1))
+                except Exception:
+                    count = 5
+
+            more_match = re.search(r'more\s*(?:than\s*)?(\d+)', lower)
+            if more_match:
+                try:
+                    count = max(count, int(more_match.group(1)))
+                except Exception:
+                    pass
+
+            # Check if count reached in previous trajectory
+            app_match = re.search(r'successfully applied to (\d+) job', trajectory_summary.lower())
+            if app_match:
+                applied_so_far = int(app_match.group(1))
+                if applied_so_far >= count:
+                    return {
+                        "thought": f"All {applied_so_far} requested LinkedIn job applications have been submitted successfully. The goal is achieved.",
+                        "action": "none",
+                        "action_args": {},
+                        "is_complete": True,
+                        "completion_message": f"Helper has successfully applied to all {applied_so_far} requested jobs on LinkedIn using your CV!"
+                    }
+                else:
+                    # Still need more jobs
+                    count = max(1, count - applied_so_far)
+
+            # Extract CV path if present
+            cv_path = r"C:\Users\DELL\Downloads\Jignesh_Kariya_CV (1).docx"
+            path_match = re.search(r'([A-Za-z]:\\[^"\'\n\r;|]+(?:\.docx|\.pdf|\.doc)?)', goal)
+            if path_match and os.path.exists(path_match.group(1).strip()):
+                cv_path = path_match.group(1).strip()
+
+            return {
+                "thought": f"I will autonomously search and apply to {count} jobs on LinkedIn using Easy Apply and attach the user's CV ({cv_path}).",
+                "action": "browser_automation",
+                "action_args": {
+                    "action": "apply_linkedin_jobs",
+                    "keywords": "Technical Support",
+                    "resume_path": cv_path,
+                    "count": count
+                },
+                "is_complete": False,
+                "completion_message": ""
+            }
+
+        # 2. Specialized handling for LinkedIn posting
+        if re.search(r"\b(linkedin|linked in)\b", lower) and re.search(r"\b(post|publish|share|create post|status)\b", lower):
+            if "successfully created and published post to linkedin" in trajectory_summary.lower():
+                return {
+                    "thought": "LinkedIn post has been successfully created and published. The goal is achieved.",
+                    "action": "none",
+                    "action_args": {},
+                    "is_complete": True,
+                    "completion_message": "Helper has successfully created and published your post to LinkedIn! The post is now live on your feed."
+                }
+            # Extract content if given, check for file references (like HOW_TO_USE.md), or craft freelancer pitch
+            li_text = ""
+            # Check for file path in goal
+            path_match = re.search(r'([A-Za-z]:\\[^"\'\n\r;|]+(?:\.md|\.txt)?)', goal)
+            if path_match and os.path.exists(path_match.group(1).strip()):
+                li_text = path_match.group(1).strip()
+            if not li_text:
+                text_match = re.search(r'(?:saying|content|with text|message)[:\s]+["\']?([^"\']+)["\']?', goal, re.IGNORECASE)
+                if text_match:
+                    li_text = text_match.group(1).strip()
+                else:
+                    li_text = goal
+
+            return {
+                "thought": "I will autonomously create and publish the requested post to LinkedIn using browser_automation with verification.",
+                "action": "browser_automation",
+                "action_args": {"action": "publish_linkedin_post", "post_text": li_text},
+                "is_complete": False,
+                "completion_message": ""
+            }
+
+        # 2. Specialized handling for Facebook posting
         if re.search(r"\b(facebook|fb)\b", lower) and re.search(r"\b(post|publish|share|create post|status)\b", lower):
             if "successfully created and published post to facebook" in trajectory_summary.lower():
                 return {
@@ -404,6 +593,34 @@ class LLMClient:
                 "is_complete": False,
                 "completion_message": ""
             }
+
+        # 4. Specialized handling for Yahoo account with Google
+        if "yahoo" in lower and any(k in lower for k in ["account", "sign in", "login", "create", "register"]):
+            if "google" in lower:
+                if "accounts.google.com" in trajectory_summary or "Google Accounts" in trajectory_summary:
+                    return {
+                        "thought": "Google account chooser is open. Selecting user's Google account to authorize Yahoo.",
+                        "action": "browser_automation",
+                        "action_args": {"action": "click", "target": "Continue as"},
+                        "is_complete": False,
+                        "completion_message": ""
+                    }
+                elif "login.yahoo.com" in trajectory_summary or "Sign in | Yahoo" in trajectory_summary:
+                    return {
+                        "thought": "On Yahoo login page. Clicking 'Sign in with Google' to initiate Google authentication.",
+                        "action": "browser_automation",
+                        "action_args": {"action": "click", "target": "Sign in with Google"},
+                        "is_complete": False,
+                        "completion_message": ""
+                    }
+                else:
+                    return {
+                        "thought": "I will open Yahoo's official login page to initiate sign-up with your logged-in Google account.",
+                        "action": "browser_automation",
+                        "action_args": {"action": "open_url", "url": "https://login.yahoo.com/"},
+                        "is_complete": False,
+                        "completion_message": ""
+                    }
 
         if not has_run:
             if re.search(r"\b(open|launch|start|run)\s+(edge|chrome|browser|notepad|calc|calculator|explorer|terminal)\b", lower) or (lower.startswith("open ") or lower.startswith("launch ")):
@@ -472,6 +689,51 @@ class LLMClient:
                     "is_complete": False,
                     "completion_message": ""
                 }
+            elif re.search(r"\b(fetch|read|scrape|get)\s+(full\s+)?(web|webpage|page|site|url|article)\b", lower) or re.search(r'https?://[^\s]+', goal):
+                url_match = re.search(r'(https?://[^\s\'"<>]+)', goal)
+                target_url = url_match.group(1) if url_match else "https://en.wikipedia.org"
+                return {
+                    "thought": f"I will fetch the complete readable webpage content from '{target_url}' using fetch_web_content.",
+                    "action": "fetch_web_content",
+                    "action_args": {"url": target_url, "max_characters": 15000},
+                    "is_complete": False,
+                    "completion_message": ""
+                }
+            elif re.search(r"\b(clipboard|paste|copy to clipboard|read clipboard)\b", lower):
+                if any(w in lower for w in ["paste", "read clipboard", "get clipboard"]):
+                    return {
+                        "thought": "I will read the Windows clipboard contents.",
+                        "action": "desktop_gui_control",
+                        "action_args": {"action": "clipboard_paste"},
+                        "is_complete": False,
+                        "completion_message": ""
+                    }
+                else:
+                    return {
+                        "thought": "I will execute clipboard copy.",
+                        "action": "desktop_gui_control",
+                        "action_args": {"action": "hotkey", "keys": "ctrl+c"},
+                        "is_complete": False,
+                        "completion_message": ""
+                    }
+            elif re.search(r"\b(list windows|open windows|running apps|active windows)\b", lower):
+                return {
+                    "thought": "I will list all open desktop application windows.",
+                    "action": "desktop_gui_control",
+                    "action_args": {"action": "list_windows"},
+                    "is_complete": False,
+                    "completion_message": ""
+                }
+            elif re.search(r"\b(hotkey|shortcut|press ctrl|press alt|press win)\b", lower):
+                keys_m = re.search(r'(ctrl\+[a-z0-9]+|alt\+[a-z0-9]+|win\+[a-z0-9]+)', lower)
+                keys = keys_m.group(1) if keys_m else "ctrl+c"
+                return {
+                    "thought": f"I will execute keyboard shortcut '{keys}'.",
+                    "action": "desktop_gui_control",
+                    "action_args": {"action": "hotkey", "keys": keys},
+                    "is_complete": False,
+                    "completion_message": ""
+                }
             elif re.search(r"\b(search|google|internet|web|lookup)\b", lower):
                 query = re.sub(r"^(search|google|find|lookup)\s+(the\s+web\s+for\s+|web\s+for\s+|for\s+)?", "", goal, flags=re.IGNORECASE).strip()
                 return {
@@ -517,11 +779,70 @@ class LLMClient:
                     "completion_message": ""
                 }
         else:
-            # Second step verification
+            # Multi-step autonomous self-learning discovery loop (NEVER prematurely surrender)
+            last_traj = trajectory_summary.lower()
+
+            # 1. Specialized handling for Open Source / Free Email Account with Google
+            if any(k in lower for k in ["email", "mail"]) and any(k in lower for k in ["open source", "free", "platform", "account", "address"]) and "google" in lower:
+                if "simplelogin" not in last_traj and "app.simplelogin.io" not in last_traj:
+                    return {
+                        "thought": "Previous email service was closed or unavailable. Trying SimpleLogin (100% open-source email alias & inbox service) which natively supports Google sign-in to create an email address.",
+                        "action": "browser_automation",
+                        "action_args": {"action": "open_url", "url": "https://app.simplelogin.io/auth/login"},
+                        "is_complete": False,
+                        "completion_message": ""
+                    }
+                elif "app.simplelogin.io" in last_traj and "google" not in last_traj:
+                    return {
+                        "thought": "On SimpleLogin authentication page. Clicking 'Sign in with Google' to create the email account.",
+                        "action": "browser_automation",
+                        "action_args": {"action": "click", "target": "Sign in with Google"},
+                        "is_complete": False,
+                        "completion_message": ""
+                    }
+                elif "accounts.google.com" in last_traj:
+                    return {
+                        "thought": "Google Accounts chooser is active. Clicking Google account to finish authorization.",
+                        "action": "browser_automation",
+                        "action_args": {"action": "click", "target": "Continue as"},
+                        "is_complete": False,
+                        "completion_message": ""
+                    }
+                else:
+                    return {
+                        "thought": "Reading page content to extract the newly created email address.",
+                        "action": "browser_automation",
+                        "action_args": {"action": "fetch_full_page"},
+                        "is_complete": False,
+                        "completion_message": ""
+                    }
+
+            # 2. Check if previous step had errors or couldn't find an element
+            if any(err in last_traj for err in ["404", "could not find", "closed", "error", "failed", "forbidden", "403", "please wait"]):
+                clean_query = re.sub(r"[^\w\s]", " ", goal).strip()
+                return {
+                    "thought": "Previous attempt encountered an obstacle. Searching the web for functional alternatives to solve the goal.",
+                    "action": "search_web",
+                    "action_args": {"query": f"{clean_query[:50]} alternative", "max_results": 5},
+                    "is_complete": False,
+                    "completion_message": ""
+                }
+
+            # 3. If browser is open, fetch full page content to see current state
+            if "live project browser" in last_traj or "http" in last_traj:
+                return {
+                    "thought": "Inspecting current browser page content to determine the next action toward the goal.",
+                    "action": "browser_automation",
+                    "action_args": {"action": "fetch_full_page"},
+                    "is_complete": False,
+                    "completion_message": ""
+                }
+
+            # 4. If nothing else, discover solutions via web search without surrendering
             return {
-                "thought": "The requested action has been performed and verified. Goal is achieved.",
-                "action": "none",
-                "action_args": {},
-                "is_complete": True,
-                "completion_message": f"Helper has successfully executed your goal: '{goal}'. Everything has been completed and verified."
+                "thought": "Exploring alternative solutions on the web to fulfill the goal autonomously.",
+                "action": "search_web",
+                "action_args": {"query": goal[:60], "max_results": 5},
+                "is_complete": False,
+                "completion_message": ""
             }

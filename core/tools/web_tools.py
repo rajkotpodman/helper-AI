@@ -103,10 +103,23 @@ class SearchWebTool(BaseTool):
                         s_elem = card.select_one(".b_caption p") or card.select_one(".b_caption")
                         a_elem = card.select_one("h2 a")
                         if t_elem and s_elem:
+                            raw_url = a_elem.get("href", "") if a_elem else ""
+                            # Unwrap Bing click redirect (u=a1<base64>) to real destination URL
+                            real_url = raw_url
+                            u_match = re.search(r"[?&]u=a1([a-zA-Z0-9+/=_-]+)", raw_url)
+                            if u_match:
+                                import base64
+                                b64 = u_match.group(1).replace("-", "+").replace("_", "/")
+                                b64 += "=" * ((4 - len(b64) % 4) % 4)
+                                try:
+                                    real_url = base64.b64decode(b64).decode("utf-8", errors="ignore")
+                                except Exception:
+                                    pass
+
                             results.append({
                                 "title": t_elem.get_text(strip=True),
                                 "snippet": s_elem.get_text(strip=True),
-                                "url": a_elem.get("href", "") if a_elem else ""
+                                "url": real_url
                             })
                             if len(results) >= max_results:
                                 break
@@ -148,13 +161,13 @@ class FetchWebContentTool(BaseTool):
             "max_characters": {
                 "type": "integer",
                 "description": "Maximum characters of text to return (default 4000).",
-                "default": 4000
+                "default": 10000
             }
         },
         "required": ["url"]
     }
 
-    def execute(self, url: str, max_characters: int = 4000) -> Dict[str, Any]:
+    def execute(self, url: str, max_characters: int = 10000) -> Dict[str, Any]:
         try:
             if not url.startswith("http://") and not url.startswith("https://"):
                 url = "https://" + url
@@ -162,9 +175,28 @@ class FetchWebContentTool(BaseTool):
             resp = requests.get(url, headers=HEADERS, timeout=15)
             resp.raise_for_status()
 
+            extracted_links = []
+            extracted_headings = []
+
             if BeautifulSoup:
                 soup = BeautifulSoup(resp.text, "html.parser")
-                for s in soup(["script", "style", "nav", "footer", "header", "noscript"]):
+                # Extract headings
+                for h in soup.find_all(["h1", "h2", "h3"]):
+                    htxt = h.get_text(strip=True)
+                    if htxt and htxt not in extracted_headings:
+                        extracted_headings.append(htxt)
+
+                # Extract top links
+                for a in soup.find_all("a", href=True):
+                    atxt = a.get_text(strip=True)
+                    ahref = a["href"]
+                    if atxt and ahref and len(atxt) < 60:
+                        full_link = urllib.parse.urljoin(url, ahref)
+                        extracted_links.append({"text": atxt, "url": full_link})
+                        if len(extracted_links) >= 15:
+                            break
+
+                for s in soup(["script", "style", "nav", "footer", "header", "noscript", "svg"]):
                     s.extract()
                 text = soup.get_text(separator="\n")
                 title = soup.title.string.strip() if soup.title and soup.title.string else url
@@ -175,15 +207,37 @@ class FetchWebContentTool(BaseTool):
                 title_match = re.search(r"<title>(.*?)</title>", resp.text, re.IGNORECASE)
                 title = title_match.group(1).strip() if title_match else url
 
+            # Clean and normalize whitespace
+            lines = [l.strip() for l in text.splitlines() if l.strip()]
+            clean_text = "\n".join(lines)
+            
+            if max_characters and max_characters > 0 and len(clean_text) > max_characters:
+                content = clean_text[:max_characters] + f"\n\n... [Content truncated at {max_characters} characters. Total page size: {len(clean_text)} characters]"
+            else:
+                content = clean_text
+
+            headings_summary = "\n- ".join(extracted_headings[:8]) if extracted_headings else "None"
+            links_summary = "\n".join(f"- {l['text']}: {l['url']}" for l in extracted_links[:10]) if extracted_links else "None"
+
             return {
                 "success": True,
                 "title": title,
-                "output": f"Title: {title}\nURL: {url}\n\n{truncated}"
+                "url": url,
+                "total_characters": len(clean_text),
+                "headings": extracted_headings[:15],
+                "links": extracted_links[:20],
+                "content": clean_text,
+                "output": (
+                    f"🌐 Webpage: '{title}'\nURL: {url} ({len(clean_text)} total characters)\n\n"
+                    f"### Key Headings:\n- {headings_summary}\n\n"
+                    f"### Page Content:\n{content}\n\n"
+                    f"### Top Links:\n{links_summary}"
+                )
             }
         except Exception as e:
             return {
                 "success": False,
-                "output": f"Failed to fetch webpage content: {str(e)}",
+                "output": f"Failed to fetch webpage content from {url}: {str(e)}",
                 "error": str(e)
             }
 

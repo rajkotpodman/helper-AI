@@ -63,10 +63,18 @@ class AgentMemory:
             status = "SUCCESS" if s.success else "FAILED"
             # Truncate very long outputs in context
             res_snippet = s.result[:400] + ("..." if len(s.result) > 400 else "")
+            # Safely truncate large argument strings to protect LLM token limits (e.g. Groq 8000 TPM)
+            safe_args = {}
+            for k, v in (s.action_args or {}).items():
+                if isinstance(v, str) and len(v) > 250:
+                    safe_args[k] = v[:250] + f"... [truncated {len(v)} chars]"
+                else:
+                    safe_args[k] = v
+
             lines.append(
                 f"Step {s.step_number}:\n"
                 f"  Thought: {s.thought}\n"
-                f"  Action: {s.action} with arguments {json.dumps(s.action_args)}\n"
+                f"  Action: {s.action} with arguments {json.dumps(safe_args)}\n"
                 f"  Observation ({status}): {res_snippet}\n"
             )
 
