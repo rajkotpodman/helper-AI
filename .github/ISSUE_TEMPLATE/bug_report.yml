@@ -1,0 +1,66 @@
+name: "🐛 Bug Report"
+description: "Report an issue, error, or bug in Helper-AI"
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue in Helper-AI! Please provide as much context as possible.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Describe the Bug"
+      description: "A clear and concise description of what the bug is."
+      placeholder: "When running goal X, the agent gets stuck on step Y..."
+    validations:
+      required: true
+
+  - type: input
+    id: goal
+    attributes:
+      label: "Goal Prompt"
+      description: "The prompt / goal provided to Helper-AI."
+      placeholder: "e.g. create and publish facebook post on..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: "LLM Provider"
+      description: "Which LLM provider was active when the issue occurred?"
+      options:
+        - Gemini (gemini-flash-latest)
+        - Groq
+        - OpenAI
+        - Ollama
+        - Rule Engine
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: "Operating System & Environment"
+      placeholder: "Windows 11 / Windows 10 / Ubuntu 22.04 / Docker"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Relevant Logs & Traceback"
+      description: "Paste execution terminal output or error messages here."
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: "Checklist"
+      options:
+        - label: "I have checked existing issues to confirm this isn't a duplicate."
+          required: true
+        - label: "I have verified my API keys and browser session are valid."
+          required: true

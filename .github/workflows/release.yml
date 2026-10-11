@@ -1,0 +1,35 @@
+name: Release & Packaging
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build Source Archive
+        run: |
+          mkdir -p dist
+          tar -czf dist/helper-ai-${{ github.ref_name }}.tar.gz --exclude='.git' --exclude='node_modules' --exclude='__pycache__' --exclude='.venv' .
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false

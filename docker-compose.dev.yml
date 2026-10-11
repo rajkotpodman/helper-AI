@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  helper-ai-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: helper-ai:dev
+    container_name: helper-ai-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-flash-latest}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - SAFE_MODE=${SAFE_MODE:-false}
+      - HOST=0.0.0.0
+      - PORT=8000
+    volumes:
+      - .:/app
+      - /app/.venv
+      - /app/__pycache__
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
