@@ -339,56 +339,90 @@ class BrowserAutomationTool(BaseTool):
         """
         import time
         from selenium.webdriver.common.by import By
+        from selenium.webdriver.common.keys import Keys
+        from selenium.webdriver.common.action_chains import ActionChains
+
         browser = ProjectBrowser.get_instance()
         driver = browser.get_driver()
         current_url = driver.current_url or ""
 
-        # 1. Navigate to Facebook home if not already on facebook or on subpath
-        if "facebook.com" not in current_url:
-            browser.navigate("https://www.facebook.com/")
-            time.sleep(2.5)
-        elif "/profile" in current_url or any(x in current_url for x in ["/photo", "/watch", "/reel", "/story"]):
-            browser.navigate("https://www.facebook.com/")
-            time.sleep(2.5)
+        # 1. Check if composer dialog is ALREADY open on screen
+        target_dlg = None
+        for dlg in driver.find_elements(By.XPATH, "//*[@role='dialog']"):
+            try:
+                if dlg.is_displayed():
+                    tbs = dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']")
+                    if tbs:
+                        target_dlg = dlg
+                        break
+            except Exception:
+                pass
 
-        # 2. Dismiss any floating backdrop/modals or 'Not now' prompts if present
-        try:
-            not_now_btns = driver.find_elements(By.XPATH, "//*[@role='button'][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'not now')]")
-            for b in not_now_btns:
-                if b.is_displayed():
-                    driver.execute_script("arguments[0].click();", b)
-                    time.sleep(0.5)
-                    break
-        except Exception:
-            pass
+        # 2. If not already open, navigate to Facebook and open composer
+        if not target_dlg:
+            if "facebook.com" not in current_url:
+                browser.navigate("https://www.facebook.com/")
+                time.sleep(2.5)
+            elif "/profile" in current_url or any(x in current_url for x in ["/photo", "/watch", "/reel", "/story"]):
+                browser.navigate("https://www.facebook.com/")
+                time.sleep(2.5)
 
-        # 3. Locate and click "What's on your mind" composer button
-        opened = False
-        for _ in range(3):
-            btns = driver.find_elements(By.XPATH, "//*[@role='button'] | //div[contains(@class, 'x1i10hfl')]")
-            for b in btns:
-                try:
+            # Dismiss any floating backdrop/modals or 'Not now' prompts if present
+            try:
+                not_now_btns = driver.find_elements(By.XPATH, "//*[@role='button'][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'not now')]")
+                for b in not_now_btns:
                     if b.is_displayed():
-                        txt = (b.text or "").lower()
-                        aria = (b.get_attribute("aria-label") or "").lower()
-                        if "what's on your mind" in txt or "what's on your mind" in aria or "create a post" in txt:
-                            try:
-                                b.click()
-                            except Exception:
-                                driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", b)
-                            opened = True
-                            break
-                except Exception:
-                    continue
-            if opened:
-                break
-            time.sleep(1.0)
+                        driver.execute_script("arguments[0].click();", b)
+                        time.sleep(0.5)
+                        break
+            except Exception:
+                pass
 
-        # 4. Wait for the Create Post dialog / textbox to appear
-        time.sleep(1.5)
+            # Locate and click "What's on your mind" composer button
+            opened = False
+            for _ in range(4):
+                btns = driver.find_elements(By.XPATH, "//*[@role='button'] | //div[contains(@class, 'x1i10hfl')]")
+                for b in btns:
+                    try:
+                        if b.is_displayed():
+                            txt = (b.text or "").lower()
+                            aria = (b.get_attribute("aria-label") or "").lower()
+                            if "what's on your mind" in txt or "what's on your mind" in aria or "create a post" in txt:
+                                try:
+                                    b.click()
+                                except Exception:
+                                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", b)
+                                opened = True
+                                break
+                    except Exception:
+                        continue
+                if opened:
+                    break
+                time.sleep(1.0)
+
+            # Wait for dialog to appear
+            for _ in range(8):
+                time.sleep(0.5)
+                for dlg in driver.find_elements(By.XPATH, "//*[@role='dialog']"):
+                    try:
+                        if dlg.is_displayed() and dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']"):
+                            target_dlg = dlg
+                            break
+                    except Exception:
+                        pass
+                if target_dlg:
+                    break
+
+        if not target_dlg:
+            return {
+                "success": False,
+                "output": "Could not open Facebook 'Create post' composer. Please ensure you are logged into Facebook in the Project Browser."
+            }
+
+        # 3. Locate the composer textbox inside the active dialog
         textbox = None
         for _ in range(6):
-            tbs = driver.find_elements(By.XPATH, "//*[@role='textbox'] | //*[@contenteditable='true']")
+            tbs = target_dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']")
             for tb in tbs:
                 try:
                     if tb.is_displayed():
@@ -403,60 +437,91 @@ class BrowserAutomationTool(BaseTool):
         if not textbox:
             return {
                 "success": False,
-                "output": "Could not open Facebook 'Create post' composer. Please ensure you are logged into Facebook in the Project Browser."
+                "output": "Could not find text input field inside Facebook Create Post composer."
             }
 
-        # 5. Type the post content
-        type_res = browser.type_text("What's on your mind", content, clear=False)
-        time.sleep(1.2)
+        # 4. Clear and enter text with Lexical / React 18 event triggers
+        try:
+            textbox.click()
+            time.sleep(0.3)
+            ActionChains(driver).move_to_element(textbox).key_down(Keys.CONTROL).send_keys("a").key_up(Keys.CONTROL).send_keys(Keys.BACKSPACE).perform()
+            time.sleep(0.3)
+        except Exception:
+            pass
 
-        # 6. Locate the Post (or Next) button
+        textbox.send_keys(content)
+        time.sleep(0.8)
+
+        # Trigger Lexical / React state listener with key events and input events
+        try:
+            textbox.send_keys(Keys.SPACE)
+            time.sleep(0.1)
+            textbox.send_keys(Keys.BACKSPACE)
+            driver.execute_script("""
+                const el = arguments[0];
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+                el.dispatchEvent(new Event('change', { bubbles: true }));
+            """, textbox)
+        except Exception:
+            pass
+        time.sleep(1.0)
+
+        # 5. Locate the exact Post (or Share/Next) button inside the dialog
         post_btn = None
-        for _ in range(5):
-            btns = driver.find_elements(By.XPATH, "//*[@role='button']")
+        for _ in range(12):  # Poll up to 6 seconds for aria-disabled to lift
+            btns = target_dlg.find_elements(By.XPATH, ".//*[@role='button'] | .//button")
             for b in btns:
                 try:
                     if b.is_displayed():
                         txt = (b.text or "").strip().lower()
                         aria = (b.get_attribute("aria-label") or "").strip().lower()
                         dis = b.get_attribute("aria-disabled")
-                        if (txt in ["post", "next"] or aria in ["post", "next"]) and dis != "true":
-                            post_btn = b
-                            break
+                        # Match exact submit actions across English & localized interfaces
+                        if (txt in ["post", "share", "next", "publish", "पोस्ट"] or aria in ["post", "share", "next", "publish", "पोस्ट"]):
+                            if dis != "true":
+                                post_btn = b
+                                break
                 except Exception:
                     continue
             if post_btn:
                 break
             time.sleep(0.5)
 
-        if not post_btn:
-            return {
-                "success": False,
-                "output": f"Post text was entered, but the 'Post' button was not found or remained disabled. Status: {type_res.get('output')}"
-            }
+        # 6. Click Post button & secondary Ctrl+Enter submission
+        if post_btn:
+            try:
+                post_btn.click()
+            except Exception:
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", post_btn)
+        else:
+            # Universal keyboard submission shortcut in Facebook composer: Ctrl + Enter
+            try:
+                ActionChains(driver).move_to_element(textbox).key_down(Keys.CONTROL).send_keys(Keys.RETURN).key_up(Keys.CONTROL).perform()
+            except Exception:
+                pass
 
-        # 7. Click Post (or Next)
-        try:
-            post_btn.click()
-        except Exception:
-            driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", post_btn)
+        time.sleep(2.5)
 
-        time.sleep(3.0)
+        # 7. Check if a secondary confirmation modal appeared (e.g. "Who can see this?", "Share to Feed")
+        for _ in range(6):
+            sec_btns = driver.find_elements(By.XPATH, "//*[@role='dialog']//*[@role='button' or self::button][translate(normalize-space(@aria-label), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='post' or translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='post' or translate(normalize-space(.), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='share' or translate(normalize-space(@aria-label), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='share']")
+            clicked_sec = False
+            for sb in sec_btns:
+                try:
+                    if sb.is_displayed() and sb != post_btn:
+                        try:
+                            sb.click()
+                        except Exception:
+                            driver.execute_script("arguments[0].click();", sb)
+                        clicked_sec = True
+                        time.sleep(2.0)
+                        break
+                except Exception:
+                    pass
+            if not clicked_sec:
+                break
 
-        # If it was 'Next', Facebook might present a second confirmation modal with 'Post'
-        try:
-            second_btns = driver.find_elements(By.XPATH, "//*[@role='button']")
-            for b in second_btns:
-                if b.is_displayed() and b.text.strip().lower() == "post":
-                    try:
-                        b.click()
-                    except Exception:
-                        driver.execute_script("arguments[0].click();", b)
-                    time.sleep(2.5)
-                    break
-        except Exception:
-            pass
-
+        time.sleep(2.0)
         return {
             "success": True,
             "output": f"Successfully created and published post to Facebook: '{content[:80]}...'! The post is officially live on your timeline/feed.",

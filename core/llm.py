@@ -165,6 +165,19 @@ class LLMClient:
             else:
                 return self._rule_engine_step(goal, trajectory_summary)
         except Exception as e:
+            # If current provider failed (e.g. Groq 429 rate limit), check if Gemini key is available for seamless failover!
+            gemini_key = os.getenv("GEMINI_API_KEY")
+            if self.provider != "gemini" and gemini_key:
+                try:
+                    self.provider = "gemini"
+                    self.api_key = gemini_key.strip().strip("'").strip('"')
+                    self.model = os.getenv("GEMINI_MODEL") or "gemini-flash-latest"
+                    step = self._call_gemini(sys_prompt, user_content)
+                    step["thought"] = f"(Note: Switched to Gemini after provider error: {str(e)[:80]}...) " + step.get("thought", "")
+                    return step
+                except Exception as ge:
+                    pass
+
             # Fallback to rule engine if API calls fail
             step = self._rule_engine_step(goal, trajectory_summary)
             step["thought"] = f"(Note: LLM provider {self.provider} error: {str(e)}. Using autonomous fallback.) " + step["thought"]
@@ -539,21 +552,42 @@ class LLMClient:
 
         # 2. Specialized handling for Facebook posting
         if re.search(r"\b(facebook|fb)\b", lower) and re.search(r"\b(post|publish|share|create post|status)\b", lower):
-            if "successfully created and published post to facebook" in trajectory_summary.lower():
+            last_traj = trajectory_summary.lower()
+            if any(k in last_traj for k in ["successfully created and published", "live on your timeline", "post published successfully"]):
                 return {
                     "thought": "Facebook post has been successfully created and published. The goal is achieved.",
                     "action": "none",
                     "action_args": {},
                     "is_complete": True,
-                    "completion_message": f"Helper has successfully created and published your post to Facebook! The post is now live."
+                    "completion_message": f"Helper has successfully created and published your post to Facebook! The post is now live on your timeline."
                 }
+
+            # Check if post text was already typed into composer and Post button is awaiting click
+            if any(k in last_traj for k in ["post text was entered", "typed", "what's on your mind"]):
+                return {
+                    "thought": "Post text is entered in the composer. Clicking 'Post' to publish it immediately.",
+                    "action": "browser_automation",
+                    "action_args": {"action": "click", "target": "Post"},
+                    "is_complete": False,
+                    "completion_message": ""
+                }
+
             # Extract post content if given, or generate clean default
             fb_text = "🚀 Testing Facebook publishing via Helper-AI! Autonomous AI Agent is working smoothly."
             text_match = re.search(r'(?:saying|content|with text|message)[:\s]+["\']?([^"\']+)["\']?', goal, re.IGNORECASE)
             if text_match:
                 fb_text = text_match.group(1).strip()
+            elif "http" in goal:
+                url_m = re.search(r'(https?://[^\s\'"<>]+)', goal)
+                if url_m:
+                    fb_text = (
+                        f"🚀 Check out Helper-AI: Autonomous PC Control & Internet Agent!\n\n"
+                        f"Automate browser workflows, desktop tasks, form filling, and social media posting with full autonomy.\n\n"
+                        f"⭐ Explore the open-source repo on GitHub:\n{url_m.group(1)}"
+                    )
+
             return {
-                "thought": "I will autonomously create and publish the requested post to Facebook using browser_automation.",
+                "thought": "I will autonomously create, format, and publish the requested post to Facebook using browser_automation.",
                 "action": "browser_automation",
                 "action_args": {"action": "publish_facebook_post", "post_text": fb_text},
                 "is_complete": False,

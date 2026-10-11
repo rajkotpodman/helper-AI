@@ -202,6 +202,10 @@ class ProjectBrowser:
 
         # Prioritize exact aria-label, role='button', and button elements using descendant text (.)
         xpath_candidates = [
+            f"//*[@role='dialog']//*[@role='button' or self::button][translate(normalize-space(@aria-label), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='{target_clean}' or translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='{target_clean}']",
+            f"//*[@role='button' or self::button][translate(normalize-space(@aria-label), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='{target_clean}' or translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='{target_clean}']",
+            f"//*[@role='dialog']//*[@role='button'][@aria-label and contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
+            f"//*[@role='dialog']//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
             f"//*[@role='button'][@aria-label and contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
             f"//button[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
             f"//*[@role='button'][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), '{target_clean}')]",
@@ -231,16 +235,26 @@ class ProjectBrowser:
                 if not valid_found:
                     continue
 
-                # Sort: prioritize interactive tags, then closest text length
+                # Sort: prioritize exact matches, in-dialog elements, interactive tags, and non-disabled elements
                 def score_el(e):
                     try:
-                        t = (e.text or "").strip()
+                        t = (e.text or "").strip().lower()
+                        aria = (e.get_attribute("aria-label") or "").strip().lower()
                         is_interactive = e.tag_name.lower() in ["button", "a", "input"] or e.get_attribute("role") == "button"
                         is_disabled = bool(e.get_attribute("disabled") or e.get_attribute("aria-disabled") == "true")
-                        prio = 2 if is_disabled else (0 if is_interactive else 1)
+                        is_exact = (t == target_clean or aria == target_clean)
+                        is_in_dialog = driver.execute_script("return arguments[0].closest('[role=\"dialog\"]') !== null;", e)
+
+                        prio = 50 if is_disabled else 0
+                        if not is_interactive:
+                            prio += 10
+                        if is_in_dialog:
+                            prio -= 10
+                        if is_exact:
+                            prio -= 25
                         return (prio, len(t) if t else 9999)
                     except Exception:
-                        return (3, 9999)
+                        return (100, 9999)
 
                 valid_found.sort(key=score_el)
                 best = valid_found[0]
