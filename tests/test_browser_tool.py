@@ -147,8 +147,15 @@ def test_browser_actions_registered():
 
 
 def test_desktop_gui_control_extended(monkeypatch):
+    import pyperclip
+    import pyautogui
     from core.tools.desktop_gui_tools import DesktopGUIControlTool
     tool = DesktopGUIControlTool()
+
+    clip_box = {}
+    monkeypatch.setattr(pyperclip, "copy", lambda text: clip_box.update({"content": str(text)}))
+    monkeypatch.setattr(pyperclip, "paste", lambda: clip_box.get("content", ""))
+    monkeypatch.setattr(pyautogui, "hotkey", lambda *args: None)
 
     # Test clipboard copy & paste
     res_copy = tool.execute(action="clipboard_copy", text="Test Clipboard Content")
