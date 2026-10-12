@@ -93,7 +93,7 @@ async def test_agent_human_in_the_loop_permission_flow(tmp_path):
     llm.generate_step = lambda **kwargs: {
         "thought": "Publish social post",
         "action": "browser_automation",
-        "action_args": {"action": "draft_social_post", "platform": "x", "post_text": "Test post"},
+        "action_args": {"action": "draft_social_post", "platform": "x", "post_text": "Test post", "open_in_system_browser": False},
         "is_complete": False,
         "completion_message": ""
     }

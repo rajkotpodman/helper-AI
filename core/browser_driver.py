@@ -70,6 +70,10 @@ class ProjectBrowser:
 
     def launch_desktop_chrome(self) -> None:
         """Launches Google Chrome on the user's interactive Windows desktop."""
+        if os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true":
+            logger.info("CI environment detected; skipping desktop Chrome launcher.")
+            return
+
         import subprocess
         logger.info("Attempting to launch interactive desktop Chrome...")
         try:
@@ -94,6 +98,8 @@ class ProjectBrowser:
         if self.is_alive():
             return self._driver
 
+        is_ci = os.getenv("CI") == "true" or os.getenv("GITHUB_ACTIONS") == "true"
+
         # Local ChromeDriver
         service = None
         if LOCAL_DRIVER_PATH.exists():
@@ -103,11 +109,11 @@ class ProjectBrowser:
             if cache_candidates:
                 service = Service(executable_path=str(cache_candidates[0].resolve()))
 
-        # 1. Check if desktop Chrome is running on 9222, or launch it
-        if not self._is_port_open(9222):
+        # 1. Check if desktop Chrome is running on 9222, or launch it (skip in CI)
+        if not is_ci and not self._is_port_open(9222):
             self.launch_desktop_chrome()
 
-        if self._is_port_open(9222):
+        if not is_ci and self._is_port_open(9222):
             opts = Options()
             opts.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
             try:
@@ -122,6 +128,11 @@ class ProjectBrowser:
 
         # Fallback to starting a fresh instance
         opts = Options()
+        if is_ci:
+            opts.add_argument("--headless=new")
+            opts.add_argument("--no-sandbox")
+            opts.add_argument("--disable-dev-shm-usage")
+            opts.add_argument("--disable-gpu")
         opts.add_argument(f"--user-data-dir={BROWSER_PROFILE_DIR.resolve()}")
         opts.add_argument("--remote-debugging-port=9225")
         opts.add_argument("--no-first-run")
