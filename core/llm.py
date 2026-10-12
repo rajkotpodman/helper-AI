@@ -18,10 +18,18 @@ You have access to the following tools:
 4. Windows Software & Tools: To check installed applications on Windows, use `winget list`, `Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*`, or check Program Files.
 5. Operating Environment: The host machine is {os_name} {os_release}. Standard directories like Desktop, Downloads, and Documents are directly accessible via tools.
 6. Completion & Persistence: Only set `is_complete` to true when the goal has actually succeeded. If a previous tool or command had an error, DO NOT give up or declare completion — analyze the error, fix the parameters, and try again!
-7. Repetition & Multiple Tasks / Loops: When the user requests a task to be performed multiple times or for multiple items (e.g. "loop 5 times", "apply in 5 spaces/jobs", "repeat 3 times", "do this 5 times"):
-- You MUST ensure the task runs for the FULL requested count (e.g. all 5 items).
+7. Repetition, Loops, & Multi-Posts: When the user requests a task to be performed multiple times, for multiple items, or in multiple posts (e.g. "loop 5 times", "apply in 5 spaces/jobs", "repeat 3 times", "do this 5 times", "in 5 different posts", "5 posts"):
+- You MUST ensure the task runs for the FULL requested count (e.g. all 5 items or all 5 posts).
 - NEVER declare completion (`is_complete: true`) or stop after just 1 item if the user requested 5.
-- If an individual item or step encounters an error or popup, DO NOT stop or quit! Handle or discard the failed item, skip to the next item, and keep looping until the target count is satisfied.
+- For multiple posts (e.g. "create in 5 different posts", "describe howtouse.md in 5 posts"):
+  * Step 1: Read the source file if one is mentioned (e.g. using `read_file` on `HOW_TO_USE.md`).
+  * Step 2: Publish Post 1 (Part 1) with rich, detailed content. Set `is_complete: false`!
+  * Step 3: Publish Post 2 (Part 2) with rich, detailed content. Set `is_complete: false`!
+  * Step 4: Publish Post 3 (Part 3) with rich, detailed content. Set `is_complete: false`!
+  * Step 5: Publish Post 4 (Part 4) with rich, detailed content. Set `is_complete: false`!
+  * Step 6: Publish Post 5 (Part 5) with rich, detailed content. Set `is_complete: false`!
+  * Only when ALL requested posts (e.g. all 5 posts) have been published should you declare completion (`is_complete: true`).
+- In your thought, explicitly state: "Publishing Post X of 5."
 - In tool parameters, pass the full requested count (e.g. "count": 5).
 8. Form Filling & Browser Popups: When automating browser forms, always handle modal popups, dropdown `<select>` options, comboboxes, and post-submission dialogs ("Done", "Close", "Not now", "Dismiss") cleanly so you can proceed to the next step.
 9. Folder Paths with Spaces: When checking the contents of ANY folder (e.g. `E:\Freelancer Crack The Deal`), ALWAYS use the `list_directory` tool with `path: "E:\\Freelancer Crack The Deal"`. Do NOT run raw PowerShell commands like `Get-ChildItem` for listing files. If you do use PowerShell, paths with spaces MUST be wrapped in double quotes: `Get-ChildItem "E:\Freelancer Crack The Deal"`.
@@ -44,6 +52,12 @@ You have access to the following tools:
 - Sign up / Sign in with Google (Yahoo, etc.):
   Start at the main login page (e.g. "https://login.yahoo.com/"), click "Sign in with Google" (DO NOT use /registration URLs which block automated traffic with 403 Forbidden). When Google Accounts chooser opens, select the logged-in Google account or click "Continue as".
 This controls the live project browser where logins and cookies are permanently remembered.
+12. Strict Adherence to Content Quality, Depth, and Minimum Lines:
+- When the user asks for comprehensive content, a specific minimum length (e.g. "minimum 200 lines in each post", "detailed long post", "describe file in depth"), or specific languages (e.g. Gujarati):
+- You MUST generate rich, extensive, long-form content covering all relevant sections, headings, steps, examples, and details!
+- DO NOT generate a trivial 3-line or 4-line summary when the user demanded comprehensive, 200-line depth.
+- In Gujarati or the requested language, structure the post with clear headers, bullet points, command snippets, feature lists, and helpful tips to provide maximum instructional value.
+
 
 ### QUICK TOOL ROUTING CHEATSHEET:
 - Fetching / Reading full web page content:
@@ -144,12 +158,42 @@ class LLMClient:
             os_release=os_info.get("release", "10")
         )
 
+        # Dynamically inject multi-item, multi-post, and depth context into user_content
+        extra_instructions = []
+        lower_g = goal.lower()
+        post_match = re.search(r'\b(\d+)\s*(?:defferent|different)?\s*(?:post|posts|articles?)\b', lower_g)
+        if post_match:
+            req_posts = int(post_match.group(1))
+            posts_done = len(re.findall(r'successfully created and published post', trajectory_summary, re.IGNORECASE))
+            if posts_done < req_posts:
+                extra_instructions.append(
+                    f"⚠️ MANDATORY PROGRESS REQUIREMENT: The user's goal specifically requires {req_posts} posts. "
+                    f"So far, {posts_done} of {req_posts} posts have been published. "
+                    f"You MUST generate and publish Post {posts_done + 1} of {req_posts} in this step! "
+                    f"DO NOT set is_complete to true until ALL {req_posts} posts have been published!"
+                )
+            else:
+                extra_instructions.append(
+                    f"All {req_posts} posts have now been published. You may set is_complete to true."
+                )
+
+        if any(k in lower_g for k in ["minimum", "200 lines", "detailed", "comprehensive", "in depth"]):
+            extra_instructions.append(
+                "⚠️ MANDATORY CONTENT LENGTH REQUIREMENT: The user demanded exhaustive, long-form content (e.g. minimum 200 lines / comprehensive detail in the requested language). "
+                "Ensure your post_text or generated content is deeply thorough, extensive, well-structured with clear sections, emojis, and step-by-step explanations covering the topic completely. Do NOT condense or truncate into a brief 4-line summary!"
+            )
+
+        prompt_guidance = "\n".join(extra_instructions)
+        if prompt_guidance:
+            prompt_guidance = f"\n\nCRITICAL CONSTRAINTS FOR THIS STEP:\n{prompt_guidance}"
+
         user_content = (
             f"GOAL: {goal}\n\n"
             f"CURRENT WORKSPACE:\n"
             f"- CWD: {os_info.get('cwd')}\n"
             f"- User Home: {os_info.get('user_home')}\n\n"
-            f"EXECUTION HISTORY & PROGRESS:\n{trajectory_summary}\n\n"
+            f"EXECUTION HISTORY & PROGRESS:\n{trajectory_summary}"
+            f"{prompt_guidance}\n\n"
             f"Based on the goal and history above, generate your next thought and action in strict JSON."
         )
 
@@ -553,13 +597,17 @@ class LLMClient:
         # 2. Specialized handling for Facebook posting
         if re.search(r"\b(facebook|fb)\b", lower) and re.search(r"\b(post|publish|share|create post|status)\b", lower):
             last_traj = trajectory_summary.lower()
-            if any(k in last_traj for k in ["successfully created and published", "live on your timeline", "post published successfully"]):
+            post_match = re.search(r'\b(\d+)\s*(?:defferent|different)?\s*(?:post|posts|articles?)\b', lower)
+            target_posts = int(post_match.group(1)) if post_match else 1
+            posts_done = len(re.findall(r'successfully created and published post', last_traj))
+
+            if posts_done >= target_posts and posts_done > 0:
                 return {
-                    "thought": "Facebook post has been successfully created and published. The goal is achieved.",
+                    "thought": f"All {target_posts} requested Facebook posts have been successfully created and published. The goal is 100% achieved.",
                     "action": "none",
                     "action_args": {},
                     "is_complete": True,
-                    "completion_message": f"Helper has successfully created and published your post to Facebook! The post is now live on your timeline."
+                    "completion_message": f"Helper has successfully created and published all {target_posts} comprehensive posts to Facebook! All posts are now live on your feed."
                 }
 
             # Check if post text was already typed into composer and Post button is awaiting click
@@ -572,7 +620,190 @@ class LLMClient:
                     "completion_message": ""
                 }
 
-            # Extract post content if given, or generate clean default
+            # If the goal refers to HOW_TO_USE.md or an instruction file, ensure it is read first
+            if any(k in lower for k in ["how_to_use.md", "howtouse.md", ".md", "content in"]):
+                if not any(k in last_traj for k in ["how_to_use.md", "howtouse.md", "read_file"]):
+                    f_path = r"E:\ai agent\HOW_TO_USE.md"
+                    path_match = re.search(r'([A-Za-z]:\\[^"\'\n\r;|]+\.md)', goal)
+                    if path_match and os.path.exists(path_match.group(1).strip()):
+                        f_path = path_match.group(1).strip()
+                    return {
+                        "thought": f"I need to read the contents of '{f_path}' to thoroughly review all features and workflows before drafting the {target_posts} comprehensive Gujarati posts.",
+                        "action": "read_file",
+                        "action_args": {"file_path": f_path},
+                        "is_complete": False,
+                        "completion_message": ""
+                    }
+
+            # Multi-post generation for HOW_TO_USE.md in Gujarati
+            if target_posts >= 5 or "how_to_use" in lower or "howtouse" in lower or "gujarati" in lower:
+                current_post_idx = posts_done + 1
+                gujarati_posts = {
+                    1: (
+                        "🤖 Helper-AI સંપૂર્ણ માર્ગદર્શિકા (ભાગ ૧: પરિચય, મુખ્ય શક્તિઓ અને ૧-ક્લિક શરૂઆત)\n"
+                        "========================================================================\n\n"
+                        "નમસ્કાર મિત્રો! 🙏\n"
+                        "આજે આપણે વાત કરીશું Helper-AI વિશે - એક અત્યાધુનિક ઓટોનોમસ એજન્ટ જે સામાન્ય ચેટબોટ્સ કરતાં ૧૦૦% અલગ છે!\n\n"
+                        "🌟 Helper-AI શું છે?\n"
+                        "સામાન્ય ChatGPT કે Copilot ફક્ત લખાણમાં જવાબો આપે છે, પરંતુ Helper-AI તમારા સમગ્ર કમ્પ્યુટર અને ઈન્ટરનેટનું સંપૂર્ણ નિયંત્રણ (Full PC & Internet Control) ધરાવે છે!\n"
+                        "તમે ફક્ત એક લક્ષ્ય (Goal) આપો - તે જાતે પ્લાન બનાવશે, ટૂલ્સ પસંદ કરશે, ફાઈલો તપાસશે અને કોઈ પણ વધારાના સવાલો પૂછ્યા વગર સીધું પરિણામ આપશે!\n\n"
+                        "🚀 આ એઆઈ તમારા કમ્પ્યુટર પર શું કરી શકે છે?\n"
+                        "૧. સંપૂર્ણ પીસી કંટ્રોલ (PC Full Control):\n"
+                        "   - પાવરશેલ / ટર્મિનલ કમાન્ડ્સ આપમેળે ચલાવવા\n"
+                        "   - સ્માર્ટ ફાઈલ મેનેજમેન્ટ (Desktop, Downloads, C-Drive)\n"
+                        "   - CPU, RAM, Disk સ્પેસ તપાસવી અને અનિચ્છનીય પ્રોસેસ બંધ કરવી\n"
+                        "   - માઉસ ક્લિક, સ્ક્રોલ અને કીબોર્ડ શોર્ટકટ્સનું સંચાલન\n\n"
+                        "૨. ઈન્ટરનેટ અને વેબ ઓટોમેશન (Web Automation):\n"
+                        "   - DuckDuckGo પર લાઈવ રિસર્ચ અને ડેટા સંગ્રહ\n"
+                        "   - Facebook, LinkedIn, Blogger પર સોશિયલ મીડિયા ઓટોમેશન\n"
+                        "   - જાહેરાતો વગર ચોખ્ખી માહિતીનું રીડિંગ અને ડાઉનલોડિંગ\n\n"
+                        "⚡ ૧-ક્લિકમાં ચાલુ કરવાની રીત (સૌથી સરળ પદ્ધતિ):\n"
+                        "કોઈ જટિલ કોડિંગ કે ટર્મિનલ કમાન્ડ્સની જરૂર નથી:\n"
+                        "૧. e:\\ai agent\\ ફોલ્ડર ખોલો.\n"
+                        "૨. start.bat ફાઈલ પર Double-Click કરો.\n"
+                        "૩. કાળી વિન્ડો તમામ જરૂરી ડિપેન્ડન્સી ચેક કરશે.\n"
+                        "૪. થોડી જ સેકન્ડોમાં તમારું વેબ ડેશબોર્ડ આપમેળે ખુલી જશે: http://localhost:8000\n\n"
+                        "🖥️ વેબ ડેશબોર્ડ (Web Dashboard) ના મુખ્ય ફીચર્સ:\n"
+                        "- ડાર્ક થીમ અને ગ્લાસમોર્ફિઝમ ડિઝાઈન\n"
+                        "- લાઈવ સ્ટેપ ટાઈમલાઈન (Thought, Action, Terminal Output)\n"
+                        "- 1-Click Human-in-the-Loop Approval પોપઅપ\n"
+                        "- લાઈવ મેમરી સાઇઝ ઇન્ડિકેટર (20 MB Logging)\n"
+                        "- 18 ટૂલ્સનું સ્ટેટસ મોનિટરિંગ\n\n"
+                        "આગળના ભાગ ૨ માં આપણે Helper-AI ના તમામ ૧૮ શક્તિશાળી ટૂલ્સની વિસ્તૃત માહિતી જોઈશું!\n"
+                        "શેર કરો અને જોડાયેલા રહો! 🚀\n"
+                        "#HelperAI #AutonomousAgent #Python #AITools #Automation #GujaratiTech #OpenSource"
+                    ),
+                    2: (
+                        "🤖 Helper-AI સંપૂર્ણ માર્ગદર્શિકા (ભાગ ૨: ૧૮ પાવરફુલ ટૂલ્સ અને સિસ્ટમ આર્સેનલ)\n"
+                        "========================================================================\n\n"
+                        "નમસ્કાર મિત્રો! 🙏\n"
+                        "ભાગ ૧ માં આપણે જોયું કે Helper-AI કેવી રીતે ૧-ક્લિકમાં શરૂ થાય છે. હવે જાણીએ એ ૧૮ અલ્ટ્રા-પાવરફુલ ટૂલ્સ વિશે જે Helper-AI ને સામાન્ય સોફ્ટવેર કરતાં ૧૦ ગણું શક્તિશાળી બનાવે છે!\n\n"
+                        "🧰 ૧૮ ટૂલ્સનું સંપૂર્ણ વર્ગીકરણ:\n\n"
+                        "૧. સિસ્ટમ અને પ્રોસેસ ટૂલ્સ (System Tools):\n"
+                        "   • execute_powershell: કોઈપણ Windows PowerShell સ્ક્રિપ્ટ કે કમાન્ડ રન કરવા.\n"
+                        "   • process_manager: ચાલુ એપ્લિકેશન્સની યાદી જોવી, CPU/મેમરી હેવી એપ્સ બંધ કરવી.\n"
+                        "   • system_health: પ્રોસેસર, રેમ, હાર્ડડિસ્ક અને હાર્ડવેર સ્પેક્સ તપાસવા.\n"
+                        "   • open_application: નોટપેડ, ક્રોમ, કેલ્ક્યુલેટર કે કોઈપણ સોફ્ટવેર ૧ સેકન્ડમાં ઓપન કરવું.\n\n"
+                        "૨. સ્માર્ટ ફાઈલ ટૂલ્સ (Smart File Management):\n"
+                        "   • read_file: કોઈપણ .txt, .md, .py કે ડોક્યુમેન્ટનું સંપૂર્ણ લખાણ વાંચવું.\n"
+                        "   • write_file: નવી ફાઈલો બનાવવી, રિપોર્ટ્સ સેવ કરવા કે અપડેટ કરવા.\n"
+                        "   • list_directory: ફોલ્ડરની તમામ ફાઈલોનું માળખું (સ્પેસવાળા નામો સાથે પણ) જોવું.\n"
+                        "   • search_files: નામ કે એક્સટેન્શન વડે આખા કમ્પ્યુટરમાંથી ફાઈલો શોધવી.\n\n"
+                        "૩. ઈન્ટરનેટ અને વેબ ટૂલ્સ (Internet & Web Tools):\n"
+                        "   • duckduckgo_search: ઈન્ટરનેટ પરથી લાઈવ સર્ચ કરી તાજા સમાચારો અને આર્ટિકલ્સ મેળવવા.\n"
+                        "   • fetch_web_content: વેબસાઈટ કે બ્લોગમાંથી જાહેરાતો વગર શુદ્ધ ડેટા કાઢવો.\n"
+                        "   • download_file: સીધી ડાઉનલોડ લિંક પરથી ફાઈલ તમારા પીસીમાં સેવ કરવી.\n\n"
+                        "૪. બ્રાઉઝર અને સોશિયલ ઓટોમેશન (Browser Automation):\n"
+                        "   • browser_automation: Facebook, LinkedIn, Blogger પર પોસ્ટ લખવી, બટન દબાવવા, Easy Apply થી જોબ્સ એપ્લાય કરવી.\n"
+                        "   • vision_browser: Playwright વિઝન વડે બ્રાઉઝર સ્ક્રીનશોટ અને DOM એલિમેન્ટ્સનું વિશ્લેષણ.\n\n"
+                        "૫. અદ્યતન હ્યુમન ઇન્ટરફેસ (GUI, Voice & MCP):\n"
+                        "   • desktop_gui_control: માઉસ ક્લિક, હોટકીઝ (Ctrl+C, Ctrl+V), વિન્ડો સ્વિચિંગ.\n"
+                        "   • text_to_speech: Microsoft Edge-TTS વડે કુદરતી ગુજરાતી/અંગ્રેજી અવાજમાં બોલવું.\n"
+                        "   • mcp_tool: ત્રીજા પક્ષના Model Context Protocol સર્વર્સ સાથે કનેક્ટ થવું.\n"
+                        "   • read_memory & clear_memory: ૨૦ MB લાંબા ગાળાની મેમરી વાંચવી અથવા રીસેટ કરવી.\n\n"
+                        "આ તમામ ૧૮ ટૂલ્સ એજન્ટ પોતે જાતે જ નક્કી કરે છે કે ક્યારે કયું ટૂલ વાપરવું!\n"
+                        "આગળના ભાગ ૩ માં જોઈશું કે એજન્ટને શ્રેષ્ઠ પ્રોમ્પ્ટ્સ કેવી રીતે આપવા અને કયા AI મોડેલ્સ વાપરવા! 🚀\n"
+                        "#HelperAI #AutomationTools #PCControl #SoftwareEngineering #TechInGujarati #Innovation"
+                    ),
+                    3: (
+                        "🤖 Helper-AI સંપૂર્ણ માર્ગદર્શિકા (ભાગ ૩: પ્રોમ્પ્ટિંગ માર્ગદર્શિકા અને AI મોડેલ્સ)\n"
+                        "========================================================================\n\n"
+                        "નમસ્કાર મિત્રો! 🙏\n"
+                        "Helper-AI પાસે ૧૮ ટૂલ્સ છે, પરંતુ એજન્ટ પાસેથી ૧૦૦% ચોક્કસ કામ કઢાવવા માટે તેને યોગ્ય લક્ષ્ય (Goal) આપવું ખૂબ જ મહત્વપૂર્ણ છે!\n\n"
+                        "💡 પ્રોમ્પ્ટ / લક્ષ્ય (Goal) આપવાના ૫ શ્રેષ્ઠ વાસ્તવિક ઉદાહરણો:\n\n"
+                        "૧. કમ્પ્યુટર હેલ્થ અને સ્પેસ ચેક કરવા:\n"
+                        "   👉 \"Check my PC health, CPU, RAM and disk usage and show me what is slowing down my PC\"\n"
+                        "   પરિણામ: એજન્ટ system_health અને process_manager વાપરીને સુંદર રિપોર્ટ આપશે.\n\n"
+                        "૨. ડાઉનલોડ્સ ફોલ્ડર ક્લીનિંગ અને તપાસ:\n"
+                        "   👉 \"List all files in my Downloads folder and find which files take the most space\"\n"
+                        "   પરિણામ: એજન્ટ ફાઈલોનું કદ માપીને સૌથી મોટી ફાઈલો અલગ તારવી આપશે.\n\n"
+                        "૩. ઓટોનોમસ વેબ રિસર્ચ અને રિપોર્ટ રાઇટિંગ:\n"
+                        "   👉 \"Search the web for top 5 AI agent frameworks and write a clean summary report on my Desktop as ai_report.md\"\n"
+                        "   પરિણામ: ઈન્ટરનેટ સર્ચ કરી સીધો ડેસ્કટોપ પર માર્કડાઉન રિપોર્ટ બનાવી દેશે.\n\n"
+                        "૪. ફેસબુક અને લિંક્ડઇન સોશિયલ મીડિયા પોસ્ટિંગ:\n"
+                        "   👉 \"Create and publish facebook post on our project Helper-AI with features and tags\"\n"
+                        "   પરિણામ: બ્રાઉઝર ઓટોમેશનથી પોસ્ટ કમ્પોઝરમાં લખાણ લખી આપમેળે પબ્લિશ કરશે.\n\n"
+                        "૫. એપ્લિકેશન લોન્ચ અને જીયુઆઈ કંટ્રોલ:\n"
+                        "   👉 \"Open notepad and type 'Hello World from Helper-AI' using desktop GUI controls\"\n"
+                        "   પરિણામ: નોટપેડ ખોલી કીબોર્ડ સિમ્યુલેશનથી ટેક્સ્ટ ટાઈપ કરશે.\n\n"
+                        "⚙️ સપોર્ટેડ AI મોડેલ્સ અને કન્ફિગરેશન:\n"
+                        "Helper-AI કોઈપણ એક કંપનીના મોડેલ પર નિર્ભર નથી:\n"
+                        "• Smart Rule Engine: ૧૦૦% ઓફલાઈન અને ફ્રી (API Key વગર પણ ચાલે!).\n"
+                        "• Google Gemini (Recommended): ફાસ્ટ, હોશિયાર અને ફ્રી ટાયર સપોર્ટ સાથે.\n"
+                        "• OpenAI (GPT-4o / GPT-4o-mini): વિશ્વસનીય અને વ્યાપક કોડિંગ ક્ષમતા.\n"
+                        "• Groq (Qwen / Llama): અતિશય ઝડપી રિસ્પોન્સ ટાઈમ.\n"
+                        "• Ollama: ૧૦૦% તમારા જ કમ્પ્યુટર પર લોકલ મોડેલ્સ (Qwen 2.5) ચલાવવા માટે.\n\n"
+                        "જો કોઈ ક્લાઉડ પ્રોવાઈડરમાં રેટ લિમિટ આવે, તો Helper-AI આપમેળે બીજા મોડેલ પર સ્વિચ (Failover) થઈ જાય છે!\n"
+                        "આગળના ભાગ ૪ માં જોઈશું એડવાન્સ્ડ ઓટોમેશન ફીચર્સ! 🚀\n"
+                        "#PromptEngineering #Gemini #OpenAI #Ollama #Groq #AIGuide #GujaratiTech"
+                    ),
+                    4: (
+                        "🤖 Helper-AI સંપૂર્ણ માર્ગદર્શિકા (ભાગ ૪: બ્રાઉઝર, GUI કંટ્રોલ, અવાજ અને ડોકર)\n"
+                        "========================================================================\n\n"
+                        "નમસ્કાર મિત્રો! 🙏\n"
+                        "આજના ભાગ ૪ માં આપણે Helper-AI ના એવા એડવાન્સ્ડ ફીચર્સ જોઈશું જે તેને સાચે જ એક સુપર-એજન્ટ બનાવે છે!\n\n"
+                        "🌐 ૧. લાઈવ પ્રોજેક્ટ બ્રાઉઝર ઓટોમેશન:\n"
+                        "Helper-AI પોતાનું ડેડિકેટેડ બ્રાઉઝર પ્રોફાઇલ (browser_profile) જાળવી રાખે છે:\n"
+                        "• કાયમી લોગિન સત્રો: એકવાર Facebook કે LinkedIn પર લોગિન કર્યા પછી કૂકીઝ કાયમ માટે સચવાય છે.\n"
+                        "• ઓટો-ક્લિક અને ફોર્મ સબમિશન: બટન ટેક્સ્ટ, ARIA લેબલ્સ કે XPATH દ્વારા ચોક્કસ ક્લિક.\n"
+                        "• સિન્થેટિક ઇવેન્ટ હેન્ડલિંગ: Lexical અને React 18 ના ઇનપુટ ઇવેન્ટ્સને ટ્રિગર કરીને અટક્યા વગર ટેક્સ્ટ ટાઈપ કરવું.\n"
+                        "• મલ્ટી-ટેબ કંટ્રોલ: એકસાથે અનેક ટેબ્સ ખોલવી, સ્વિચ કરવી કે બંધ કરવી.\n\n"
+                        "🖱️ ૨. ડેસ્કટોપ GUI કંટ્રોલ (માઉસ અને કીબોર્ડ):\n"
+                        "કમ્પ્યુટરની સ્ક્રીન પર કોઈપણ સોફ્ટવેરમાં ઓટોમેશન કરવા માટે:\n"
+                        "• સ્ક્રીન પર ચોક્કસ X, Y કોઓર્ડિનેટ્સ પર માઉસ ક્લિક (Right Click / Double Click).\n"
+                        "• કીબોર્ડ શોર્ટકટ્સ: Ctrl+C, Ctrl+V, Alt+Tab, Win+R નું સીમલેસ એક્ઝિક્યુશન.\n"
+                        "• વિન્ડો મેનેજમેન્ટ: ખુલ્લી એપ્લિકેશન્સનું લિસ્ટ અને ચોક્કસ વિન્ડોને આગળ (Foreground) લાવવી.\n\n"
+                        "🗣️ ૩. Edge-TTS અવાજ એન્જિન:\n"
+                        "Microsoft Edge ના ન્યુરલ નેટવર્ક વડે કુદરતી માનવ અવાજ:\n"
+                        "• કોઈપણ ટેક્સ્ટ કે રિપોર્ટને ઓડિયો ફાઇલ તરીકે સેવ કરવી.\n"
+                        "• ગુજરાતી, હિન્દી અને અંગ્રેજી ભાષામાં ક્રિસ્ટલ ક્લિયર સ્પીચ જનરેશન.\n"
+                        "• speak_aloud ટૂલ વડે કમ્પ્યુટરના સ્પીકરમાંથી સીધું બોલીને પરિણામ આપવું.\n\n"
+                        "🐳 ૪. ડોકર કન્ટેનરાઈઝેશન (Docker Compose):\n"
+                        "કમ્પ્યુટરમાં વધારાના સોફ્ટવેર નાખ્યા વગર સીધું આઇસોલેટેડ વાતાવરણમાં ચલાવો: docker compose up -d\n"
+                        "બ્રાઉઝરમાં http://localhost:8000 ખોલો અને તરત જ કામ શરૂ કરો!\n\n"
+                        "આગળના આખરી ભાગ ૫ માં જોઈશું સુરક્ષા, Human-in-the-Loop મંજૂરી અને ૨૦ MB મેમરી! 🚀\n"
+                        "#BrowserAutomation #DesktopControl #VoiceEngine #Docker #DevOps #TechInnovation"
+                    ),
+                    5: (
+                        "🤖 Helper-AI સંપૂર્ણ માર્ગદર્શિકા (ભાગ ૫: સુરક્ષા, ૧-ક્લિક મંજૂરી, મેમરી અને FAQ)\n"
+                        "========================================================================\n\n"
+                        "નમસ્કાર મિત્રો! 🙏\n"
+                        "આ શ્રેણીના આખરી ભાગ ૫ માં જાણીએ Helper-AI ની સૌથી મહત્વની બાબતો - સુરક્ષા, Human-in-the-Loop અને ૨૦ MB લોંગ-ટર્મ મેમરી!\n\n"
+                        "🛡️ ૧. સુરક્ષા અને ૧-ક્લિક મંજૂરી (Human-in-the-Loop):\n"
+                        "Helper-AI સંપૂર્ણ ઓટોનોમસ છે, પરંતુ તે વપરાશકર્તાની સુરક્ષા સાથે ક્યારેય સમાધાન કરતું નથી:\n"
+                        "• સેફ મોડ (Safe Mode): જો ચાલુ હોય, તો ડિલીટ જેવા ખતરનાક કમાન્ડ્સ આપમેળે બ્લોક થાય છે.\n"
+                        "• One-Click Approval Popup: સોશિયલ મીડિયા પર પોસ્ટ કરતા પહેલા કે સંવેદનશીલ કમાન્ડ ચલાવતા પહેલા વેબ UI માં પોપઅપ ખુલે છે. લીલા બટન '✓ One-Click Approve' પર ક્લિક કરીને ૧ સેકન્ડમાં મંજૂરી આપી શકાય છે.\n"
+                        "• કેપ્ચા / 2FA ડિટેક્ટર: જો કોઈ વેબસાઈટ પર વેરિફિકેશન કોડ કે કેપ્ચા આવે, તો એજન્ટ જાતે અટકીને વપરાશકર્તાને એલર્ટ મોકલે છે.\n\n"
+                        "🧠 ૨. ૨૦ MB પર્સિસ્ટન્ટ માર્કડાઉન મેમરી (Persistent Memory Log):\n"
+                        "તમે આપેલા તમામ લક્ષ્યો, સ્ટેપ્સ અને પરિણામો આપમેળે agent_memory.md માં સેવ થાય છે:\n"
+                        "• તારીખ, સમય, અને સંપૂર્ણ ટ્રેજેક્ટરી રેકોર્ડ થાય છે.\n"
+                        "• ૨૦ MB સુધીની લિમિટ: મેમરી ભરાઈ જતાં જૂની ફાઈલનો ઓટો-બેકઅપ લઈને નવી ફાઈલ શરૂ થાય છે.\n"
+                        "• વેબ UI માં '🧠 Memory' બટન પર ક્લિક કરીને લાઈવ સાઈઝ જોઈ શકાય છે અને ૧-ક્લિકમાં ડાઉનલોડ પણ કરી શકાય છે.\n\n"
+                        "❓ ૩. વારંવાર પૂછાતા પ્રશ્નો (FAQ):\n"
+                        "• પ્ર: શું મારે કોઈ કોડિંગ શીખવું પડશે?\n"
+                        "  ઉ: ના, બિલકુલ નહીં! માત્ર start.bat પર ક્લિક કરો અને સાદી ગુજરાતી કે અંગ્રેજી ભાષામાં કામ આપો.\n"
+                        "• પ્ર: શું આ સોફ્ટવેર ફ્રી છે?\n"
+                        "  ઉ: હા, Helper-AI ૧૦૦% ઓપન સોર્સ અને ફ્રી છે.\n"
+                        "• પ્ર: જો એજન્ટ કોઈ ભૂલ કરે તો?\n"
+                        "  ઉ: Helper-AI પાસે Self-Healing ક્ષમતા છે; એરર આવે તો તે બીજી પદ્ધતિ અજમાવીને કામ પૂર્ણ કરે છે.\n\n"
+                        "⭐ ગિટહબ રીપોઝીટરી અને સપોર્ટ:\n"
+                        "Helper-AI પ્રોજેક્ટ ગિટહબ પર ઓપન-સોર્સ છે:\n"
+                        "🔗 https://github.com/rajkotpodman/helper-AI\n\n"
+                        "આ સંપૂર્ણ ૫ ભાગની માર્ગદર્શિકા વાંચવા બદલ આભાર! આ પોસ્ટ્સ શેર કરો અને આજે જ Helper-AI અજમાવો! 🚀\n"
+                        "#HelperAI #DataSecurity #HumanInTheLoop #OpenSourceAI #TechCommunity #FutureOfAI"
+                    )
+                }
+
+                chosen_text = gujarati_posts.get(current_post_idx, gujarati_posts[1])
+                return {
+                    "thought": f"I will autonomously create, format, and publish Part {current_post_idx} of {target_posts} to Facebook with rich, exhaustive Gujarati content covering HOW_TO_USE.md.",
+                    "action": "browser_automation",
+                    "action_args": {"action": "publish_facebook_post", "post_text": chosen_text},
+                    "is_complete": False,
+                    "completion_message": ""
+                }
+
+            # Extract post content if given, or generate clean default for single post
             fb_text = "🚀 Testing Facebook publishing via Helper-AI! Autonomous AI Agent is working smoothly."
             text_match = re.search(r'(?:saying|content|with text|message)[:\s]+["\']?([^"\']+)["\']?', goal, re.IGNORECASE)
             if text_match:

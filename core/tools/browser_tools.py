@@ -449,8 +449,25 @@ class BrowserAutomationTool(BaseTool):
         except Exception:
             pass
 
-        textbox.send_keys(content)
-        time.sleep(0.8)
+        # Use clipboard paste for fast, lossless Unicode & multi-line Gujarati posting
+        pasted = False
+        try:
+            import pyperclip
+            pyperclip.copy(content)
+            time.sleep(0.2)
+            ActionChains(driver).move_to_element(textbox).key_down(Keys.CONTROL).send_keys("v").key_up(Keys.CONTROL).perform()
+            time.sleep(0.8)
+            pasted = len((textbox.text or "").strip()) > 5 or " " in (textbox.text or "")
+        except Exception as ce:
+            logger.debug(f"pyperclip paste failed: {ce}")
+            pasted = False
+
+        if not pasted:
+            try:
+                textbox.send_keys(content)
+                time.sleep(0.8)
+            except Exception as se:
+                logger.warning(f"send_keys fallback failed: {se}")
 
         # Trigger Lexical / React state listener with key events and input events
         try:

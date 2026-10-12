@@ -62,11 +62,34 @@ class HelperAgent:
         memory = AgentMemory(goal)
         metrics.record_goal_start()
 
-        # Dynamically scale step limits for /goal or multi-item tasks
         clean_goal = goal.strip()
-        lower_g = clean_goal.lower()
-        if "/goal" in lower_g or "5 " in lower_g or "apply" in lower_g:
-            self.max_steps = max(self.max_steps, 100)
+        lower_goal = clean_goal.lower()
+
+        # Parse requested post count or item count
+        import re
+        post_match = re.search(r'\b(\d+)\s*(?:defferent|different)?\s*(?:post|posts|articles?)\b', lower_goal)
+        target_posts = int(post_match.group(1)) if post_match else None
+
+        loop_match = re.search(r'\b(?:loop|repeat|do|apply)\s*(?:in\s*)?(?:more\s*)?(\d+)\s*(?:times|space|jobs|items|positions)?\b', lower_goal)
+        if not loop_match:
+            loop_match = re.search(r'\b(\d+)\s*(?:times|space|jobs|positions)\b', lower_goal)
+        target_loop_count = int(loop_match.group(1)) if loop_match else None
+
+        # Dynamically scale step limits for /goal or multi-item tasks (preserve explicit caller limits)
+        if self.max_steps >= 50:
+            if "/goal" in lower_goal or (target_posts and target_posts > 1) or (target_loop_count and target_loop_count > 1):
+                self.max_steps = max(self.max_steps, 100)
+
+        def get_completed_post_count() -> int:
+            count = 0
+            for s in memory.history:
+                if s.success:
+                    obs_lower = str(getattr(s, "result", "") or getattr(s, "observation", "")).lower()
+                    if s.action == "browser_automation" and s.action_args.get("action") in ["publish_facebook_post", "publish_linkedin_post", "publish_blog_post"]:
+                        count += 1
+                    elif any(k in obs_lower for k in ["successfully created and published post", "live on your timeline", "live on your feed"]):
+                        count += 1
+            return count
 
         def emit(event_type: str, data: Dict[str, Any]):
             if on_event:
@@ -118,22 +141,28 @@ class HelperAgent:
 
             # 2. Check if goal was declared completed
             if is_complete or action == "none":
-                # Check if the goal specifies a target loop count or number of items/jobs
-                import re
-                count_match = re.search(r'\b(?:loop|repeat|do|apply)\s*(?:in\s*)?(?:more\s*)?(\d+)\s*(?:times|space|jobs|items|positions)?\b', lower_goal)
-                if not count_match:
-                    count_match = re.search(r'\b(\d+)\s*(?:times|space|jobs|positions)\b', lower_goal)
+                # Check if multi-post requirement is satisfied
+                if target_posts:
+                    posts_done = get_completed_post_count()
+                    if posts_done < target_posts and step_idx < self.max_steps:
+                        logger.info(f"Goal requested {target_posts} posts, but only {posts_done} completed so far. Forcing loop continuation for post {posts_done + 1}.")
+                        emit("status_update", {
+                            "step": step_idx,
+                            "message": f"Published {posts_done} of {target_posts} posts. Continuing autonomous execution to generate and publish post {posts_done + 1}..."
+                        })
+                        continue
 
-                if count_match:
-                    target_count = int(count_match.group(1))
+                # Check if target loop / job count requirement is satisfied
+                if target_loop_count:
                     total_applied = 0
                     for s in memory.history:
                         if s.success:
-                            app_m = re.search(r'successfully applied to (\d+) job', str(s.observation).lower())
+                            obs_s = str(getattr(s, "result", "") or getattr(s, "observation", "")).lower()
+                            app_m = re.search(r'successfully applied to (\d+) job', obs_s)
                             if app_m:
                                 total_applied += int(app_m.group(1))
-                    if target_count > 1 and total_applied > 0 and total_applied < target_count and step_idx < self.max_steps:
-                        logger.info(f"Goal requested {target_count} items but only {total_applied} completed so far. Continuing loop.")
+                    if target_loop_count > 1 and total_applied > 0 and total_applied < target_loop_count and step_idx < self.max_steps:
+                        logger.info(f"Goal requested {target_loop_count} items but only {total_applied} completed so far. Continuing loop.")
                         continue
 
                 # Prevent premature surrender when previous step failed
@@ -320,15 +349,25 @@ class HelperAgent:
             if action == "browser_automation" and action_success:
                 b_act = action_args.get("action")
                 if b_act in ["publish_linkedin_post", "publish_facebook_post", "publish_blog_post"]:
-                    success = True
-                    final_message = output_str
-                    metrics.record_goal_complete(success=True)
-                    emit("completed", {
-                        "success": True,
-                        "message": final_message,
-                        "total_steps": step_idx
-                    })
-                    break
+                    posts_done = get_completed_post_count()
+                    if target_posts and posts_done < target_posts and step_idx < self.max_steps:
+                        logger.info(f"Published post {posts_done} of {target_posts}. Continuing loop for post {posts_done + 1}.")
+                        emit("status_update", {
+                            "step": step_idx,
+                            "message": f"Successfully published post {posts_done} of {target_posts} to {b_act.split('_')[1].title()}! Continuing to prepare and publish post {posts_done + 1}..."
+                        })
+                        await asyncio.sleep(2.0)
+                        continue
+                    else:
+                        success = True
+                        final_message = f"Successfully published all {posts_done or 1} requested post(s) to {b_act.split('_')[1].title()}!\n\n{output_str}"
+                        metrics.record_goal_complete(success=True)
+                        emit("completed", {
+                            "success": True,
+                            "message": final_message,
+                            "total_steps": step_idx
+                        })
+                        break
                 elif b_act == "apply_linkedin_jobs":
                     req_count = int(action_args.get("count") or 5)
                     applied_cnt = tool_result.get("applied_count", 0) if isinstance(tool_result, dict) else 0
