@@ -456,13 +456,13 @@ class LLMClient:
 
         parsed = None
         try:
-            parsed = json.loads(text)
-        except json.JSONDecodeError:
+            parsed = json.loads(text, strict=False)
+        except Exception:
             # Attempt to extract JSON substring
             match = re.search(r"\{.*\}", text, re.DOTALL)
             if match:
                 try:
-                    parsed = json.loads(match.group(0))
+                    parsed = json.loads(match.group(0), strict=False)
                 except Exception:
                     pass
 
@@ -473,7 +473,7 @@ class LLMClient:
             action_args = parsed.get("action_args") or parsed.get("arguments") or parsed.get("parameters") or parsed.get("args") or {}
             if isinstance(action_args, str):
                 try:
-                    action_args = json.loads(action_args)
+                    action_args = json.loads(action_args, strict=False)
                 except Exception:
                     action_args = {}
             if not isinstance(action_args, dict):
@@ -492,6 +492,30 @@ class LLMClient:
                 "is_complete": is_complete,
                 "completion_message": parsed.get("completion_message") or parsed.get("message") or ""
             }
+
+        # Regex fallback extraction for resilient parsing of large multi-line posts
+        action_m = re.search(r'"action"\s*:\s*"([^"]+)"', text)
+        if action_m:
+            act_val = action_m.group(1)
+            thought_m = re.search(r'"thought"\s*:\s*"((?:[^"\\]|\\.)*)"', text)
+            th_val = thought_m.group(1) if thought_m else f"Executing action '{act_val}'."
+            act_args = {}
+            args_sub = re.search(r'"action_args"\s*:\s*\{', text)
+            if args_sub:
+                pt_m = re.search(r'"post_text"\s*:\s*"(.*?)(?:"\s*,\s*"|"\s*\}\s*\}|"\s*\}\s*$)', text, re.DOTALL)
+                sub_act = re.search(r'"action"\s*:\s*"(publish_[^"]+)"', text)
+                if pt_m:
+                    act_args["post_text"] = pt_m.group(1)
+                if sub_act:
+                    act_args["action"] = sub_act.group(1)
+            if act_val != "none" or act_args:
+                return {
+                    "thought": th_val,
+                    "action": act_val,
+                    "action_args": act_args,
+                    "is_complete": False,
+                    "completion_message": ""
+                }
 
         return {
             "thought": "Failed to parse model output into JSON. Terminating gracefully.",

@@ -158,3 +158,46 @@ async def test_agent_multi_post_loop_execution(monkeypatch, tmp_path):
     assert any("ભાગ ૪" in s["action_args"]["post_text"] for s in post_steps)
     assert any("ભાગ ૫" in s["action_args"]["post_text"] for s in post_steps)
 
+
+def test_parse_json_response_with_raw_control_chars_and_multiline_gujarati():
+    from core.llm import LLMClient
+    client = LLMClient(provider="rule_engine")
+    raw_response = """{
+        "thought": "Publishing post 4 of 5 with full Gujarati depth",
+        "action": "browser_automation",
+        "action_args": {
+            "action": "publish_facebook_post",
+            "post_text": "🌟 Helper-AI: શ્રેષ્ઠ પરિણામો મેળવવા માટેની ટિપ્સ\n\nલાઇન ૧: પ્રથમ પગલું\nલાઇન ૨: બીજું પગલું"
+        },
+        "is_complete": false
+    }"""
+    parsed = client._parse_json_response(raw_response)
+    assert parsed["action"] == "browser_automation"
+    assert parsed["action_args"]["action"] == "publish_facebook_post"
+    assert "શ્રેષ્ઠ પરિણામો" in parsed["action_args"]["post_text"]
+    assert parsed["is_complete"] is False
+
+
+def test_parse_json_response_regex_fallback():
+    from core.llm import LLMClient
+    client = LLMClient(provider="rule_engine")
+    # Broken JSON where string has unescaped quotes inside body
+    broken_response = """
+    Here is the step:
+    {
+        "thought": "Publishing post 5 of 5 now",
+        "action": "browser_automation",
+        "action_args": {
+            "action": "publish_facebook_post",
+            "post_text": "🌟 Helper-AI: વાસ્તવિક "ઉદાહરણો" અને નિષ્કર્ષ (ભાગ ૫/૫)
+            સુરક્ષા માર્ગદર્શિકા
+            સંપૂર્ણ માર્ગદર્શિકા"
+        }
+    """
+    parsed = client._parse_json_response(broken_response)
+    assert parsed["action"] == "browser_automation"
+    assert parsed["action_args"]["action"] == "publish_facebook_post"
+    assert "ભાગ ૫/૫" in parsed["action_args"]["post_text"]
+    assert parsed["is_complete"] is False
+
+

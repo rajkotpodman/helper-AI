@@ -346,72 +346,87 @@ class BrowserAutomationTool(BaseTool):
         driver = browser.get_driver()
         current_url = driver.current_url or ""
 
-        # 1. Check if composer dialog is ALREADY open on screen
-        target_dlg = None
+        # Step 0: Ensure any prior in-flight post or open dialog is completely finished and closed
+        # We NEVER reuse an existing dialog for a new post to prevent overwriting previous drafts!
+        for _ in range(15):
+            open_dlgs = [d for d in driver.find_elements(By.XPATH, "//*[@role='dialog']") if d.is_displayed()]
+            if not open_dlgs:
+                break
+            time.sleep(1.0)
+
+        # If a dialog is STILL displayed after 15s (e.g. leftover prompt), attempt to close or discard it
         for dlg in driver.find_elements(By.XPATH, "//*[@role='dialog']"):
             try:
                 if dlg.is_displayed():
-                    tbs = dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']")
-                    if tbs:
+                    close_btns = dlg.find_elements(By.XPATH, ".//*[@aria-label='Close' or @aria-label='Discard' or @aria-label='બંધ કરો' or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'cancel') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'close')]")
+                    for cb in close_btns:
+                        if cb.is_displayed():
+                            try:
+                                cb.click()
+                            except Exception:
+                                driver.execute_script("arguments[0].click();", cb)
+                            time.sleep(1.0)
+                            break
+            except Exception:
+                pass
+
+        # Step 1: Ensure we are on a valid Facebook timeline / page / home
+        if "facebook.com" not in current_url:
+            browser.navigate("https://www.facebook.com/")
+            time.sleep(2.5)
+        elif any(x in current_url for x in ["/photo", "/watch", "/reel", "/story"]):
+            browser.navigate("https://www.facebook.com/")
+            time.sleep(2.5)
+
+        # Dismiss any floating backdrop/modals or 'Not now' prompts if present
+        try:
+            not_now_btns = driver.find_elements(By.XPATH, "//*[@role='button'][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'not now')]")
+            for b in not_now_btns:
+                if b.is_displayed():
+                    driver.execute_script("arguments[0].click();", b)
+                    time.sleep(0.5)
+                    break
+        except Exception:
+            pass
+
+        # Step 2: Locate and click "What's on your mind?" / "Share a thought..." / "Create post" composer button
+        opened = False
+        for attempt in range(5):
+            btns = driver.find_elements(By.XPATH, "//*[@role='button'] | //div[contains(@class, 'x1i10hfl')] | //div[@contenteditable='true']")
+            for b in btns:
+                try:
+                    if b.is_displayed():
+                        txt = (b.text or "").lower()
+                        aria = (b.get_attribute("aria-label") or "").lower()
+                        if any(k in txt or k in aria for k in [
+                            "what's on your mind", "share a thought", "create a post",
+                            "write something", "તમારા મનમાં શું છે", "પોસ્ટ બનાવો", "पोस्ट बनाएँ"
+                        ]):
+                            try:
+                                b.click()
+                            except Exception:
+                                driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", b)
+                            opened = True
+                            break
+                except Exception:
+                    continue
+            if opened:
+                break
+            time.sleep(1.0)
+
+        # Step 3: Wait for fresh composer dialog to appear
+        target_dlg = None
+        for _ in range(12):
+            time.sleep(0.5)
+            for dlg in driver.find_elements(By.XPATH, "//*[@role='dialog']"):
+                try:
+                    if dlg.is_displayed() and dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']"):
                         target_dlg = dlg
                         break
-            except Exception:
-                pass
-
-        # 2. If not already open, navigate to Facebook and open composer
-        if not target_dlg:
-            if "facebook.com" not in current_url:
-                browser.navigate("https://www.facebook.com/")
-                time.sleep(2.5)
-            elif "/profile" in current_url or any(x in current_url for x in ["/photo", "/watch", "/reel", "/story"]):
-                browser.navigate("https://www.facebook.com/")
-                time.sleep(2.5)
-
-            # Dismiss any floating backdrop/modals or 'Not now' prompts if present
-            try:
-                not_now_btns = driver.find_elements(By.XPATH, "//*[@role='button'][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'not now')]")
-                for b in not_now_btns:
-                    if b.is_displayed():
-                        driver.execute_script("arguments[0].click();", b)
-                        time.sleep(0.5)
-                        break
-            except Exception:
-                pass
-
-            # Locate and click "What's on your mind" composer button
-            opened = False
-            for _ in range(4):
-                btns = driver.find_elements(By.XPATH, "//*[@role='button'] | //div[contains(@class, 'x1i10hfl')]")
-                for b in btns:
-                    try:
-                        if b.is_displayed():
-                            txt = (b.text or "").lower()
-                            aria = (b.get_attribute("aria-label") or "").lower()
-                            if "what's on your mind" in txt or "what's on your mind" in aria or "create a post" in txt:
-                                try:
-                                    b.click()
-                                except Exception:
-                                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", b)
-                                opened = True
-                                break
-                    except Exception:
-                        continue
-                if opened:
-                    break
-                time.sleep(1.0)
-
-            # Wait for dialog to appear
-            for _ in range(8):
-                time.sleep(0.5)
-                for dlg in driver.find_elements(By.XPATH, "//*[@role='dialog']"):
-                    try:
-                        if dlg.is_displayed() and dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']"):
-                            target_dlg = dlg
-                            break
-                    except Exception:
-                        pass
-                if target_dlg:
-                    break
+                except Exception:
+                    pass
+            if target_dlg:
+                break
 
         if not target_dlg:
             return {
@@ -483,9 +498,9 @@ class BrowserAutomationTool(BaseTool):
             pass
         time.sleep(1.0)
 
-        # 5. Locate the exact Post (or Share/Next) button inside the dialog
+        # Step 6: Locate the exact Post (or Share/Next) button inside the dialog
         post_btn = None
-        for _ in range(12):  # Poll up to 6 seconds for aria-disabled to lift
+        for _ in range(16):  # Poll up to 8 seconds for aria-disabled to lift
             btns = target_dlg.find_elements(By.XPATH, ".//*[@role='button'] | .//button")
             for b in btns:
                 try:
@@ -493,8 +508,7 @@ class BrowserAutomationTool(BaseTool):
                         txt = (b.text or "").strip().lower()
                         aria = (b.get_attribute("aria-label") or "").strip().lower()
                         dis = b.get_attribute("aria-disabled")
-                        # Match exact submit actions across English & localized interfaces
-                        if (txt in ["post", "share", "next", "publish", "पोस्ट"] or aria in ["post", "share", "next", "publish", "पोस्ट"]):
+                        if any(k in txt or k in aria for k in ["post", "share", "next", "publish", "done", "પોસ્ટ", "पोस्ट"]):
                             if dis != "true":
                                 post_btn = b
                                 break
@@ -517,32 +531,69 @@ class BrowserAutomationTool(BaseTool):
             except Exception:
                 pass
 
-        time.sleep(2.5)
+        # Step 8: CRITICAL: Wait for dialog to CLOSE completely and handle secondary confirmation modals
+        # On Facebook, submitting a post takes 3 to 10 seconds for GraphQL to commit and remove the modal.
+        dialog_closed = False
+        start_wait = time.time()
+        while time.time() - start_wait < 30:  # Allow up to 30 seconds
+            time.sleep(1.0)
 
-        # 7. Check if a secondary confirmation modal appeared (e.g. "Who can see this?", "Share to Feed")
-        for _ in range(6):
-            sec_btns = driver.find_elements(By.XPATH, "//*[@role='dialog']//*[@role='button' or self::button][translate(normalize-space(@aria-label), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='post' or translate(normalize-space(text()), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='post' or translate(normalize-space(.), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='share' or translate(normalize-space(@aria-label), 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz')='share']")
-            clicked_sec = False
+            # Check if a secondary confirmation modal appeared (e.g. "Who can see this?", "Share to Feed", "Post anyway")
+            sec_btns = driver.find_elements(
+                By.XPATH,
+                "//*[@role='dialog']//*[@role='button' or self::button]"
+            )
             for sb in sec_btns:
                 try:
                     if sb.is_displayed() and sb != post_btn:
-                        try:
-                            sb.click()
-                        except Exception:
-                            driver.execute_script("arguments[0].click();", sb)
-                        clicked_sec = True
-                        time.sleep(2.0)
-                        break
+                        stxt = (sb.text or "").strip().lower()
+                        saria = (sb.get_attribute("aria-label") or "").strip().lower()
+                        if any(k in stxt or k in saria for k in ["post", "share", "next", "done", "continue", "પોસ્ટ", "पोस्ट"]):
+                            if sb.get_attribute("aria-disabled") != "true":
+                                try:
+                                    sb.click()
+                                except Exception:
+                                    driver.execute_script("arguments[0].click();", sb)
+                                time.sleep(1.5)
+                                break
                 except Exception:
                     pass
-            if not clicked_sec:
+
+            # Check if target_dlg has closed
+            try:
+                if not target_dlg.is_displayed():
+                    dialog_closed = True
+                    break
+            except Exception:
+                # StaleElementReferenceException means Facebook detached the modal from the DOM -> Post published!
+                dialog_closed = True
                 break
 
-        time.sleep(2.0)
+            # If still open after 8s or 16s, retry clicking post_btn or Ctrl+Enter
+            elapsed = time.time() - start_wait
+            if (7.0 < elapsed < 8.5) or (15.0 < elapsed < 16.5):
+                try:
+                    if post_btn and post_btn.is_displayed() and post_btn.get_attribute("aria-disabled") != "true":
+                        driver.execute_script("arguments[0].click();", post_btn)
+                    elif textbox and textbox.is_displayed():
+                        ActionChains(driver).move_to_element(textbox).key_down(Keys.CONTROL).send_keys(Keys.RETURN).key_up(Keys.CONTROL).perform()
+                except Exception:
+                    pass
+
+        # Step 9: Settle and refresh the feed to guarantee pristine DOM state for consecutive posts
+        time.sleep(3.5)
+        try:
+            target_refresh_url = driver.current_url or "https://www.facebook.com/"
+            browser.navigate(target_refresh_url)
+            time.sleep(3.5)
+        except Exception as ne:
+            logger.debug(f"Feed refresh after post: {ne}")
+
         return {
             "success": True,
             "output": f"Successfully created and published post to Facebook: '{content[:80]}...'! The post is officially live on your timeline/feed.",
             "content": content,
+            "dialog_closed": dialog_closed,
             "page": browser.get_page_summary()
         }
 
