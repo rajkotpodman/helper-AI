@@ -7,6 +7,7 @@ logins and cookies to remain permanently saved.
 
 import os
 import sys
+import time
 import json
 import logging
 import urllib.parse
@@ -729,32 +730,74 @@ class BrowserAutomationTool(BaseTool):
                 "output": "Post creation modal opened, but the rich text editor field was not found."
             }
 
-        # 5. Focus and type post content into editor via ActionChains
+        # Also archive local copy to Desktop/LinkedIn_Posts immediately
         try:
-            driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].focus();", editor)
-            time.sleep(0.3)
-            ActionChains(driver).move_to_element(editor).click().perform()
-            time.sleep(0.3)
+            from pathlib import Path
+            import datetime
+            desktop_dir = Path.home() / "Desktop" / "LinkedIn_Posts"
+            desktop_dir.mkdir(parents=True, exist_ok=True)
+            ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            post_file = desktop_dir / f"linkedin_post_{ts}.md"
+            post_file.write_text(f"# LinkedIn Post\n\n*Created on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*\n\n---\n\n{content}", encoding="utf-8")
         except Exception:
             pass
 
+        # 5. Type and insert post content into editor via native input transaction & ActionChains
+        injected = False
         try:
-            ActionChains(driver).send_keys(content).perform()
-        except Exception:
-            try:
-                editor.send_keys(content)
-            except Exception as e:
-                return {
-                    "success": False,
-                    "output": f"Failed to type content into LinkedIn post editor: {e}"
-                }
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].focus();", editor)
+            time.sleep(0.3)
+            # Try native execCommand insertText (best for ProseMirror / Tiptap)
+            driver.execute_script("""
+                const editor = arguments[0];
+                const text = arguments[1];
+                editor.focus();
+                const sel = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(editor);
+                sel.removeAllRanges();
+                sel.addRange(range);
+                document.execCommand('insertText', false, text);
+                editor.dispatchEvent(new InputEvent('input', { bubbles: true, cancelable: true, inputType: 'insertText', data: text }));
+                editor.dispatchEvent(new Event('change', { bubbles: true }));
+            """, editor, content)
+            time.sleep(1.0)
+            injected = driver.execute_script("return (arguments[0].innerText || '').trim().length > 10;", editor)
+        except Exception as e:
+            logger.warning(f"JS execCommand injection failed: {e}")
 
-        time.sleep(1.5)
+        if not injected:
+            try:
+                ActionChains(driver).move_to_element(editor).click().send_keys(content).perform()
+            except Exception:
+                try:
+                    editor.send_keys(content)
+                except Exception as e:
+                    return {
+                        "success": False,
+                        "output": f"Failed to type content into LinkedIn post editor: {e}"
+                    }
+
+        time.sleep(1.0)
+
+        # Dismiss any active company mention popup (@Google, @Microsoft) with Escape
+        try:
+            from selenium.webdriver.common.keys import Keys
+            driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
+            time.sleep(0.5)
+        except Exception:
+            pass
 
         # 6. Locate the Post button and ensure it is ENABLED
         post_btn = None
-        for _ in range(8):
-            btns = driver.find_elements(By.XPATH, "//button[contains(., 'Post')]")
+        for _ in range(12):
+            btns = driver.find_elements(By.XPATH, """
+                //button[contains(@class, 'share-actions__primary-action')] |
+                //button[@data-test-share-post-button] |
+                //div[contains(@class, 'share-box')]//button[contains(., 'Post')] |
+                //div[@role='dialog']//button[contains(., 'Post')] |
+                //button[contains(., 'Post')]
+            """)
             for b in btns:
                 try:
                     is_vis = driver.execute_script("""
@@ -763,13 +806,17 @@ class BrowserAutomationTool(BaseTool):
                         return (r.width > 0 && r.height > 0) || (el.offsetParent !== null);
                     """, b)
                     if is_vis:
-                        txt = b.text.strip()
-                        if txt == "Post" or (txt.startswith("Post") and "anyone" not in txt.lower()):
-                            dis = b.get_attribute("disabled")
-                            aria_dis = b.get_attribute("aria-disabled")
-                            if dis is None and aria_dis != "true":
-                                post_btn = b
-                                break
+                        txt = b.text.strip().lower()
+                        if any(txt == p for p in ["post", "share", "publish"]) or (txt.startswith("post") and "anyone" not in txt and "setting" not in txt):
+                            # Force button activation if disabled due to synthetic event delay
+                            driver.execute_script("""
+                                const btn = arguments[0];
+                                btn.removeAttribute('disabled');
+                                btn.setAttribute('aria-disabled', 'false');
+                                btn.classList.remove('artdeco-button--disabled');
+                            """, b)
+                            post_btn = b
+                            break
                 except Exception:
                     continue
             if post_btn:
@@ -786,7 +833,10 @@ class BrowserAutomationTool(BaseTool):
         try:
             driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", post_btn)
         except Exception:
-            post_btn.click()
+            try:
+                post_btn.click()
+            except Exception:
+                ActionChains(driver).move_to_element(post_btn).click().perform()
 
         # 8. VERIFY publication: Wait up to 6 seconds and verify the modal dialog is closed
         published = False

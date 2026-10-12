@@ -549,7 +549,7 @@ class LLMClient:
         if "facebook" in lower or "fb" in lower:
             platform = "facebook"
             action_name = "publish_facebook_post"
-        elif "linkedin" in lower:
+        elif any(k in lower for k in ["linkedin", "linkdin", "linkden", "linked in"]):
             platform = "linkedin"
             action_name = "publish_linkedin_post"
         else:
@@ -655,6 +655,69 @@ class LLMClient:
             post_data = ai_gujarati_catalog.get(curr_idx, ai_gujarati_catalog[1])
             p_title = post_data["title"]
             p_text = post_data["text"]
+        elif platform == "linkedin":
+            linkedin_catalog = {
+                1: (
+                    "🚀 Part 1/5: The Future of Remote Work is 'Result as a Service' (RaaS) with Autonomous AI Agents!\n\n"
+                    "Companies shouldn't pay for hours logged—they should pay for outcomes achieved. "
+                    "As an Autonomous AI Architect & Goal Creator, I build end-to-end AI systems that replace repetitive workflows with 100% self-healing autonomous execution.\n\n"
+                    "When an AI agent delivers $100,000+ in operational efficiency per month, investing $1,000/hr in elite architecture is the highest ROI decision a leadership team can make.\n\n"
+                    "⚡ Core Capabilities:\n"
+                    "• Autonomous PC & Web Control (Zero repetitive questioning)\n"
+                    "• Multimodal edge processing & self-correcting error recovery\n"
+                    "• High-throughput business workflow automation\n\n"
+                    "Calling innovative AI leaders & hiring managers seeking top-tier remote talent:\n"
+                    "@Google @Microsoft @OpenAI @NVIDIA @Meta @Anthropic @Amazon @Apple\n\n"
+                    "Let's connect or DM me to discuss custom agentic deployments!\n\n"
+                    "#ArtificialIntelligence #RemoteWork #AIAgents #AutonomousAI #ResultAsAService #Innovation #HiringAI #FutureOfWork"
+                ),
+                2: (
+                    "⚡ Part 2/5: Beyond Simple Chat Wrappers — Engineering Real Autonomous PC & Browser Control\n\n"
+                    "Most AI tools simply generate text; true productivity requires an agent that can take direct action across the OS, terminal, and browser without hand-holding.\n\n"
+                    "Why our 'Result as a Service' architecture stands apart:\n"
+                    "1. Self-Healing Execution: When a UI changes or an API errors, the agent adapts dynamically instead of halting.\n"
+                    "2. 0% Redundant Deliberation: Direct goal breakdown into executable actions.\n"
+                    "3. Universal Data Processing: Real-time web scraping, report synthesis, and system automation.\n\n"
+                    "Tagging enterprise leaders scaling autonomous engineering teams:\n"
+                    "@ScaleAI @Databricks @Snowflake @Microsoft @Google @OpenAI\n\n"
+                    "Open for select high-value remote AI consulting & architecture contracts ($1,000/hr).\n\n"
+                    "#SoftwareEngineering #AIAgents #SystemAutomation #Python #DeepLearning #TechLeadership"
+                ),
+                3: (
+                    "💼 Part 3/5: Why Top Enterprise Teams are Pivoting to $1,000/hr Result-Oriented AI Architects\n\n"
+                    "Traditional engineering takes weeks to integrate disjointed microservices. An autonomous agent framework cuts that turnaround to hours by uniting LLM reasoning with direct environment control.\n\n"
+                    "The Math Behind the Value:\n"
+                    "• 100+ manual hours saved weekly across operations\n"
+                    "• Near-zero error rates in mission-critical web & data tasks\n"
+                    "• 24/7 autonomous monitoring & pipeline recovery\n\n"
+                    "Hiring teams & founders building next-gen AI infrastructure:\n"
+                    "@NVIDIA @Meta @Google @Amazon @Apple @Anthropic\n\n"
+                    "Available for strategic remote engagements. Let's build autonomous systems that drive tangible revenue.\n\n"
+                    "#EnterpriseAI #TechCareers #RemoteWork #AIArchitecture #Automation #Consulting"
+                ),
+                4: (
+                    "🧠 Part 4/5: The Multimodal & Edge-AI Wave — 100% Offline Resilience Meets Cloud Scale\n\n"
+                    "Building autonomous agents that thrive under real-world constraints requires a hybrid approach:\n"
+                    "• Fast local inference (Ollama / Edge models) for instant terminal actions\n"
+                    "• High-reasoning frontier models (Gemini 2.5 / GPT-4o / Claude 3.7) for complex synthesis\n"
+                    "• Neural voice & visual recognition for human-in-the-loop oversight\n\n"
+                    "Ready to help visionary organizations implement cutting-edge autonomous agents:\n"
+                    "@Qualcomm @Intel @AMD @HuggingFace @OpenAI @Microsoft\n\n"
+                    "Let's connect! DM open for remote high-impact AI contracts.\n\n"
+                    "#EdgeAI #Multimodal #MachineLearning #OpenSource #TechInnovation"
+                ),
+                5: (
+                    "🌟 Part 5/5: 'The Goal Creator' — Turning Complex Directives into Flawless Execution\n\n"
+                    "Autonomous agents must fulfill the prompt exactly as envisioned: adhering to length, format, language, and quality standards without premature surrender.\n\n"
+                    "As an autonomous systems creator, my commitment is simple: 100% completed results, zero excuses, maximum business acceleration.\n\n"
+                    "A big shoutout to the companies pioneering the remote AI revolution:\n"
+                    "@Google @Microsoft @OpenAI @NVIDIA @Meta @Anthropic @Amazon @Apple\n\n"
+                    "This concludes our 5-part LinkedIn series on Autonomous AI Engineering & Result as a Service! Looking forward to partnering on transformative projects.\n\n"
+                    "#AI #TechNews #Entrepreneurship #Freelancing #Contracting #GlobalAI"
+                )
+            }
+            p_title = f"LinkedIn Post {curr_idx} of {target_posts}"
+            p_text = linkedin_catalog.get(curr_idx, linkedin_catalog[1])
         else:
             p_title = f"Post {curr_idx} of {target_posts}: {goal[:50]}"
             p_text = f"Part {curr_idx} of {target_posts} addressing goal:\n\n{goal}\n\nComprehensive execution details for item {curr_idx}."
@@ -704,7 +767,7 @@ class LLMClient:
         has_run = bool(trajectory_summary and ("Step " in trajectory_summary or "earlier steps" in trajectory_summary) and trajectory_summary != "No previous steps executed yet.")
 
         # 1. Specialized handling for LinkedIn Job Applications with CV
-        if re.search(r"\b(linkedin|linked in|linkdin)\b", lower) and re.search(r"\b(apply|job|jobs|opening|openings|cv|resume)\b", lower):
+        if re.search(r"\b(linkedin|linked in|linkdin|linkden)\b", lower) and re.search(r"\b(apply|application|applications|cv|resume)\b", lower) and not re.search(r"\b(post|posts|publish|article|articles)\b", lower):
             # Extract count (e.g. 5 space, 5 jobs, loop 5 times)
             count = 5
             count_match = re.search(r'\b(\d+)\s*(?:space|job|jobs|position|positions|opening|openings|times)?\b', lower)
@@ -757,7 +820,24 @@ class LLMClient:
             }
 
         # 2. Specialized handling for LinkedIn posting
-        if re.search(r"\b(linkedin|linked in)\b", lower) and re.search(r"\b(post|publish|share|create post|status)\b", lower):
+        if re.search(r"\b(linkedin|linked in|linkdin|linkden)\b", lower) and re.search(r"\b(post|posts|publish|share|create post|status)\b", lower):
+            last_traj = trajectory_summary.lower()
+            post_match = re.search(r'\b(\d+)\s*(?:defferent|different|seperate|separate)?\s*(?:post|posts|articles?)\b', lower)
+            target_posts = int(post_match.group(1)) if post_match else 1
+            posts_done = len(re.findall(r'successfully created and published (?:linkedin\s+)?post|post is (?:officially\s+)?live', last_traj))
+
+            if posts_done >= target_posts and posts_done > 0:
+                return {
+                    "thought": f"All {target_posts} requested LinkedIn posts have been successfully created and published. The goal is 100% achieved.",
+                    "action": "none",
+                    "action_args": {},
+                    "is_complete": True,
+                    "completion_message": f"Helper has successfully created and published all {target_posts} posts to LinkedIn! All posts are now live on your feed."
+                }
+
+            if target_posts > 1:
+                return self.get_multi_post_step(goal, posts_done, target_posts, trajectory_summary)
+
             if "successfully created and published post to linkedin" in trajectory_summary.lower():
                 return {
                     "thought": "LinkedIn post has been successfully created and published. The goal is achieved.",

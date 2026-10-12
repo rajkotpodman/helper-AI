@@ -289,3 +289,48 @@ def test_goal_10_memory_recorder_audit_trail_and_limits(tmp_path):
     audit_logger.log_event("heavy_goal_test", "browser_automation", {"batch": 10}, True, 12.5, "Completed 10 goals")
     assert (tmp_path / "audit.jsonl").exists()
     assert "heavy_goal_test" in (tmp_path / "audit.jsonl").read_text(encoding="utf-8")
+
+
+# ==============================================================================
+# 11. Goal 11: 5-Post LinkedIn Remote AI Work ($1000/hr RaaS) Tagging Pipeline
+# ==============================================================================
+@pytest.mark.asyncio
+async def test_goal_11_linkedin_five_posts_remote_ai_work(tmp_path):
+    """
+    Validates user prompt:
+    'create 5 post for linkdin and publish it and tag all companey who give me job remote ai work for 1000 per hour for my result as a service the goal creater'
+    Ensures all 5 LinkedIn posts are generated with company tags and published without halting.
+    """
+    user_goal = "create 5 post for linkdin and publish it and tag all companey who give me job remote ai work for 1000 per hour for my result as a service the goal creater"
+
+    events = []
+    def on_event(event_type, data):
+        events.append((event_type, data))
+
+    tools = ToolRegistry()
+    published_posts = []
+    def mock_linkedin_publish(**kwargs):
+        action = kwargs.get("action")
+        if action == "publish_linkedin_post":
+            pt = kwargs.get("post_text", "")
+            published_posts.append(pt)
+            return {
+                "success": True,
+                "output": f"Successfully created and published post to LinkedIn: '{pt[:60]}...'! The post is officially live on your LinkedIn feed.",
+                "data": {"post_id": f"li_post_{len(published_posts)}"}
+            }
+        return {"success": False, "output": "Unknown action"}
+
+    tools._tools["browser_automation"].execute = mock_linkedin_publish
+
+    llm = LLMClient(provider="rule_engine")
+    agent = HelperAgent(llm_client=llm, tool_registry=tools, safe_mode=False, max_steps=15)
+
+    result = await agent.run(user_goal, on_event=on_event)
+
+    assert result["success"] is True
+    assert len(published_posts) == 5
+    # Verify company tags are present in posts
+    for post in published_posts:
+        assert any(c in post for c in ["@Google", "@Microsoft", "@OpenAI", "@NVIDIA", "@ScaleAI", "@Meta", "@Qualcomm"])
+        assert "1,000" in post or "result as a service" in post.lower() or "autonomous" in post.lower()
