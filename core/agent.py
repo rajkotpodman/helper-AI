@@ -87,7 +87,14 @@ class HelperAgent:
                     obs_lower = str(getattr(s, "result", "") or getattr(s, "observation", "")).lower()
                     if s.action == "browser_automation" and s.action_args.get("action") in ["publish_facebook_post", "publish_linkedin_post", "publish_blog_post"]:
                         count += 1
-                    elif any(k in obs_lower for k in ["successfully created and published post", "live on your timeline", "live on your feed"]):
+                    elif any(k in obs_lower for k in [
+                        "successfully created and published post",
+                        "successfully created and published blog post",
+                        "live on your timeline",
+                        "live on your feed",
+                        "post is now live",
+                        "post is officially live"
+                    ]):
                         count += 1
             return count
 
@@ -145,12 +152,24 @@ class HelperAgent:
                 if target_posts:
                     posts_done = get_completed_post_count()
                     if posts_done < target_posts and step_idx < self.max_steps:
-                        logger.info(f"Goal requested {target_posts} posts, but only {posts_done} completed so far. Forcing loop continuation for post {posts_done + 1}.")
+                        logger.info(f"Goal requested {target_posts} posts, but only {posts_done} completed so far. Overriding with multi-post step {posts_done + 1}.")
                         emit("status_update", {
                             "step": step_idx,
                             "message": f"Published {posts_done} of {target_posts} posts. Continuing autonomous execution to generate and publish post {posts_done + 1}..."
                         })
-                        continue
+                        forced_step = self.llm_client.get_multi_post_step(goal, posts_done, target_posts)
+                        thought = forced_step.get("thought", f"Publishing post {posts_done + 1} of {target_posts}")
+                        action = forced_step.get("action", "browser_automation")
+                        action_args = forced_step.get("action_args", {})
+                        is_complete = False
+                        emit("thought", {
+                            "step": step_idx,
+                            "thought": thought,
+                            "action": action,
+                            "action_args": action_args
+                        })
+
+            if is_complete or action == "none":
 
                 # Check if target loop / job count requirement is satisfied
                 if target_loop_count:
@@ -184,7 +203,8 @@ class HelperAgent:
                                 "step": step_idx,
                                 "action": "list_directory",
                                 "success": True,
-                                "output": rescue_res.get("output", "")
+                                "output": rescue_res.get("output", ""),
+                                "result": rescue_res.get("output", "")
                             })
                             success = True
                             final_message = f"Successfully inspected '{rescued_path}':\n\n{rescue_res.get('output', '')}"
@@ -198,7 +218,7 @@ class HelperAgent:
 
                 # Prevent premature surrender when goal requires a concrete outcome but roadblocks were encountered
                 if memory.history and step_idx < self.max_steps:
-                    last_obs = str(memory.history[-1].observation).lower()
+                    last_obs = str(getattr(memory.history[-1], "result", "") or getattr(memory.history[-1], "observation", "")).lower()
                     if any(k in lower_goal for k in ["give me", "create", "register", "sign up", "find", "extract", "address", "email"]):
                         if any(err in last_obs for err in ["closed", "404", "could not find", "error", "please wait", "failed", "forbidden", "403"]):
                             logger.info(f"Roadblock detected in trajectory ('{last_obs[:60]}...'). Forcing autonomous self-healing continuation.")
@@ -247,14 +267,14 @@ class HelperAgent:
                         memory.add_step(thought, action, action_args, obs, False)
                         audit_logger.log_event("tool_call_denied", action, action_args, False, 0.0, obs, "UserDenied")
                         metrics.record_tool_call(action, False, 0.0)
-                        emit("action_result", {"step": step_idx, "success": False, "output": obs})
+                        emit("action_result", {"step": step_idx, "success": False, "output": obs, "result": obs})
                         continue
                 elif self.safe_mode:
                     obs = f"Action blocked by Safe Mode: {perm_reason}."
                     memory.add_step(thought, action, action_args, obs, False)
                     audit_logger.log_event("tool_call_blocked", action, action_args, False, 0.0, obs, "SafeModeBlocked")
                     metrics.record_tool_call(action, False, 0.0)
-                    emit("action_result", {"step": step_idx, "success": False, "output": obs})
+                    emit("action_result", {"step": step_idx, "success": False, "output": obs, "result": obs})
                     continue
 
             # 4. Execute the chosen tool
@@ -285,7 +305,8 @@ class HelperAgent:
                 "step": step_idx,
                 "action": action,
                 "success": action_success,
-                "output": output_str
+                "output": output_str,
+                "result": output_str
             })
 
             # Fast-path early completion for successfully fulfilled single-intent goals
@@ -454,6 +475,7 @@ class HelperAgent:
             "success": success,
             "goal": goal,
             "final_message": final_message,
+            "message": final_message,
             "steps_executed": len(memory.history),
             "memory_info": mem_info,
             "history": [s.to_dict() for s in memory.history]

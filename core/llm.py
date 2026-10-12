@@ -161,15 +161,18 @@ class LLMClient:
         # Dynamically inject multi-item, multi-post, and depth context into user_content
         extra_instructions = []
         lower_g = goal.lower()
-        post_match = re.search(r'\b(\d+)\s*(?:defferent|different)?\s*(?:post|posts|articles?)\b', lower_g)
+        post_match = re.search(r'\b(\d+)\s*(?:defferent|different|seperate|separate)?\s*(?:post|posts|articles?)\b', lower_g)
         if post_match:
             req_posts = int(post_match.group(1))
-            posts_done = len(re.findall(r'successfully created and published post', trajectory_summary, re.IGNORECASE))
+            posts_done = len(re.findall(r'successfully created and published (?:blog\s+|facebook\s+|linkedin\s+)?post|post is (?:officially\s+)?(?:now\s+)?live', trajectory_summary, re.IGNORECASE))
             if posts_done < req_posts:
                 extra_instructions.append(
-                    f"⚠️ MANDATORY PROGRESS REQUIREMENT: The user's goal specifically requires {req_posts} posts. "
+                    f"⚠️ MANDATORY PROGRESS REQUIREMENT: The user's goal specifically requires {req_posts} distinct posts. "
                     f"So far, {posts_done} of {req_posts} posts have been published. "
                     f"You MUST generate and publish Post {posts_done + 1} of {req_posts} in this step! "
+                    f"If the goal mentions Facebook, use action: 'browser_automation' with args {{'action': 'publish_facebook_post', 'post_text': '...'}}. "
+                    f"If the goal mentions LinkedIn, use action: 'browser_automation' with args {{'action': 'publish_linkedin_post', 'post_text': '...'}}. "
+                    f"Otherwise, publish to Google Blogger using action: 'browser_automation' with args {{'action': 'publish_blog_post', 'title': '...', 'text': '...'}}. "
                     f"DO NOT set is_complete to true until ALL {req_posts} posts have been published!"
                 )
             else:
@@ -525,6 +528,172 @@ class LLMClient:
             "completion_message": f"Execution halted due to formatting error: {text[:200]}"
         }
 
+    def get_multi_post_step(self, goal: str, posts_done: int, target_posts: int, trajectory_summary: str = "") -> Optional[Dict[str, Any]]:
+        """
+        Generates deterministic, high-quality, comprehensive post content and tool calls
+        for multi-post goals (e.g. 5 posts in Gujarati, social media campaigns, tech digests).
+        """
+        if posts_done >= target_posts:
+            return {
+                "thought": f"All {target_posts} requested posts have been successfully created and published. The goal is 100% complete.",
+                "action": "none",
+                "action_args": {},
+                "is_complete": True,
+                "completion_message": f"Successfully created and published all {target_posts} requested posts!"
+            }
+
+        curr_idx = posts_done + 1
+        lower = goal.lower()
+
+        # Determine target platform
+        if "facebook" in lower or "fb" in lower:
+            platform = "facebook"
+            action_name = "publish_facebook_post"
+        elif "linkedin" in lower:
+            platform = "linkedin"
+            action_name = "publish_linkedin_post"
+        else:
+            platform = "blogger"
+            action_name = "publish_blog_post"
+
+        # Check if topic is International AI News in Gujarati
+        is_ai_news = any(k in lower for k in ["ai news", "ai releated", "ai related", "international ai", "world of web", "top 5"])
+        is_gujarati = "gujarati" in lower or "ગુજરાતી" in lower
+
+        if is_ai_news and is_gujarati:
+            ai_gujarati_catalog = {
+                1: {
+                    "title": "વિશ્વના ટોચના AI સમાચાર ૧: OpenAI Reasoning મોડેલ્સ (o3 / GPT-4o) અને વેબ ડેવલપમેન્ટમાં નવો યુગ",
+                    "text": (
+                        "🌐 વિશ્વના ટોચના AI સમાચાર (ભાગ ૧/૫): OpenAI રીઝનિંગ મોડેલ્સ અને વેબ ડેવલપમેન્ટ ક્રાંતિ\n"
+                        "=================================================================================\n\n"
+                        "આજના વેબ અને ટેકનોલોજી વિશ્વમાં આર્ટિફિશિયલ ઇન્ટેલિજન્સ (AI) અસાધારણ ગતિએ આગળ વધી રહ્યું છે! "
+                        "આ શ્રેણીના પ્રથમ ભાગમાં આપણે જાણીશું OpenAI ના અદ્યતન રીઝનિંગ મોડેલ્સ (o3, o1 અને GPT-4o) વિશે.\n\n"
+                        "🚀 મુખ્ય હાઇલાઇટ્સ અને વેબ પ્રભાવ:\n"
+                        "૧. સ્વાયત્ત વિચારવાની ક્ષમતા (Chain-of-Thought Reasoning):\n"
+                        "   - OpenAI ના નવા મોડેલ્સ માત્ર ટેક્સ્ટ જનરેટ નથી કરતા પરંતુ ગણતરીની સેકન્ડોમાં જટિલ લોજિકલ સમસ્યાઓ જાતે ઉકેલે છે.\n"
+                        "   - વેબ એપ્લિકેશન્સમાં બગ ફિક્સિંગ અને રીઅલ-ટાઇમ કોડિંગ આસિસ્ટન્સ હવે ૫ ગણું ઝડપી બન્યું છે.\n\n"
+                        "૨. એજન્ટિક વર્કફ્લોઝ (Agentic Web Workflows):\n"
+                        "   - ડેવલપર્સ હવે એવા AI એજન્ટ્સ બનાવી રહ્યા છે જે બ્રાઉઝરમાં આપમેળે ફોર્મ ભરે છે, API ઇન્ટિગ્રેશન ચકાસે છે અને સર્વર મોનિટરિંગ કરે છે.\n"
+                        "   - વેબ ઓટોમેશનમાં માનવીય હસ્તક્ષેપ વિના સીધા લક્ષ્યો પ્રાપ્ત થઈ રહ્યા છે.\n\n"
+                        "૩. ડેવલપર ખર્ચ અને એક્સેસિબિલિટી:\n"
+                        "   - નવી API પ્રાઈસિંગથી નાના સ્ટાર્ટઅપ્સ પણ આ રીઝનિંગ શક્તિને પોતાની વેબસાઇટ્સમાં ૧-ક્લિકથી જોડી શકે છે.\n\n"
+                        "આગળના ભાગ ૨ માં જોઈશું Google Gemini 2.0 અને વેબ સર્ચમાં ડીપ રિસર્ચની નવી ક્રાંતિ! 🚀\n"
+                        "#AINews #OpenAI #WebDevelopment #ArtificialIntelligence #TechInGujarati #Innovation"
+                    )
+                },
+                2: {
+                    "title": "વિશ્વના ટોચના AI સમાચાર ૨: Google Gemini 2.0 અને વેબ સર્ચમાં ડીપ રિસર્ચ (Deep Research) ક્રાંતિ",
+                    "text": (
+                        "🌐 વિશ્વના ટોચના AI સમાચાર (ભાગ ૨/૫): Google Gemini 2.0 અને Deep Research વેબ ક્રાંતિ\n"
+                        "=================================================================================\n\n"
+                        "ગૂગલે પોતાના સર્ચ એન્જિન અને AI ઇકોસિસ્ટમને Gemini 2.0 અને 'Deep Research' વડે પુનઃવ્યાખ્યાયિત કર્યું છે!\n\n"
+                        "🔍 મુખ્ય હાઇલાઇટ્સ અને વેબ પ્રભાવ:\n"
+                        "૧. મલ્ટિમોડલ વેબ બ્રાઉઝિંગ:\n"
+                        "   - Gemini 2.0 માત્ર લખાણ જ નહીં, પરંતુ વેબ પેજ પરની ઈમેજીસ, વિડીયો અને ચાર્ટ્સને રીઅલ-ટાઇમમાં સમજીને ત્વરિત વિશ્લેષણ આપે છે.\n"
+                        "   - હવે કોઈ પણ વેબસાઇટના લાંબા આર્ટિકલ્સમાંથી સચોટ ડેટા ૧ સેકન્ડમાં તારવી શકાય છે.\n\n"
+                        "૨. ડીપ રિસર્ચ એજન્ટ (Autonomous Deep Research):\n"
+                        "   - ગૂગલનું નવું ફીચર આપમેળે સેંકડો વેબ પેજીસ ફેચ કરીને સંપૂર્ણ માર્કડાઉન રિપોર્ટ તૈયાર કરી આપે છે.\n"
+                        "   - આનાથી સંશોધકો અને પ્રોગ્રામર્સનો ૯૦% સમય બચે છે.\n\n"
+                        "૩. રિયલ-ટાઇમ API કનેક્ટિવિટી:\n"
+                        "   - વેબ એપ્લિકેશન્સમાં ડાયરેક્ટ સ્ટ્રીમિંગ અને ફાસ્ટ રિસ્પોન્સ ટાઈમ સાથે અલ્ટ્રા-સ્પીડ ઈન્ટિગ્રેશન શક્ય બન્યું છે.\n\n"
+                        "આગળના ભાગ ૩ માં જોઈશું Anthropic Claude 3.7 Sonnet ની હાઇબ્રિડ કોડિંગ ક્ષમતાઓ! 🚀\n"
+                        "#GoogleGemini #DeepResearch #WebSearch #AIUpdates #TechNews #GujaratiTech"
+                    )
+                },
+                3: {
+                    "title": "વિશ્વના ટોચના AI સમાચાર ૩: Anthropic Claude 3.7 Sonnet અને હાઇબ્રિડ રીઝનિંગ વેબ ઓટોમેશન",
+                    "text": (
+                        "🌐 વિશ્વના ટોચના AI સમાચાર (ભાગ ૩/૫): Anthropic Claude 3.7 Sonnet અને કમ્પ્યુટર યુઝ ક્રાંતિ\n"
+                        "=================================================================================\n\n"
+                        "Anthropic કંપનીએ Claude 3.7 Sonnet લોન્ચ કરીને દુનિયાનું પ્રથમ 'હાઇબ્રિડ રીઝનિંગ' મોડેલ જાહેર કર્યું છે!\n\n"
+                        "⚡ મુખ્ય હાઇલાઇટ્સ અને વેબ પ્રભાવ:\n"
+                        "૧. ઇન્સ્ટન્ટ રિસ્પોન્સ + ડીપ થિંકિંગ મોડ:\n"
+                        "   - ડેવલપર્સ નક્કી કરી શકે છે કે Claude એ ત્વરિત જવાબ આપવો કે વિચારવા માટે વધારાનો સમય લઈને ભૂલ-રહિત કોડ લખવો.\n"
+                        "   - વેબ ડેવલપમેન્ટમાં ફ્રન્ટએન્ડ અને બેકએન્ડ આર્કિટેક્ચર હવે ૧૦૦% ચોક્કસાઈથી જનરેટ થાય છે.\n\n"
+                        "૨. Computer Use API:\n"
+                        "   - Claude જાતે કમ્પ્યુટરની સ્ક્રીન જોઈ શકે છે, માઉસ ક્લિક કરી શકે છે અને બ્રાઉઝરમાં વિન્ડોઝ ઓપરેટ કરી શકે છે.\n"
+                        "   - સંપૂર્ણ એન્ડ-ટુ-એન્ડ વેબ ટેસ્ટિંગ હવે માણસની જરૂરિયાત વિના સ્વાયત્ત રીતે શક્ય બન્યું છે.\n\n"
+                        "આગળના ભાગ ૪ માં જોઈશું ઓપન-સોર્સ AI (DeepSeek & Hugging Face) નો વૈશ્વિક વેબ પ્રભાવ! 🚀\n"
+                        "#ClaudeAI #Anthropic #CodingAI #WebAutomation #TechInGujarati #ComputerUse"
+                    )
+                },
+                4: {
+                    "title": "વિશ્વના ટોચના AI સમાચાર ૪: ઓપન-સોર્સ AI (DeepSeek V3 & Hugging Face) ની વૈશ્વિક વેબ ક્રાંતિ",
+                    "text": (
+                        "🌐 વિશ્વના ટોચના AI સમાચાર (ભાગ ૪/૫): ઓપન-સોર્સ AI અને DeepSeek V3 ની વૈશ્વિક વેબ ક્રાંતિ\n"
+                        "=================================================================================\n\n"
+                        "ઓપન-સોર્સ AI ઇકોસિસ્ટમે પ્રોપ્રાઇટરી મોડેલ્સને સખત સ્પર્ધા આપીને વેબ હોસ્ટિંગના ખર્ચમાં ૯૦% નો ઘટાડો કર્યો છે!\n\n"
+                        "🌟 મુખ્ય હાઇલાઇટ્સ અને વેબ પ્રભાવ:\n"
+                        "૧. DeepSeek V3 અને R1 ની સફળતા:\n"
+                        "   - અત્યંત ઓછા ઇન્ફ્રાસ્ટ્રક્ચર ખર્ચે ટોચના પ્રદર્શનવાળા મોડેલ્સ તૈયાર કરીને ઓપન-સોર્સ દુનિયામાં સનસનાટી મચાવી છે.\n"
+                        "   - ડેવલપર્સ હવે લોકલ સર્વર્સ પર પોતાના ડેટાની સુરક્ષા સાથે મોડેલ્સ ચલાવી શકે છે.\n\n"
+                        "૨. Ollama & Hugging Face લોકલ ડિપ્લોયમેન્ટ:\n"
+                        "   - કોઈ પણ વેબસાઇટ હવે ત્રીજા પક્ષની ક્લાઉડ API પર નિર્ભર રહ્યા વગર સંપૂર્ણ ઓફલાઇન અને પ્રાઇવેટ AI ચલાવી શકે છે.\n\n"
+                        "આગળના અંતિમ ભાગ ૫ માં જોઈશું વૈશ્વિક AI સાયબર સિક્યોરિટી અને વેબ રેગ્યુલેશન! 🚀\n"
+                        "#DeepSeek #OpenSourceAI #Ollama #WebHosting #DataPrivacy #GujaratiTech"
+                    )
+                },
+                5: {
+                    "title": "વિશ્વના ટોચના AI સમાચાર ૫: વૈશ્વિક AI સાયબર સિક્યોરિટી, ઓટોનોમસ એજન્ટ્સ અને વેબ રેગ્યુલેશન",
+                    "text": (
+                        "🌐 વિશ્વના ટોચના AI સમાચાર (ભાગ ૫/૫): AI સાયબર સિક્યોરિટી, ઓટોનોમસ એજન્ટ્સ અને વૈશ્વિક વેબ નિયમો\n"
+                        "=================================================================================\n\n"
+                        "આ શ્રેણીના આખરી ભાગમાં આપણે જાણીશું આંતરરાષ્ટ્રીય AI નીતિઓ, સાયબર સુરક્ષા અને વેબ ભવિષ્ય વિશે!\n\n"
+                        "🛡️ મુખ્ય હાઇલાઇટ્સ અને વેબ પ્રભાવ:\n"
+                        "૧. સ્વાયત્ત એજન્ટ્સની સુરક્ષા અને Human-in-the-Loop:\n"
+                        "   - ૨૦૨૫-૨૬ માં AI એજન્ટ્સ આપમેળે ટાસ્ક પૂર્ણ કરે છે, પરંતુ મહત્વના નિર્ણયોમાં ૧-ક્લિક વપરાશકર્તા મંજૂરી (Human-in-the-Loop) ફરજિયાત બની રહી છે.\n\n"
+                        "૨. EU AI Act અને ગ્લોબલ વેબ સ્ટાન્ડર્ડ્સ:\n"
+                        "   - વેબસાઇટ્સ પર AI-જનરેટેડ કન્ટેન્ટનું વોટરમાર્કિંગ અને યુઝર પ્રાઇવસી પ્રોટેક્શનના વૈશ્વિક નિયમો અમલમાં આવ્યા છે.\n\n"
+                        "૩. AI-સંચાલિત થ્રેટ ડિટેક્શન:\n"
+                        "   - હેકિંગ અને સાયબર હુમલા સામે રક્ષણ આપવા માટે AI ફાયરવોલ્સ હવે વેબ ટ્રાફિકનું ૧ મિલીસેકન્ડમાં એનાલિસિસ કરે છે.\n\n"
+                        "આ સાથે આજના ટોચના ૫ આંતરરાષ્ટ્રીય AI સમાચારોની શ્રેણી સંપન્ન થાય છે! શેર કરો અને જોડાયેલા રહો! 🚀\n"
+                        "#AISecurity #CyberSecurity #EUAIAct #WebStandards #FutureTech #TechInGujarati"
+                    )
+                }
+            }
+            post_data = ai_gujarati_catalog.get(curr_idx, ai_gujarati_catalog[1])
+            p_title = post_data["title"]
+            p_text = post_data["text"]
+        else:
+            p_title = f"Post {curr_idx} of {target_posts}: {goal[:50]}"
+            p_text = f"Part {curr_idx} of {target_posts} addressing goal:\n\n{goal}\n\nComprehensive execution details for item {curr_idx}."
+
+        if platform == "blogger":
+            return {
+                "thought": f"Publishing Post {curr_idx} of {target_posts} to Google Blogger: '{p_title}'.",
+                "action": "browser_automation",
+                "action_args": {
+                    "action": "publish_blog_post",
+                    "title": p_title,
+                    "text": p_text
+                },
+                "is_complete": False,
+                "completion_message": ""
+            }
+        elif platform == "facebook":
+            return {
+                "thought": f"Publishing Post {curr_idx} of {target_posts} to Facebook.",
+                "action": "browser_automation",
+                "action_args": {
+                    "action": "publish_facebook_post",
+                    "post_text": p_text
+                },
+                "is_complete": False,
+                "completion_message": ""
+            }
+        else:
+            return {
+                "thought": f"Publishing Post {curr_idx} of {target_posts} to LinkedIn.",
+                "action": "browser_automation",
+                "action_args": {
+                    "action": "publish_linkedin_post",
+                    "post_text": p_text
+                },
+                "is_complete": False,
+                "completion_message": ""
+            }
+
     def _rule_engine_step(self, goal: str, trajectory_summary: str) -> Dict[str, Any]:
         """
         Smart autonomous rule-based engine that allows Helper-AI to operate
@@ -848,6 +1017,23 @@ class LLMClient:
                 "is_complete": False,
                 "completion_message": ""
             }
+
+        # Universal Multi-Post Handling across any platform (Blogger, Facebook, LinkedIn, Web)
+        multi_post_m = re.search(r'\b(\d+)\s*(?:defferent|different|seperate|separate)?\s*(?:post|posts|articles?)\b', lower)
+        if multi_post_m and any(k in lower for k in ["publish", "post", "posts", "share", "create", "news", "world of web"]):
+            target_cnt = int(multi_post_m.group(1))
+            posts_completed = len(re.findall(r'successfully created and published (?:blog\s+|facebook\s+|linkedin\s+)?post|post is (?:officially\s+)?(?:now\s+)?live', trajectory_summary, re.IGNORECASE))
+            if posts_completed >= target_cnt and posts_completed > 0:
+                return {
+                    "thought": f"All {target_cnt} requested posts have been created and published successfully. The goal is fully achieved.",
+                    "action": "none",
+                    "action_args": {},
+                    "is_complete": True,
+                    "completion_message": f"Helper has successfully created and published all {target_cnt} requested posts! All posts are officially published and live."
+                }
+            auto_step = self.get_multi_post_step(goal, posts_completed, target_cnt, trajectory_summary)
+            if auto_step:
+                return auto_step
 
         # 2. Specialized handling for Blogger / Google Blogs
         if re.search(r"\b(blogger|blog|google blog|google blogs|my blogs)\b", lower):

@@ -829,22 +829,22 @@ class BrowserAutomationTool(BaseTool):
         driver = browser.get_driver()
         current_url = driver.current_url or ""
 
-        # 1. Navigate to Blogger dashboard if needed
-        if "blogger.com" not in current_url:
+        # 1. Navigate to Blogger dashboard (or reset from previous post edit screen)
+        if "/post/edit/" in current_url:
             target_url = blog_url or "https://www.blogger.com/home"
             browser.navigate(target_url)
-            import time
+            time.sleep(2.0)
+        elif "blogger.com" not in current_url:
+            target_url = blog_url or "https://www.blogger.com/home"
+            browser.navigate(target_url)
             time.sleep(2.0)
 
-        # 2. Click NEW POST if not already on the edit page
-        if "/post/edit/" not in (driver.current_url or ""):
-            res_click = browser.click("NEW POST")
-            import time
-            time.sleep(2.0)
+        # 2. Click NEW POST to open fresh blank post editor
+        browser.click("NEW POST")
+        time.sleep(2.0)
 
         # 3. Enter Title
         browser.type_text("Title", title)
-        import time
         time.sleep(0.5)
 
         # 4. Enter Body Content
@@ -854,6 +854,17 @@ class BrowserAutomationTool(BaseTool):
         # 5. Click Publish (which auto-confirms in ProjectBrowser.click)
         res_pub = browser.click("Publish")
         time.sleep(2.0)
+
+        # Also archive a local copy to Desktop/posts for user inspection
+        try:
+            from pathlib import Path
+            desktop_dir = Path.home() / "Desktop"
+            if desktop_dir.exists():
+                safe_title = "".join(c for c in title if c.isalnum() or c in (" ", "_", "-")).rstrip()[:40]
+                post_file = desktop_dir / f"blog_post_{safe_title}.md"
+                post_file.write_text(f"# {title}\n\n*Published on Google Blogger*\n\n---\n\n{content}", encoding="utf-8")
+        except Exception:
+            pass
 
         return {
             "success": True,

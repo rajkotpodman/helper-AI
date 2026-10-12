@@ -602,8 +602,11 @@ function handleStreamEvent(data) {
     appendTerminalLog(`⚡ Action [${actionName}]: ${actionInput.slice(0, 180)}`, 'action');
   } 
   else if (type === 'action_result') {
-    const resText = typeof data.result === 'string' ? data.result : JSON.stringify(data.result || '');
-    appendTerminalLog(`↳ Result: ${resText.slice(0, 220)}`, 'info');
+    const rawOut = data.output !== undefined ? data.output : (data.result !== undefined ? data.result : '');
+    const resText = typeof rawOut === 'string' ? rawOut : JSON.stringify(rawOut || '');
+    if (resText.trim()) {
+      appendTerminalLog(`↳ Result: ${resText.slice(0, 240)}`, 'info');
+    }
   } 
   else if (type === 'permission_requested') {
     showPermissionModal(data);
