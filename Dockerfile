@@ -2,6 +2,12 @@
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir --user -r requirements.txt
 
@@ -18,6 +24,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     HOST=0.0.0.0
 
 WORKDIR /app
+
+# Install lightweight runtime libraries
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy dependencies from builder stage
 COPY --from=builder /root/.local /root/.local
