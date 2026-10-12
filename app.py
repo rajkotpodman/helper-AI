@@ -221,6 +221,7 @@ async def get_available_engines():
         "description": "Helper-AI Autonomous PC Control & Internet Agent"
     }
 
+@app.post("/api/execute")
 @app.post("/api/run")
 async def start_goal(req: GoalRequest):
     global active_agent, active_task, current_goal_info
@@ -367,18 +368,69 @@ async def api_translate(req: TranslateRequest):
     translated = translator.translate_text(req.text or "", target_lang=req.target_lang, source_lang=req.source_lang or "auto")
     return {"translated_text": translated, "target_lang": req.target_lang}
 
+@app.get("/api/system-status")
+async def get_system_status():
+    import psutil, platform
+    try:
+        cpu = psutil.cpu_percent(interval=None)
+        mem = psutil.virtual_memory()
+        disk = psutil.disk_usage(str(Path.cwd().anchor))
+    except Exception:
+        cpu = 0.0
+        mem = type("Obj", (), {"percent": 0.0, "used": 0, "total": 0})()
+        disk = type("Obj", (), {"percent": 0.0, "free": 0})()
+
+    tools = ToolRegistry()
+    return {
+        "status": "online",
+        "is_running": current_goal_info["is_running"],
+        "cpu_percent": round(cpu, 1),
+        "ram_percent": round(mem.percent, 1),
+        "ram_used_gb": round(getattr(mem, "used", 0) / (1024 ** 3), 2),
+        "ram_total_gb": round(getattr(mem, "total", 0) / (1024 ** 3), 2),
+        "disk_free_gb": round(getattr(disk, "free", 0) / (1024 ** 3), 1),
+        "platform": platform.platform(),
+        "python_version": platform.python_version(),
+        "tools_registered": len(tools.get_all_tools()),
+        "memory_file_size_mb": memory_recorder.get_size_mb(),
+        "memory_entries": memory_recorder.get_entry_count(),
+        "provider": os.getenv("LLM_PROVIDER", "gemini"),
+        "safe_mode": os.getenv("SAFE_MODE", "false").lower() == "true"
+    }
+
+@app.get("/api/quick-ideas")
+async def get_quick_ideas():
+    return {
+        "ideas": [
+            {"id": "google_blogs", "icon": "🌐", "title": "List My Google Blogs", "prompt": "give me the list of my google blogs"},
+            {"id": "pc_health", "icon": "💻", "title": "PC Health Diagnostic", "prompt": "Check my PC health, CPU, RAM and disk usage"},
+            {"id": "ai_research", "icon": "🔍", "title": "Web Research Report", "prompt": "Search the web for top 5 AI agent frameworks and write summary to Desktop"},
+            {"id": "clean_downloads", "icon": "📁", "title": "Inspect Downloads", "prompt": "List the largest files in my Downloads folder"},
+            {"id": "sysinfo_desktop", "icon": "📄", "title": "System Info to Desktop", "prompt": "Open PowerShell, test git version and write system info to Desktop/sysinfo.txt"}
+        ]
+    }
+
 # Mount screenshots directory
 screenshots_dir = Path(__file__).parent / "screenshots"
 screenshots_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/screenshots", StaticFiles(directory=str(screenshots_dir)), name="screenshots")
 
 # Mount static files and serve index.html
+web_static_dir = Path(__file__).parent / "web" / "static"
+web_templates_dir = Path(__file__).parent / "web" / "templates"
 static_dir = Path(__file__).parent / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
-app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+if web_static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(web_static_dir)), name="static")
+else:
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 @app.get("/")
 async def serve_index():
+    modern_index = web_templates_dir / "index.html"
+    if modern_index.exists():
+        return FileResponse(modern_index)
     index_file = static_dir / "index.html"
     if index_file.exists():
         return FileResponse(index_file)

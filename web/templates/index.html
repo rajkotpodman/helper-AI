@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helper-AI • Autonomous PC Control & Internet Agent</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cyberDark: '#090D16',
+            cyberSurface: '#0D131F',
+            cyberCard: 'rgba(17, 24, 39, 0.72)',
+            cyberBorder: 'rgba(255, 255, 255, 0.08)',
+            electricBlue: '#3B82F6',
+            cyanGlow: '#06B6D4',
+            emeraldLive: '#10B981',
+            amberWarn: '#F59E0B'
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="text-slate-100 flex flex-col justify-between min-h-screen">
+
+  <!-- Top Ambient Glow Aura -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-blue-600/10 rounded-full blur-[130px] pointer-events-none -z-10"></div>
+
+  <div class="max-w-[1140px] w-full mx-auto px-4 sm:px-6 py-6 flex-1 flex flex-col">
+    
+    <!-- A. Top Navigation Header -->
+    <header class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-white/[0.08] mb-8">
+      
+      <!-- Brand Identity (Left) -->
+      <div class="flex items-center gap-3.5">
+        <div class="brand-logo-box">
+          <i data-lucide="zap" class="w-6 h-6 text-white stroke-[2.2]"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+            Helper <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">- AI</span>
+          </h1>
+          <p class="text-xs font-medium text-slate-400">Autonomous PC Control & Internet Agent</p>
+        </div>
+      </div>
+
+      <!-- Status & Utility Pills (Right / Center-Right) -->
+      <div class="flex items-center flex-wrap gap-2.5">
+        
+        <!-- PC Control Online Status -->
+        <div class="nav-pill" title="Live Agent Daemon Status">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span id="system-status-text" class="text-emerald-400 font-semibold">PC Control Online</span>
+        </div>
+
+        <!-- Project Browser Button -->
+        <button id="btn-project-browser" class="nav-pill" title="Open Desktop Chrome Browser Session">
+          <i data-lucide="globe" class="w-4 h-4 text-cyan-400"></i>
+          <span>Project Browser</span>
+        </button>
+
+        <!-- Memory Telemetry Badge -->
+        <button id="btn-memory-pill" class="nav-pill" title="View & Download agent_memory.md">
+          <i data-lucide="brain" class="w-4 h-4 text-pink-400"></i>
+          <span>Memory (<strong id="memory-size-badge" class="font-semibold text-white">0.02 MB</strong>)</span>
+        </button>
+
+        <!-- Metrics Button -->
+        <button id="btn-metrics-pill" class="nav-pill" title="Telemetry & Tool Usage Metrics">
+          <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i>
+          <span>Metrics</span>
+        </button>
+
+        <!-- Settings Button -->
+        <button id="btn-settings-pill" class="nav-pill" title="Configure AI Model Providers & Keys">
+          <i data-lucide="settings" class="w-4 h-4 text-blue-400"></i>
+          <span>Settings</span>
+        </button>
+
+        <!-- Language Selector Dropdown -->
+        <div class="relative inline-block text-left" id="lang-selector-group">
+          <button id="btn-lang-dropdown" class="nav-pill" title="Select Any Language (Google Translate)">
+            <i data-lucide="languages" class="w-4 h-4 text-indigo-400"></i>
+            <span id="active-lang-label" class="font-medium text-white">English</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+          </button>
+          
+          <div id="lang-dropdown-menu" class="hidden absolute right-0 mt-2 w-72 glass-panel border border-white/10 shadow-2xl z-50 flex-col overflow-hidden">
+            <div class="p-2.5 border-b border-white/10 bg-slate-900/60 flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <i data-lucide="globe" class="w-3.5 h-3.5 text-cyan-400"></i> Google Translate
+              </span>
+              <span class="text-[10px] bg-blue-500/20 text-blue-300 font-semibold px-2 py-0.5 rounded-full">130+ Languages</span>
+            </div>
+            <div class="p-2 border-b border-white/10 bg-slate-950/70">
+              <input type="text" id="lang-search-box" placeholder="Search language (Gujarati, Hindi...)" 
+                class="w-full bg-slate-900/90 text-xs px-2.5 py-1.5 rounded-lg border border-white/10 focus:border-cyan-500 focus:outline-none text-white">
+            </div>
+            <div class="max-h-60 overflow-y-auto divide-y divide-white/5 py-1" id="lang-items-container">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+    <!-- B. Central Goal Execution Card (<main>) -->
+    <main class="space-y-6">
+      <section class="glass-panel p-6 sm:p-7 relative overflow-hidden" id="goal-container">
+        
+        <!-- Ambient top inner highlight line -->
+        <div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent"></div>
+
+        <!-- Card Header -->
+        <div class="flex items-center justify-between gap-4 mb-4">
+          <label for="goal-input" class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            <span>🎯</span>
+            <span id="label-goal-title">What goal would you like Helper to achieve?</span>
+          </label>
+
+          <!-- Voice Input Pill Button -->
+          <button id="btn-voice-input" class="nav-pill hover:border-red-500/50 hover:text-red-400" title="Speak your goal (Voice-to-Text)">
+            <i data-lucide="mic" class="w-4 h-4 text-red-400" id="mic-icon"></i>
+            <span id="voice-btn-label">Voice Input</span>
+          </button>
+        </div>
+
+        <!-- Main Prompt Textarea -->
+        <div class="relative">
+          <textarea id="goal-input" 
+            placeholder="Example: List my Google blogs, or write a report on desktop by researching AI models..."
+            class="prompt-textarea"
+            rows="3"></textarea>
+          <div class="absolute right-3 bottom-3 text-[11px] text-slate-500 font-mono pointer-events-none hidden sm:block">
+            Press <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-white/10">Ctrl + Enter</kbd> to run
+          </div>
+        </div>
+
+        <!-- Quick Ideas Pill Bar -->
+        <div class="mt-4 flex flex-wrap items-center gap-2 pt-1">
+          <span class="text-xs font-semibold text-slate-400 flex items-center gap-1 mr-1">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span id="label-quick-ideas">Quick Ideas:</span>
+          </span>
+
+          <button class="idea-chip" data-prompt="give me the list of my google blogs">
+            <span>🌐</span> <span>List My Google Blogs</span>
+          </button>
+          <button class="idea-chip" data-prompt="Check my PC health, CPU, RAM and disk usage">
+            <span>💻</span> <span>PC Health Diagnostic</span>
+          </button>
+          <button class="idea-chip" data-prompt="Search the web for top 5 AI agent frameworks and write summary to Desktop">
+            <span>🔍</span> <span>Web Research Report</span>
+          </button>
+          <button class="idea-chip" data-prompt="List the largest files in my Downloads folder">
+            <span>📁</span> <span>Inspect Downloads</span>
+          </button>
+          <button class="idea-chip" data-prompt="Open PowerShell, test git version and write system info to Desktop/sysinfo.txt">
+            <span>📄</span> <span>System Info to Desktop</span>
+          </button>
+        </div>
+
+        <!-- Card Action Footer -->
+        <div class="mt-6 pt-5 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-4">
+          
+          <!-- Left Status Badges -->
+          <div class="flex items-center flex-wrap gap-3 text-xs">
+            
+            <!-- Safe Mode Badge -->
+            <button id="btn-toggle-safemode" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-white/10 hover:border-slate-600 transition" title="Click to toggle Safe Mode">
+              <span id="safe-mode-icon">🛡️</span>
+              <span class="text-slate-400">Safe Mode:</span>
+              <strong id="safe-mode-state-text" class="text-slate-200">Off (Full Autonomous)</strong>
+            </button>
+
+            <!-- Provider Badge -->
+            <button id="btn-quick-provider" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-white/10 hover:border-blue-500/40 transition" title="Active Model Engine">
+              <span>🤖</span>
+              <span class="text-slate-400">Provider:</span>
+              <strong id="provider-state-text" class="text-blue-400 font-semibold uppercase">GEMINI</strong>
+            </button>
+
+          </div>
+
+          <!-- Right Action CTA Buttons -->
+          <div class="flex items-center gap-3">
+            <button id="btn-stop-agent" class="hidden px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-sm border border-red-500/30 transition">
+              <i data-lucide="square" class="w-4 h-4 inline mr-1 fill-red-400"></i> Stop Agent
+            </button>
+
+            <button id="btn-execute-goal" class="btn-execute">
+              <i data-lucide="rocket" class="w-4 h-4"></i>
+              <span id="label-execute-btn">Execute Goal</span>
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- C. Live Execution & Output Drawer (Expandable Below Goal Card) -->
+      <section id="execution-drawer" class="hidden glass-panel p-6 animate-drawer-in space-y-6">
+        
+        <!-- Drawer Header with Step Stepper -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+          <div class="flex items-center gap-2.5">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+            </span>
+            <span id="execution-status-label" class="font-bold text-sm sm:text-base text-cyan-300">
+              Helper is executing autonomously...
+            </span>
+          </div>
+
+          <div class="text-xs font-mono font-semibold text-slate-400 px-3 py-1 rounded-full bg-slate-900 border border-white/10 w-fit">
+            <span id="step-counter-label">Step 1 of 50</span>
+          </div>
+        </div>
+
+        <!-- 4-Phase Stepper Pipeline -->
+        <div class="stepper-container px-2 py-1">
+          <div class="step-node active" id="step-node-1">
+            <div class="step-circle"><i data-lucide="search" class="w-4 h-4"></i></div>
+            <span class="step-label">Researching</span>
+          </div>
+          <div class="stepper-line" id="step-line-1"></div>
+
+          <div class="step-node" id="step-node-2">
+            <div class="step-circle"><i data-lucide="cpu" class="w-4 h-4"></i></div>
+            <span class="step-label">Planning</span>
+          </div>
+          <div class="stepper-line" id="step-line-2"></div>
+
+          <div class="step-node" id="step-node-3">
+            <div class="step-circle"><i data-lucide="terminal" class="w-4 h-4"></i></div>
+            <span class="step-label">Executing</span>
+          </div>
+          <div class="stepper-line" id="step-line-3"></div>
+
+          <div class="step-node" id="step-node-4">
+            <div class="step-circle"><i data-lucide="check-circle" class="w-4 h-4"></i></div>
+            <span class="step-label">Verifying</span>
+          </div>
+        </div>
+
+        <!-- Live Terminal Stream Box -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+            <span class="flex items-center gap-1.5 font-mono">
+              <i data-lucide="terminal" class="w-3.5 h-3.5 text-cyan-400"></i> Real-time Execution Feed
+            </span>
+            <button id="btn-copy-terminal" class="hover:text-white transition flex items-center gap-1">
+              <i data-lucide="copy" class="w-3 h-3"></i> Copy Output
+            </button>
+          </div>
+
+          <div class="terminal-box" id="terminal-stream">
+            <div class="terminal-line text-slate-500">
+              <span class="terminal-time">[System]</span> Initializing autonomous agent environment...
+            </div>
+          </div>
+        </div>
+
+        <!-- Final Comprehensive Result Card -->
+        <div id="result-container" class="hidden p-5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 space-y-4">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-emerald-400 font-bold text-base">
+              <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+              <span id="result-heading">Mission Accomplished!</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btn-speak-result" class="idea-chip hover:border-emerald-400" title="Read Aloud via Edge-TTS Voice">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5 text-emerald-400"></i> Speak
+              </button>
+              <button id="btn-export-markdown" class="idea-chip hover:border-blue-400" title="Download Markdown Report">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-400"></i> Export MD
+              </button>
+              <button id="btn-export-json" class="idea-chip hover:border-indigo-400" title="Download Full JSON History">
+                <i data-lucide="code" class="w-3.5 h-3.5 text-indigo-400"></i> Export JSON
+              </button>
+            </div>
+          </div>
+
+          <div id="result-body-text" class="text-sm text-slate-200 leading-relaxed font-sans whitespace-pre-wrap bg-slate-950/60 p-4 rounded-lg border border-white/5 font-mono text-xs max-h-72 overflow-y-auto">
+            Execution result will appear here.
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- D. Persistent Minimal Footer -->
+    <footer class="mt-auto py-8 text-center border-t border-white/[0.06] text-xs text-slate-400">
+      Helper-AI • Autonomous PC & Internet Agent • Built for seamless autonomous productivity.
+    </footer>
+
+  </div>
+
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. Settings Modal -->
+  <div id="modal-settings" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="settings" class="w-5 h-5 text-blue-400"></i> Helper-AI Settings
+        </h3>
+        <button id="btn-close-settings-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">AI Model Provider</label>
+          <select id="modal-select-provider" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white">
+            <option value="gemini">Google Gemini (Recommended & Fast)</option>
+            <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+            <option value="groq">Groq (Ultra-fast Llama 3.3)</option>
+            <option value="ollama">Ollama (100% Offline & Free)</option>
+            <option value="rule_engine">Smart Rule Engine (No API Key Required)</option>
+          </select>
+        </div>
+
+        <div id="group-gemini-key">
+          <label class="block font-semibold text-slate-300 mb-1">Gemini API Key</label>
+          <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+        </div>
+
+        <div id="group-openai-key" class="hidden">
+          <label class="block font-semibold text-slate-300 mb-1">OpenAI API Key</label>
+          <input type="password" id="input-openai-key" placeholder="sk-..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+        </div>
+
+        <div id="group-groq-key" class="hidden">
+          <label class="block font-semibold text-slate-300 mb-1">Groq API Key</label>
+          <input type="password" id="input-groq-key" placeholder="gsk_..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+        </div>
+
+        <div id="group-ollama-config" class="hidden space-y-2">
+          <label class="block font-semibold text-slate-300 mb-1">Ollama Model</label>
+          <input type="text" id="input-ollama-model" placeholder="qwen2.5:1.5b" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+        </div>
+
+        <div class="pt-2">
+          <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+            <input type="checkbox" id="modal-checkbox-safemode" class="rounded bg-slate-900 border-white/20 text-blue-600 focus:ring-0">
+            <span>Enable Safe Mode (Requires 1-click authorization for risky actions)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-5 mt-4 border-t border-white/10">
+        <button id="btn-cancel-settings-modal" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold">Cancel</button>
+        <button id="btn-save-settings-modal" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Memory Modal (agent_memory.md) -->
+  <div id="modal-memory" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="brain" class="w-5 h-5 text-pink-400"></i> AI Agent Memory Log
+        </h3>
+        <button id="btn-close-memory-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <p class="text-xs text-slate-400 mb-4">
+        Helper-AI automatically records every user goal and final outcome to <code>agent_memory.md</code> (Max limit 20 MB).
+      </p>
+
+      <div class="p-3.5 rounded-xl bg-slate-950/70 border border-white/5 space-y-3 mb-4 text-xs">
+        <div class="flex justify-between text-slate-300">
+          <span>Recorded Goals:</span>
+          <strong id="modal-memory-prompts" class="text-emerald-400">0 prompts</strong>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>Current File Size:</span>
+          <strong id="modal-memory-size" class="text-blue-400">0.02 MB / 20.0 MB</strong>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+          <div id="modal-memory-progress" class="bg-blue-500 h-2 rounded-full transition-all" style="width: 2%"></div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <button id="btn-reset-memory-modal" class="px-3.5 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-xs border border-red-500/30">
+          Clear & Reset Log
+        </button>
+        <div class="flex items-center gap-2">
+          <button id="btn-close-memory-btn" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs">Close</button>
+          <a href="/api/memory/download" download="agent_memory.md" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Download File
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Metrics Modal -->
+  <div id="modal-metrics" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="bar-chart-3" class="w-5 h-5 text-amber-400"></i> Operational Telemetry
+        </h3>
+        <button id="btn-close-metrics-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="terminal-box text-xs max-h-72" id="metrics-json-display">
+        Loading metrics telemetry...
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Permission Authorization Modal (Human-in-the-Loop) -->
+  <div id="modal-permission" class="modal-backdrop hidden">
+    <div class="modal-dialog border-2 border-amber-500/40">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-amber-400 flex items-center gap-2">
+          <i data-lucide="shield-alert" class="w-5 h-5"></i> Authorization Request
+        </h3>
+        <span class="text-xs bg-amber-500/15 text-amber-300 px-2.5 py-0.5 rounded-full font-semibold">1-Click Approval</span>
+      </div>
+
+      <p class="text-xs text-slate-300 mb-3" id="permission-modal-desc">
+        Helper-AI has paused to request your explicit approval for this action:
+      </p>
+
+      <div class="terminal-box text-xs max-h-36 mb-4 text-slate-300" id="permission-modal-details">
+        Action details loading...
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button id="btn-deny-permission" class="px-4 py-2 rounded-lg bg-red-600/20 text-red-300 hover:bg-red-600/30 font-semibold text-xs border border-red-500/30">
+          ✕ Deny Action
+        </button>
+        <button id="btn-approve-permission" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20">
+          ✓ One-Click Approve
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden Google Translate Element Engine -->
+  <div id="google_translate_element" style="display:none;"></div>
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <!-- Application Logic -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
