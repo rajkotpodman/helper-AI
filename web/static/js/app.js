@@ -4,7 +4,7 @@
  */
 
 // --- 1. Language Definitions (Google Translate 130+ Languages) ---
-const GOOGLE_LANGUAGES = [
+let GOOGLE_LANGUAGES = [
   { code: 'en', name: 'English', native: 'English' },
   { code: 'gu', name: 'Gujarati', native: 'ગુજરાતી' },
   { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
@@ -14,10 +14,24 @@ const GOOGLE_LANGUAGES = [
   { code: 'te', name: 'Telugu', native: 'తెలుగు' },
   { code: 'ur', name: 'Urdu', native: 'اردو' },
   { code: 'pa', name: 'Punjabi', native: 'ਪੰਜਾਬੀ' },
+  { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' },
+  { code: 'ml', name: 'Malayalam', native: 'മലയാളം' },
+  { code: 'or', name: 'Odia', native: 'ଓଡ଼ିଆ' },
+  { code: 'as', name: 'Assamese', native: 'অসমীয়া' },
+  { code: 'bho', name: 'Bhojpuri', native: 'भोजपुरी' },
+  { code: 'mai', name: 'Maithili', native: 'मैथिली' },
+  { code: 'gom', name: 'Konkani', native: 'कोंकणी' },
+  { code: 'sa', name: 'Sanskrit', native: 'संस्कृतम्' },
+  { code: 'doi', name: 'Dogri', native: 'डोगरी' },
+  { code: 'mni-Mtei', name: 'Meiteilon (Manipuri)', native: 'মৈতৈলোন্' },
+  { code: 'lus', name: 'Mizo', native: 'Mizo ṭawng' },
+  { code: 'ne', name: 'Nepali', native: 'नेपाली' },
+  { code: 'si', name: 'Sinhala', native: 'සිංහල' },
   { code: 'es', name: 'Spanish', native: 'Español' },
   { code: 'fr', name: 'French', native: 'Français' },
   { code: 'de', name: 'German', native: 'Deutsch' },
   { code: 'zh-CN', name: 'Chinese (Simplified)', native: '简体中文' },
+  { code: 'zh-TW', name: 'Chinese (Traditional)', native: '繁體中文' },
   { code: 'ja', name: 'Japanese', native: '日本語' },
   { code: 'ko', name: 'Korean', native: '한국어' },
   { code: 'ru', name: 'Russian', native: 'Русский' },
@@ -30,6 +44,8 @@ const GOOGLE_LANGUAGES = [
   { code: 'vi', name: 'Vietnamese', native: 'Tiếng Việt' },
   { code: 'th', name: 'Thai', native: 'ไทย' },
   { code: 'id', name: 'Indonesian', native: 'Bahasa Indonesia' },
+  { code: 'ms', name: 'Malay', native: 'Bahasa Melayu' },
+  { code: 'fil', name: 'Filipino', native: 'Filipino' },
   { code: 'sv', name: 'Swedish', native: 'Svenska' },
   { code: 'fa', name: 'Persian', native: 'فارسی' },
   { code: 'he', name: 'Hebrew', native: 'עברית' },
@@ -40,7 +56,88 @@ const GOOGLE_LANGUAGES = [
   { code: 'el', name: 'Greek', native: 'Ελληνικά' },
   { code: 'da', name: 'Danish', native: 'Dansk' },
   { code: 'fi', name: 'Finnish', native: 'Suomi' },
-  { code: 'no', name: 'Norwegian', native: 'Norsk' }
+  { code: 'no', name: 'Norwegian', native: 'Norsk' },
+  { code: 'af', name: 'Afrikaans', native: 'Afrikaans' },
+  { code: 'ak', name: 'Twi', native: 'Twi' },
+  { code: 'am', name: 'Amharic', native: 'አማርኛ' },
+  { code: 'ay', name: 'Aymara', native: 'Aymar aru' },
+  { code: 'az', name: 'Azerbaijani', native: 'Azərbaycan' },
+  { code: 'be', name: 'Belarusian', native: 'Беларуская' },
+  { code: 'bg', name: 'Bulgarian', native: 'Български' },
+  { code: 'bm', name: 'Bambara', native: 'Bamanankan' },
+  { code: 'bs', name: 'Bosnian', native: 'Bosanski' },
+  { code: 'ca', name: 'Catalan', native: 'Català' },
+  { code: 'ceb', name: 'Cebuano', native: 'Cebuano' },
+  { code: 'ckb', name: 'Kurdish (Sorani)', native: 'کوردی سۆرانی' },
+  { code: 'co', name: 'Corsican', native: 'Corsu' },
+  { code: 'cy', name: 'Welsh', native: 'Cymraeg' },
+  { code: 'dv', name: 'Dhivehi', native: 'ދިވެހި' },
+  { code: 'ee', name: 'Ewe', native: 'Eʋegbe' },
+  { code: 'eo', name: 'Esperanto', native: 'Esperanto' },
+  { code: 'et', name: 'Estonian', native: 'Eesti' },
+  { code: 'eu', name: 'Basque', native: 'Euskara' },
+  { code: 'fy', name: 'Frisian', native: 'Frysk' },
+  { code: 'ga', name: 'Irish', native: 'Gaeilge' },
+  { code: 'gd', name: 'Scots Gaelic', native: 'Gàidhlig' },
+  { code: 'gl', name: 'Galician', native: 'Galego' },
+  { code: 'gn', name: 'Guarani', native: 'Avañe\'ẽ' },
+  { code: 'ha', name: 'Hausa', native: 'Hausa' },
+  { code: 'haw', name: 'Hawaiian', native: 'ʻŌlelo Hawaiʻi' },
+  { code: 'hmn', name: 'Hmong', native: 'Hmoob' },
+  { code: 'hr', name: 'Croatian', native: 'Hrvatski' },
+  { code: 'ht', name: 'Haitian Creole', native: 'Kreyòl ayisyen' },
+  { code: 'hy', name: 'Armenian', native: 'Հայերեն' },
+  { code: 'ig', name: 'Igbo', native: 'Igbo' },
+  { code: 'ilo', name: 'Ilocano', native: 'Ilokano' },
+  { code: 'is', name: 'Icelandic', native: 'Íslenska' },
+  { code: 'jw', name: 'Javanese', native: 'Basa Jawa' },
+  { code: 'ka', name: 'Georgian', native: 'ქართული' },
+  { code: 'kk', name: 'Kazakh', native: 'Қазақ тілі' },
+  { code: 'km', name: 'Khmer', native: 'ភាសាខ្មែរ' },
+  { code: 'kri', name: 'Krio', native: 'Krio' },
+  { code: 'ku', name: 'Kurdish (Kurmanji)', native: 'Kurdî' },
+  { code: 'ky', name: 'Kyrgyz', native: 'Кыргызча' },
+  { code: 'la', name: 'Latin', native: 'Latina' },
+  { code: 'lb', name: 'Luxembourgish', native: 'Lëtzebuergesch' },
+  { code: 'lg', name: 'Luganda', native: 'Luganda' },
+  { code: 'ln', name: 'Lingala', native: 'Lingála' },
+  { code: 'lo', name: 'Lao', native: 'ລາວ' },
+  { code: 'lt', name: 'Lithuanian', native: 'Lietuvių' },
+  { code: 'lv', name: 'Latvian', native: 'Latviešu' },
+  { code: 'mg', name: 'Malagasy', native: 'Malagasy' },
+  { code: 'mi', name: 'Maori', native: 'Māori' },
+  { code: 'mk', name: 'Macedonian', native: 'Македонски' },
+  { code: 'mn', name: 'Mongolian', native: 'Монгол' },
+  { code: 'mt', name: 'Maltese', native: 'Malti' },
+  { code: 'my', name: 'Burmese', native: 'မြန်မာ' },
+  { code: 'nso', name: 'Northern Sotho (Sepedi)', native: 'Sepedi' },
+  { code: 'ny', name: 'Chichewa', native: 'Chichewa' },
+  { code: 'om', name: 'Oromo', native: 'Afaan Oromoo' },
+  { code: 'ps', name: 'Pashto', native: 'پښتو' },
+  { code: 'qu', name: 'Quechua', native: 'Runa Simi' },
+  { code: 'rw', name: 'Kinyarwanda', native: 'Ikinyarwanda' },
+  { code: 'sd', name: 'Sindhi', native: 'سنڌي' },
+  { code: 'sk', name: 'Slovak', native: 'Slovenčina' },
+  { code: 'sl', name: 'Slovenian', native: 'Slovenščina' },
+  { code: 'sm', name: 'Samoan', native: 'Gagana fa\'a Sāmoa' },
+  { code: 'sn', name: 'Shona', native: 'chiShona' },
+  { code: 'so', name: 'Somali', native: 'Soomaaliga' },
+  { code: 'sq', name: 'Albanian', native: 'Shqip' },
+  { code: 'sr', name: 'Serbian', native: 'Српски' },
+  { code: 'st', name: 'Sesotho', native: 'Sesotho' },
+  { code: 'su', name: 'Sundanese', native: 'Basa Sunda' },
+  { code: 'sw', name: 'Swahili', native: 'Kiswahili' },
+  { code: 'tg', name: 'Tajik', native: 'Тоҷикӣ' },
+  { code: 'ti', name: 'Tigrinya', native: 'ትግርኛ' },
+  { code: 'tk', name: 'Turkmen', native: 'Türkmençe' },
+  { code: 'ts', name: 'Tsonga', native: 'Xitsonga' },
+  { code: 'tt', name: 'Tatar', native: 'Татар теле' },
+  { code: 'ug', name: 'Uyghur', native: 'ئۇيغۇرچە' },
+  { code: 'uz', name: 'Uzbek', native: 'Oʻzbekcha' },
+  { code: 'xh', name: 'Xhosa', native: 'isiXhosa' },
+  { code: 'yi', name: 'Yiddish', native: 'ייִדיש' },
+  { code: 'yo', name: 'Yoruba', native: 'Èdè Yorùbá' },
+  { code: 'zu', name: 'Zulu', native: 'isiZulu' }
 ];
 
 // --- 2. State Management ---
@@ -276,7 +373,36 @@ function stopListening() {
 
 // --- 8. Google Translate Multi-Language Selector ---
 function setupLanguageSelector() {
+  const countBadge = document.getElementById('lang-count-badge');
+  if (countBadge) {
+    countBadge.textContent = `${GOOGLE_LANGUAGES.length}+ Languages`;
+  }
+  
   renderLanguageList(GOOGLE_LANGUAGES);
+
+  // Dynamically fetch and merge backend language list
+  fetch('/api/translate/languages')
+    .then(res => res.json())
+    .then(data => {
+      if (data && Array.isArray(data.languages) && data.languages.length > 0) {
+        const existingCodes = new Set(GOOGLE_LANGUAGES.map(l => l.code));
+        let added = false;
+        data.languages.forEach(l => {
+          if (!existingCodes.has(l.code)) {
+            GOOGLE_LANGUAGES.push(l);
+            existingCodes.add(l.code);
+            added = true;
+          }
+        });
+        if (countBadge) {
+          countBadge.textContent = `${GOOGLE_LANGUAGES.length}+ Languages`;
+        }
+        if (added) {
+          renderLanguageList(GOOGLE_LANGUAGES);
+        }
+      }
+    })
+    .catch(err => console.debug('Languages fetch fallback:', err));
 
   // Toggle Dropdown
   elements.btnLangDropdown?.addEventListener('click', (e) => {
