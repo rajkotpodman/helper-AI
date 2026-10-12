@@ -69,12 +69,23 @@ const btnCloseMemoryAlert = document.getElementById('btn-close-memory-alert');
 const btnDismissMemoryAlert = document.getElementById('btn-dismiss-memory-alert');
 const btnDownloadMemoryAlert = document.getElementById('btn-download-memory-alert');
 
+// Language & Universal Google Translate Elements
+const btnLangToggle = document.getElementById('btn-lang-toggle');
+const langDropdown = document.getElementById('lang-dropdown');
+const langSearchInput = document.getElementById('lang-search-input');
+const langList = document.getElementById('lang-list');
+const currentLangLabel = document.getElementById('current-lang-label');
+let currentAppLanguage = localStorage.getItem('helper_language') || 'en';
+let currentAppLanguageName = localStorage.getItem('helper_language_name') || 'English';
+let allLanguages = [];
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   setupWebSocket();
   fetchStatus();
   fetchMemoryStatus();
   setupEventListeners();
+  initLanguageSystem();
 });
 
 function setupEventListeners() {
@@ -219,11 +230,19 @@ function handleAgentEvent(eventType, data) {
       timeline.innerHTML = '';
       completionBox.style.display = 'none';
       executionSection.style.display = 'block';
-      executionStatusText.textContent = `Helper is executing: "${data.goal}"`;
+      const execMsg = `Helper is executing: "${data.goal}"`;
+      executionStatusText.textContent = execMsg;
+      if (currentAppLanguage !== 'en') {
+        translateText(execMsg, currentAppLanguage).then(t => { executionStatusText.textContent = t; });
+      }
       break;
 
     case 'step_start':
-      stepCounter.textContent = `Step ${data.step} of ${data.max_steps || 50}`;
+      const stepTxt = `Step ${data.step} of ${data.max_steps || 50}`;
+      stepCounter.textContent = stepTxt;
+      if (currentAppLanguage !== 'en') {
+        translateText(stepTxt, currentAppLanguage).then(t => { stepCounter.textContent = t; });
+      }
       break;
 
     case 'thought':
@@ -253,14 +272,27 @@ function handleAgentEvent(eventType, data) {
       if (permissionModal) permissionModal.style.display = 'none';
       setRunningState(false);
       const isSuccess = data.success !== false;
-      executionStatusText.textContent = isSuccess ? 'Goal Completed' : 'Goal Execution Halted';
+      const statusTitle = isSuccess ? 'Goal Completed' : 'Goal Execution Halted';
+      executionStatusText.textContent = statusTitle;
+      if (currentAppLanguage !== 'en') {
+        translateText(statusTitle, currentAppLanguage).then(t => { executionStatusText.textContent = t; });
+      }
       completionBox.style.display = 'block';
       const titleElem = completionBox.querySelector('h3');
       if (titleElem) {
-        titleElem.textContent = isSuccess ? '🎉 Mission Accomplished!' : '⚠️ Goal Execution Incomplete / Limit Reached';
+        const rawTitle = isSuccess ? '🎉 Mission Accomplished!' : '⚠️ Goal Execution Incomplete / Limit Reached';
+        titleElem.textContent = rawTitle;
         titleElem.style.color = isSuccess ? '#10b981' : '#f59e0b';
+        if (currentAppLanguage !== 'en') {
+          translateText(rawTitle, currentAppLanguage).then(t => { titleElem.textContent = t; });
+        }
       }
-      completionMessage.textContent = data.message || (isSuccess ? 'Execution finished successfully.' : 'Goal was not fully completed before reaching step limit.');
+      const rawMsg = data.message || (isSuccess ? 'Execution finished successfully.' : 'Goal was not fully completed before reaching step limit.');
+      completionMessage.textContent = rawMsg;
+      completionBox.dataset.originalMessage = rawMsg;
+      if (currentAppLanguage !== 'en') {
+        translateText(rawMsg, currentAppLanguage).then(t => { completionMessage.textContent = t; });
+      }
       completionBox.scrollIntoView({ behavior: 'smooth' });
       fetchMemoryStatus();
       break;
@@ -345,12 +377,16 @@ function createStepCard(data) {
   const card = document.createElement('div');
   card.className = 'step-card';
   card.id = `step-${data.step}`;
+  card.dataset.originalThought = data.thought || '';
+  card.dataset.stepNumber = data.step;
 
   const top = document.createElement('div');
   top.className = 'step-top';
+  const stepLabel = `Step ${data.step}`;
+  const toolBadge = data.action !== 'none' ? '⚡ ' + data.action : '🏁 Complete';
   top.innerHTML = `
-    <span class="step-number">Step ${data.step}</span>
-    <span class="tool-badge">${data.action !== 'none' ? '⚡ ' + data.action : '🏁 Complete'}</span>
+    <span class="step-number">${stepLabel}</span>
+    <span class="tool-badge">${toolBadge}</span>
   `;
 
   const thought = document.createElement('div');
@@ -362,6 +398,16 @@ function createStepCard(data) {
 
   timeline.appendChild(card);
   card.scrollIntoView({ behavior: 'smooth' });
+
+  if (currentAppLanguage !== 'en' && data.thought) {
+    translateText(data.thought, currentAppLanguage).then(t => {
+      thought.textContent = t;
+    });
+    translateText(stepLabel, currentAppLanguage).then(t => {
+      const numElem = top.querySelector('.step-number');
+      if (numElem) numElem.textContent = t;
+    });
+  }
 }
 
 function updateStepCardResult(data) {
@@ -571,3 +617,386 @@ async function handleResetMemory() {
     alert('Failed to reset memory: ' + e.message);
   }
 }
+
+// ==========================================
+// UNIVERSAL GOOGLE TRANSLATE & AI REPLAY
+// ==========================================
+
+const UI_TRANSLATIONS = {
+  en: {
+    system_ready: "System Ready",
+    pc_online: "PC Control Online",
+    disconnected: "Disconnected",
+    project_browser: "Project Browser",
+    memory: "Memory",
+    metrics: "Metrics",
+    settings: "Settings",
+    goal_prompt: "🎯 What goal would you like Helper to achieve?",
+    voice_input: "Voice Input",
+    goal_placeholder: "Example: give me the list of my google blogs, or research AI models and write a report to my Desktop...",
+    quick_ideas: "Quick Ideas:",
+    safe_mode: "Safe Mode:",
+    provider: "Provider:",
+    stop_agent: "⏹ Stop Agent",
+    execute_goal: "🚀 Execute Goal",
+    executing_prefix: "Helper is working autonomously on your goal...",
+    mission_accomplished: "🎉 Mission Accomplished!",
+    exec_halted: "⚠️ Goal Execution Incomplete / Limit Reached",
+    download_md: "Download Markdown Report",
+    download_json: "Download JSON History",
+    auth_req: "Authorization Request",
+    deny: "✕ Deny Action",
+    approve: "✓ One-Click Approve",
+    save_settings: "Save Settings",
+    cancel: "Cancel"
+  },
+  gu: {
+    system_ready: "સિસ્ટમ તૈયાર",
+    pc_online: "પીસી કંટ્રોલ ઓનલાઇન",
+    disconnected: "ડિસ્કનેક્ટ થયું",
+    project_browser: "પ્રોજેક્ટ બ્રાઉઝર",
+    memory: "મેમરી",
+    metrics: "મેટ્રિક્સ",
+    settings: "સેટિંગ્સ",
+    goal_prompt: "🎯 તમે હેલ્પર પાસે શું કામ કરાવવા માંગો છો?",
+    voice_input: "અવાજ ઇનપુટ",
+    goal_placeholder: "ઉદાહરણ: મારા ગૂગલ બ્લોગ્સની યાદી આપો, અથવા AI મોડલ્સ પર રિસર્ચ કરીને ડેસ્કટોપ પર રિપોર્ટ લખો...",
+    quick_ideas: "ઝડપી વિચારો:",
+    safe_mode: "સુરક્ષિત મોડ:",
+    provider: "પ્રદાતા:",
+    stop_agent: "⏹ એજન્ટ અટકાવો",
+    execute_goal: "🚀 લક્ષ્ય ચલાવો",
+    executing_prefix: "હેલ્પર તમારા લક્ષ્ય પર સ્વાયત્ત રીતે કામ કરી રહ્યો છે...",
+    mission_accomplished: "🎉 કાર્ય સફળતાપૂર્વક પૂર્ણ થયું!",
+    exec_halted: "⚠️ કાર્ય અધૂરું રહ્યું / મર્યાદા પહોંચી ગઈ",
+    download_md: "માર્કડાઉન રિપોર્ટ ડાઉનલોડ કરો",
+    download_json: "JSON ઇતિહાસ ડાઉનલોડ કરો",
+    auth_req: "મંજૂરી વિનંતી",
+    deny: "✕ અસ્વીકાર",
+    approve: "✓ ૧-ક્લિક મંજૂરી",
+    save_settings: "સેટિંગ્સ સાચવો",
+    cancel: "રદ કરો"
+  },
+  hi: {
+    system_ready: "सिस्टम तैयार",
+    pc_online: "पीसी नियंत्रण ऑनलाइन",
+    disconnected: "डिस्कनेक्ट हो गया",
+    project_browser: "प्रोजेक्ट ब्राउज़र",
+    memory: "मेमोरी",
+    metrics: "मेट्रिक्स",
+    settings: "सेटिंग्स",
+    goal_prompt: "🎯 आप हेल्पर से क्या कार्य करवाना चाहते हैं?",
+    voice_input: "वॉयस इनपुट",
+    goal_placeholder: "उदाहरण: मेरे गूगल ब्लॉग्स की सूची दें, या AI मॉडल पर शोध करके डेस्कटॉप पर रिपोर्ट लिखें...",
+    quick_ideas: "त्वरित विचार:",
+    safe_mode: "सुरक्षित मोड:",
+    provider: "प्रदाता:",
+    stop_agent: "⏹ एजेंट रोकें",
+    execute_goal: "🚀 लक्ष्य शुरू करें",
+    executing_prefix: "हेल्पर आपके लक्ष्य पर स्वायत्त रूप से काम कर रहा है...",
+    mission_accomplished: "🎉 मिशन सफलतापूर्वक पूरा हुआ!",
+    exec_halted: "⚠️ कार्य अधूरा रहा / सीमा समाप्त",
+    download_md: "मार्कडाउन रिपोर्ट डाउनलोड करें",
+    download_json: "JSON इतिहास डाउनलोड करें",
+    auth_req: "अनुमति अनुरोध",
+    deny: "✕ अस्वीकार करें",
+    approve: "✓ १-क्लिक अनुमोदन",
+    save_settings: "सेटिंग्स सहेजें",
+    cancel: "रद्द करें"
+  },
+  es: {
+    system_ready: "Sistema listo",
+    pc_online: "Control de PC en línea",
+    disconnected: "Desconectado",
+    project_browser: "Navegador del proyecto",
+    memory: "Memoria",
+    metrics: "Métricas",
+    settings: "Configuración",
+    goal_prompt: "🎯 ¿Qué objetivo te gustaría que Helper logre?",
+    voice_input: "Entrada de voz",
+    goal_placeholder: "Ejemplo: dame la lista de mis blogs de Google o investiga modelos de IA...",
+    quick_ideas: "Ideas rápidas:",
+    safe_mode: "Modo seguro:",
+    provider: "Proveedor:",
+    stop_agent: "⏹ Detener agente",
+    execute_goal: "🚀 Ejecutar objetivo",
+    executing_prefix: "Helper está trabajando de forma autónoma en tu objetivo...",
+    mission_accomplished: "🎉 ¡Misión cumplida!",
+    exec_halted: "⚠️ Ejecución incompleta",
+    download_md: "Descargar informe Markdown",
+    download_json: "Descargar historial JSON",
+    auth_req: "Solicitud de autorización",
+    deny: "✕ Denegar acción",
+    approve: "✓ Aprobación en 1 clic",
+    save_settings: "Guardar configuración",
+    cancel: "Cancelar"
+  },
+  fr: {
+    system_ready: "Système prêt",
+    pc_online: "Contrôle PC en ligne",
+    disconnected: "Déconnecté",
+    project_browser: "Navigateur du projet",
+    memory: "Mémoire",
+    metrics: "Métriques",
+    settings: "Paramètres",
+    goal_prompt: "🎯 Quel objectif souhaitez-vous que Helper atteigne ?",
+    voice_input: "Entrée vocale",
+    goal_placeholder: "Exemple: donnez-moi la liste de mes blogs Google ou recherchez des modèles IA...",
+    quick_ideas: "Idées rapides:",
+    safe_mode: "Mode sécurisé:",
+    provider: "Fournisseur:",
+    stop_agent: "⏹ Arrêter l'agent",
+    execute_goal: "🚀 Exécuter l'objectif",
+    executing_prefix: "Helper travaille de manière autonome sur votre objectif...",
+    mission_accomplished: "🎉 Mission accomplie !",
+    exec_halted: "⚠️ Exécution incomplète",
+    download_md: "Télécharger le rapport Markdown",
+    download_json: "Télécharger l'historique JSON",
+    auth_req: "Demande d'autorisation",
+    deny: "✕ Refuser l'action",
+    approve: "✓ Approuver en 1 clic",
+    save_settings: "Enregistrer les paramètres",
+    cancel: "Annuler"
+  },
+  de: {
+    system_ready: "System bereit",
+    pc_online: "PC-Steuerung online",
+    disconnected: "Getrennt",
+    project_browser: "Projekt-Browser",
+    memory: "Speicher",
+    metrics: "Metriken",
+    settings: "Einstellungen",
+    goal_prompt: "🎯 Welches Ziel soll Helper erreichen?",
+    voice_input: "Spracheingabe",
+    goal_placeholder: "Beispiel: Gib mir die Liste meiner Google-Blogs oder recherchiere KI-Modelle...",
+    quick_ideas: "Schnelle Ideen:",
+    safe_mode: "Sicherer Modus:",
+    provider: "Anbieter:",
+    stop_agent: "⏹ Agent stoppen",
+    execute_goal: "🚀 Ziel ausführen",
+    executing_prefix: "Helper arbeitet autonom an Ihrem Ziel...",
+    mission_accomplished: "🎉 Mission erfüllt!",
+    exec_halted: "⚠️ Ausführung unvollständig",
+    download_md: "Markdown-Bericht herunterladen",
+    download_json: "JSON-Verlauf herunterladen",
+    auth_req: "Autorisierungsanfrage",
+    deny: "✕ Aktion ablehnen",
+    approve: "✓ 1-Klick genehmigen",
+    save_settings: "Einstellungen speichern",
+    cancel: "Abbrechen"
+  }
+};
+
+async function initLanguageSystem() {
+  if (currentLangLabel) {
+    currentLangLabel.textContent = currentAppLanguageName;
+  }
+
+  // Load language list from backend
+  try {
+    const res = await fetch('/api/translate/languages');
+    const data = await res.json();
+    if (data.languages && Array.isArray(data.languages)) {
+      allLanguages = data.languages;
+      renderLanguageList(allLanguages);
+    }
+  } catch (e) {
+    console.warn('Failed to fetch languages list:', e);
+  }
+
+  // Toggle Dropdown
+  if (btnLangToggle && langDropdown) {
+    btnLangToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isVisible = langDropdown.style.display === 'flex';
+      langDropdown.style.display = isVisible ? 'none' : 'flex';
+      if (!isVisible && langSearchInput) {
+        langSearchInput.value = '';
+        renderLanguageList(allLanguages);
+        setTimeout(() => langSearchInput.focus(), 50);
+      }
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.lang-selector-container')) {
+        langDropdown.style.display = 'none';
+      }
+    });
+  }
+
+  // Filter search
+  if (langSearchInput) {
+    langSearchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = allLanguages.filter(l => 
+        l.name.toLowerCase().includes(q) || 
+        l.native.toLowerCase().includes(q) || 
+        l.code.toLowerCase().includes(q)
+      );
+      renderLanguageList(filtered);
+    });
+  }
+
+  // Apply current active language immediately
+  if (currentAppLanguage && currentAppLanguage !== 'en') {
+    applyAppLanguage(currentAppLanguage, currentAppLanguageName);
+  }
+}
+
+function renderLanguageList(list) {
+  if (!langList) return;
+  langList.innerHTML = '';
+
+  list.forEach(l => {
+    const item = document.createElement('div');
+    item.className = 'lang-item' + (l.code === currentAppLanguage ? ' active' : '');
+    item.innerHTML = `
+      <span>${l.name}</span>
+      <span class="lang-native-name">${l.native}</span>
+    `;
+    item.addEventListener('click', () => {
+      selectLanguage(l.code, l.name);
+      if (langDropdown) langDropdown.style.display = 'none';
+    });
+    langList.appendChild(item);
+  });
+}
+
+function selectLanguage(langCode, langName) {
+  currentAppLanguage = langCode;
+  currentAppLanguageName = langName;
+  localStorage.setItem('helper_language', langCode);
+  localStorage.setItem('helper_language_name', langName);
+
+  if (currentLangLabel) {
+    currentLangLabel.textContent = langName;
+  }
+
+  // Update active state in list
+  renderLanguageList(allLanguages);
+
+  // Set Google Translate cookie
+  setGoogleTranslateCookie(langCode);
+
+  // Trigger Google Translate widget if available
+  triggerGoogleTranslateWidget(langCode);
+
+  // Apply UI translations & translate live AI reply / timeline
+  applyAppLanguage(langCode, langName);
+}
+
+function setGoogleTranslateCookie(langCode) {
+  const cookieValue = `/en/${langCode}`;
+  document.cookie = `googtrans=${cookieValue}; path=/;`;
+  try {
+    document.cookie = `googtrans=${cookieValue}; path=/; domain=${window.location.hostname};`;
+  } catch (e) {}
+}
+
+function triggerGoogleTranslateWidget(langCode) {
+  const gtCombo = document.querySelector('.goog-te-combo');
+  if (gtCombo) {
+    gtCombo.value = langCode;
+    gtCombo.dispatchEvent(new Event('change'));
+  }
+}
+
+async function translateText(text, targetLang) {
+  if (!text || !text.trim() || targetLang === 'en') return text;
+  try {
+    const res = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: text, target_lang: targetLang })
+    });
+    const data = await res.json();
+    return data.translated_text || text;
+  } catch (e) {
+    console.debug('Translate text call failed:', e);
+    return text;
+  }
+}
+
+async function applyAppLanguage(langCode, langName) {
+  const dict = UI_TRANSLATIONS[langCode];
+
+  // 1. Instant dictionary translation for top languages
+  if (dict) {
+    const goalLabel = document.querySelector('#goal-card label');
+    if (goalLabel) goalLabel.textContent = dict.goal_prompt;
+    if (goalInput) goalInput.placeholder = dict.goal_placeholder;
+    const btnVoiceSpan = btnVoice ? btnVoice.querySelector('span') : null;
+    if (btnVoiceSpan) btnVoiceSpan.textContent = dict.voice_input;
+    const quickSpan = document.querySelector('.quick-prompts > span');
+    if (quickSpan) quickSpan.textContent = dict.quick_ideas;
+    if (btnCancel) btnCancel.textContent = dict.stop_agent;
+    const btnRunSpan = btnRun ? btnRun.querySelector('span') : null;
+    if (btnRunSpan && !isRunning) btnRunSpan.textContent = dict.execute_goal;
+
+    // Header buttons
+    const browserSpan = document.querySelector('#btn-open-browser span');
+    if (browserSpan) browserSpan.textContent = dict.project_browser;
+    const metricsSpan = document.querySelector('#btn-open-metrics span');
+    if (metricsSpan) metricsSpan.textContent = dict.metrics;
+    const settingsSpan = document.querySelector('#btn-open-settings span');
+    if (settingsSpan) settingsSpan.textContent = dict.settings;
+
+    // Mission accomplished box
+    const complTitle = completionBox ? completionBox.querySelector('h3') : null;
+    if (complTitle) complTitle.textContent = dict.mission_accomplished;
+    const exportMdSpan = document.querySelector('#btn-export-md span');
+    if (exportMdSpan) exportMdSpan.textContent = dict.download_md;
+    const exportJsonSpan = document.querySelector('#btn-export-json span');
+    if (exportJsonSpan) exportJsonSpan.textContent = dict.download_json;
+  } else if (langCode !== 'en') {
+    // 2. Dynamic translation for any other Google Translate language
+    const goalLabel = document.querySelector('#goal-card label');
+    if (goalLabel) translateText("🎯 What goal would you like Helper to achieve?", langCode).then(t => goalLabel.textContent = t);
+    if (goalInput) translateText("Example: give me the list of my google blogs, or research AI models and write a report to my Desktop...", langCode).then(t => goalInput.placeholder = t);
+    const btnVoiceSpan = btnVoice ? btnVoice.querySelector('span') : null;
+    if (btnVoiceSpan) translateText("Voice Input", langCode).then(t => btnVoiceSpan.textContent = t);
+    const quickSpan = document.querySelector('.quick-prompts > span');
+    if (quickSpan) translateText("Quick Ideas:", langCode).then(t => quickSpan.textContent = t);
+  }
+
+  // 3. Translate existing timeline step cards
+  translateExistingCards(langCode);
+
+  // 4. Translate completion message if present
+  if (completionBox && completionBox.style.display !== 'none') {
+    const rawMsg = completionBox.dataset.originalMessage || completionMessage.textContent;
+    if (rawMsg) {
+      translateText(rawMsg, langCode).then(t => {
+        completionMessage.textContent = t;
+      });
+    }
+  }
+}
+
+function translateExistingCards(targetLang) {
+  const cards = document.querySelectorAll('.step-card');
+  cards.forEach(card => {
+    const rawThought = card.dataset.originalThought;
+    const thoughtElem = card.querySelector('.thought-text');
+    const stepNumber = card.dataset.stepNumber || '1';
+    const numElem = card.querySelector('.step-number');
+
+    if (targetLang === 'en') {
+      if (thoughtElem && rawThought) thoughtElem.textContent = rawThought;
+      if (numElem) numElem.textContent = `Step ${stepNumber}`;
+    } else {
+      if (thoughtElem && rawThought) {
+        translateText(rawThought, targetLang).then(t => {
+          thoughtElem.textContent = t;
+        });
+      }
+      if (numElem) {
+        translateText(`Step ${stepNumber}`, targetLang).then(t => {
+          numElem.textContent = t;
+        });
+      }
+    }
+  });
+}
+

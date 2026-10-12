@@ -58,6 +58,12 @@ class SettingsRequest(BaseModel):
     ollama_model: Optional[str] = None
     safe_mode: bool = False
 
+class TranslateRequest(BaseModel):
+    text: Optional[str] = ""
+    texts: Optional[List[str]] = None
+    target_lang: str = "en"
+    source_lang: Optional[str] = "auto"
+
 async def broadcast_event(event_type: str, data: dict):
     message = json.dumps({"event": event_type, "data": data})
     disconnected = []
@@ -345,6 +351,21 @@ async def api_mcp_tools():
     from core.mcp_manager import MCPManager
     tools = await MCPManager.get_instance().list_tools_async()
     return {"tools": tools}
+
+@app.get("/api/translate/languages")
+async def api_translate_languages():
+    from core.translator import translator
+    return {"languages": translator.get_supported_languages()}
+
+@app.post("/api/translate")
+async def api_translate(req: TranslateRequest):
+    from core.translator import translator
+    if req.texts:
+        translated = translator.batch_translate(req.texts, target_lang=req.target_lang, source_lang=req.source_lang or "auto")
+        return {"translated_texts": translated, "target_lang": req.target_lang}
+    
+    translated = translator.translate_text(req.text or "", target_lang=req.target_lang, source_lang=req.source_lang or "auto")
+    return {"translated_text": translated, "target_lang": req.target_lang}
 
 # Mount screenshots directory
 screenshots_dir = Path(__file__).parent / "screenshots"

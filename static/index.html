@@ -37,6 +37,23 @@
         <button class="btn-icon" id="btn-open-settings">
           ⚙️ <span>Settings</span>
         </button>
+        <div class="lang-selector-container">
+          <button class="btn-icon" id="btn-lang-toggle" title="Universal Google Translate (Select Any Language)">
+            🌐 <span id="current-lang-label">English</span> <span style="font-size: 0.65rem; opacity: 0.7;">▼</span>
+          </button>
+          <div class="lang-dropdown" id="lang-dropdown" style="display: none;">
+            <div class="lang-dropdown-header">
+              <span>🌐 Google Translate</span>
+              <span class="lang-count-badge">130+ Languages</span>
+            </div>
+            <div class="lang-search-wrapper">
+              <input type="text" id="lang-search-input" placeholder="Search language (e.g. Gujarati, Hindi, Spanish)...">
+            </div>
+            <div class="lang-list" id="lang-list">
+              <!-- Dynamically populated with all Google Translate languages -->
+            </div>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -280,6 +297,17 @@
     </footer>
   </div>
 
+  <!-- Hidden Google Translate Element Engine -->
+  <div id="google_translate_element" style="display:none;"></div>
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'en',
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   <script src="/static/js/app.js"></script>
 </body>
 </html>
