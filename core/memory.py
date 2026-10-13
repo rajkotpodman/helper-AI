@@ -59,15 +59,23 @@ class AgentMemory:
             lines.append(f"[{len(self.history) - max_recent} earlier steps succeeded. Showing the {max_recent} most recent steps:]")
 
         recent_steps = self.history[-max_recent:]
-        for s in recent_steps:
+        for idx, s in enumerate(recent_steps):
+            is_latest = (idx == len(recent_steps) - 1)
             status = "SUCCESS" if s.success else "FAILED"
-            # Truncate very long outputs in context
-            res_snippet = s.result[:400] + ("..." if len(s.result) > 400 else "")
-            # Safely truncate large argument strings to protect LLM token limits (e.g. Groq 8000 TPM)
+            # For the most recent step, provide generous context budget (up to 16,000 chars)
+            # so the model can inspect complete lists (e.g. all 20+ GitHub repos, full directory files, search results).
+            # For older steps, provide up to 3,000 chars.
+            char_limit = 16000 if is_latest else 3000
+            if len(s.result) <= char_limit:
+                res_snippet = s.result
+            else:
+                res_snippet = s.result[:char_limit] + f"\n... [Truncated {len(s.result) - char_limit} chars; showing first {char_limit} chars of {len(s.result)} total]"
+
+            # Safely truncate abnormally massive argument strings to protect token limits
             safe_args = {}
             for k, v in (s.action_args or {}).items():
-                if isinstance(v, str) and len(v) > 250:
-                    safe_args[k] = v[:250] + f"... [truncated {len(v)} chars]"
+                if isinstance(v, str) and len(v) > 1000:
+                    safe_args[k] = v[:1000] + f"... [truncated {len(v)} chars]"
                 else:
                     safe_args[k] = v
 

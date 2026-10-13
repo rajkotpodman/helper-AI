@@ -108,6 +108,10 @@ This controls the live project browser where logins and cookies are permanently 
   Action: "manage_mcp", Action args: {{ "action": "list_servers" }}
 - Checking / Diagnosing all system connections (Internet, Google Translate, LLM APIs, Chrome port 9222, MCP, WebSocket):
   Action: "check_connections", Action args: {{ "pass_count": 2 }}
+- Listing / fetching GitHub repositories:
+  - Via GitHub CLI: Action: "execute_powershell", Action args: {{ "command": "gh repo list --limit 100" }}
+  - Via GitHub API: Action: "fetch_web_content", Action args: {{ "url": "https://api.github.com/users/<username>/repos?per_page=100" }}
+  - MANDATORY: Always present 100% of all discovered repositories in your final completion_message! Do NOT truncate, sample, or stop at only 3-5 items!
 
 ### RESPONSE FORMAT:
 You MUST respond ONLY with a valid JSON object matching this exact schema:
@@ -311,6 +315,14 @@ class LLMClient:
             extra_instructions.append(
                 "⚠️ MANDATORY CONTENT LENGTH REQUIREMENT: The user demanded exhaustive, long-form content (e.g. minimum 200 lines / comprehensive detail in the requested language). "
                 "Ensure your post_text or generated content is deeply thorough, extensive, well-structured with clear sections, emojis, and step-by-step explanations covering the topic completely. Do NOT condense or truncate into a brief 4-line summary!"
+            )
+
+        if any(k in lower_g for k in ["repo", "repos", "github", "repositories", "list all", "fetch all", "find all"]):
+            extra_instructions.append(
+                "⚠️ MANDATORY EXHAUSTIVE FETCHING REQUIREMENT: The user specifically requires listing or fetching all repositories / internet items.\n"
+                "1. If listing via GitHub CLI, ALWAYS use `gh repo list --limit 100` (or `gh repo list <username> --limit 100`) so NO repositories are omitted or restricted by default limits.\n"
+                "2. If fetching via Internet / API, use `https://api.github.com/users/<username>/repos?per_page=100` with action `fetch_web_content` to fetch up to 100 repositories in one call.\n"
+                "3. In your final completion_message, you MUST provide 100% of all discovered repositories in an exhaustive, numbered list showing: item number, repository name, Public/Private status, and description/link. DO NOT truncate, sample, or stop at only 3-5 items!"
             )
 
         prompt_guidance = "\n".join(extra_instructions)
@@ -893,7 +905,53 @@ class LLMClient:
         # Check if any step has already been executed in trajectory (prevents loop when earlier steps are truncated)
         has_run = bool(trajectory_summary and ("Step " in trajectory_summary or "earlier steps" in trajectory_summary) and trajectory_summary != "No previous steps executed yet.")
 
-        # 1. Specialized handling for LinkedIn Job Applications with CV
+        # 1. Specialized handling for Listing/Fetching all GitHub repositories
+        if any(k in lower for k in ["github", "repo", "repos", "repositories"]) and any(k in lower for k in ["list", "fetch", "show", "get", "find", "all"]):
+            if ("gh repo list" in trajectory_summary.lower() or "api.github.com" in trajectory_summary.lower() or "rajkotpodman/" in trajectory_summary) and "Step " in trajectory_summary:
+                raw_lines = [l.strip() for l in trajectory_summary.splitlines() if l.strip()]
+                found_repos = []
+                for line in raw_lines:
+                    gh_m = re.match(r'^([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)\s+(.*?)\s+(public|private)\b', line, re.IGNORECASE)
+                    if gh_m:
+                        repo_name = gh_m.group(1)
+                        desc = gh_m.group(2).strip() or "No description provided"
+                        vis = gh_m.group(3).capitalize()
+                        found_repos.append(f"{repo_name} ({vis}) - {desc}")
+                    elif re.match(r'^\d+\.\s+([A-Za-z0-9_.-]+)', line):
+                        found_repos.append(line)
+                    elif "/" in line and any(v in line.lower() for v in ["public", "private"]) and not line.startswith("Step") and not line.startswith("Action") and not line.startswith("Thought"):
+                        found_repos.append(line)
+
+                if found_repos:
+                    seen = set()
+                    unique_repos = []
+                    for r in found_repos:
+                        if r not in seen:
+                            seen.add(r)
+                            unique_repos.append(r)
+
+                    repo_list_str = "\n".join(f"{idx}. {r}" if not re.match(r'^\d+\.', r) else r for idx, r in enumerate(unique_repos, start=1))
+                    return {
+                        "thought": f"All {len(unique_repos)} GitHub repositories have been successfully fetched and verified. Presenting the 100% complete list.",
+                        "action": "none",
+                        "action_args": {},
+                        "is_complete": True,
+                        "completion_message": (
+                            f"Mission Accomplished!\n\n"
+                            f"Successfully listed all {len(unique_repos)} GitHub repositories:\n\n"
+                            f"{repo_list_str}"
+                        )
+                    }
+
+            return {
+                "thought": "I will execute `gh repo list --limit 100` to fetch 100% of all GitHub repositories without omitting any repository.",
+                "action": "execute_powershell",
+                "action_args": {"command": "gh repo list --limit 100"},
+                "is_complete": False,
+                "completion_message": ""
+            }
+
+        # 2. Specialized handling for LinkedIn Job Applications with CV
         if re.search(r"\b(linkedin|linked in|linkdin|linkden)\b", lower) and re.search(r"\b(apply|application|applications|cv|resume)\b", lower) and not re.search(r"\b(post|posts|publish|article|articles)\b", lower):
             # Extract count (e.g. 5 space, 5 jobs, loop 5 times)
             count = 5

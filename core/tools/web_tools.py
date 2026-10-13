@@ -185,7 +185,7 @@ class FetchWebContentTool(BaseTool):
         "required": ["url"]
     }
 
-    def execute(self, url: str, max_characters: int = 10000) -> Dict[str, Any]:
+    def execute(self, url: str, max_characters: int = 15000) -> Dict[str, Any]:
         try:
             if not url.startswith("http://") and not url.startswith("https://"):
                 url = "https://" + url
@@ -193,6 +193,53 @@ class FetchWebContentTool(BaseTool):
             resp = requests.get(url, headers=HEADERS, timeout=15)
             resp.raise_for_status()
 
+            resp_headers = getattr(resp, "headers", {}) or {}
+            content_type = str(resp_headers.get("Content-Type", "")).lower()
+
+            # 1. Handle JSON APIs (e.g. GitHub API, REST endpoints, JSON catalogs)
+            if ("application/json" in content_type or url.endswith(".json") or "/api." in url or "/api/" in url) and hasattr(resp, "json"):
+                try:
+                    data = resp.json()
+                    if isinstance(data, list):
+                        lines = [f"🌐 API Endpoint: {url} (Total Items: {len(data)})"]
+                        for idx, item in enumerate(data, start=1):
+                            if isinstance(item, dict):
+                                name = item.get("name") or item.get("full_name") or item.get("title") or item.get("id") or f"Item {idx}"
+                                desc = item.get("description") or item.get("summary") or item.get("body") or ""
+                                link = item.get("html_url") or item.get("url") or item.get("link") or ""
+                                is_priv = item.get("private")
+                                priv_str = "Private" if is_priv is True else ("Public" if is_priv is False else "")
+                                extra = f" [{priv_str}]" if priv_str else ""
+                                lang = f" | Lang: {item.get('language')}" if item.get("language") else ""
+                                stars = f" | ⭐ {item.get('stargazers_count')}" if item.get("stargazers_count") is not None else ""
+                                desc_str = f" - {desc}" if desc else ""
+                                link_str = f" ({link})" if link else ""
+                                lines.append(f"{idx}. {name}{extra}{desc_str}{link_str}{lang}{stars}")
+                            else:
+                                lines.append(f"{idx}. {str(item)}")
+                        formatted_output = "\n".join(lines)
+                        return {
+                            "success": True,
+                            "title": f"API JSON Response ({len(data)} items)",
+                            "url": url,
+                            "items_count": len(data),
+                            "content": formatted_output,
+                            "output": formatted_output
+                        }
+                    elif isinstance(data, dict):
+                        import json
+                        formatted_output = f"🌐 API JSON Object from {url}:\n\n" + json.dumps(data, indent=2)[:max_characters]
+                        return {
+                            "success": True,
+                            "title": "API JSON Object",
+                            "url": url,
+                            "content": formatted_output,
+                            "output": formatted_output
+                        }
+                except Exception:
+                    pass
+
+            # 2. Handle HTML Webpages
             extracted_links = []
             extracted_headings = []
 
@@ -204,15 +251,16 @@ class FetchWebContentTool(BaseTool):
                     if htxt and htxt not in extracted_headings:
                         extracted_headings.append(htxt)
 
-                # Extract top links
+                # Extract links (e.g. repository links, documentation, articles)
                 for a in soup.find_all("a", href=True):
                     atxt = a.get_text(strip=True)
                     ahref = a["href"]
-                    if atxt and ahref and len(atxt) < 60:
+                    if atxt and ahref and len(atxt) < 80:
                         full_link = urllib.parse.urljoin(url, ahref)
-                        extracted_links.append({"text": atxt, "url": full_link})
-                        if len(extracted_links) >= 15:
-                            break
+                        if not any(l["url"] == full_link for l in extracted_links):
+                            extracted_links.append({"text": atxt, "url": full_link})
+                            if len(extracted_links) >= 60:
+                                break
 
                 for s in soup(["script", "style", "nav", "footer", "header", "noscript", "svg"]):
                     s.extract()
@@ -234,22 +282,22 @@ class FetchWebContentTool(BaseTool):
             else:
                 content = clean_text
 
-            headings_summary = "\n- ".join(extracted_headings[:8]) if extracted_headings else "None"
-            links_summary = "\n".join(f"- {l['text']}: {l['url']}" for l in extracted_links[:10]) if extracted_links else "None"
+            headings_summary = "\n- ".join(extracted_headings[:15]) if extracted_headings else "None"
+            links_summary = "\n".join(f"- {l['text']}: {l['url']}" for l in extracted_links[:35]) if extracted_links else "None"
 
             return {
                 "success": True,
                 "title": title,
                 "url": url,
                 "total_characters": len(clean_text),
-                "headings": extracted_headings[:15],
-                "links": extracted_links[:20],
+                "headings": extracted_headings[:25],
+                "links": extracted_links[:60],
                 "content": clean_text,
                 "output": (
                     f"🌐 Webpage: '{title}'\nURL: {url} ({len(clean_text)} total characters)\n\n"
                     f"### Key Headings:\n- {headings_summary}\n\n"
                     f"### Page Content:\n{content}\n\n"
-                    f"### Top Links:\n{links_summary}"
+                    f"### Discovered Links ({len(extracted_links)} total):\n{links_summary}"
                 )
             }
         except Exception as e:

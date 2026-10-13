@@ -623,7 +623,9 @@ function handleStreamEvent(data) {
     const rawOut = data.output !== undefined ? data.output : (data.result !== undefined ? data.result : '');
     const resText = typeof rawOut === 'string' ? rawOut : JSON.stringify(rawOut || '');
     if (resText.trim()) {
-      appendTerminalLog(`↳ Result: ${resText.slice(0, 240)}`, 'info');
+      const lineCount = resText.split('\n').filter(l => l.trim()).length;
+      const countNote = lineCount > 3 ? ` (${lineCount} items/lines)` : '';
+      appendTerminalLog(`↳ Result${countNote}: ${resText.slice(0, 450)}${resText.length > 450 ? '...' : ''}`, 'info');
     }
   } 
   else if (type === 'permission_requested') {
