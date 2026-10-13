@@ -793,3 +793,152 @@ class BuildProjectTool(BaseTool):
         }
 
 
+class AuditSecurityBaselineTool(BaseTool):
+    name = "audit_security_baseline"
+    description = (
+        "Audits defensive security posture, system hardening baselines, listening network ports, "
+        "firewall profiles, installed patches/hotfixes, user privileges, and running service integrity. "
+        "Provides fast, accurate, and authorized ethical security diagnostics."
+    )
+    parameters = {
+        "type": "object",
+        "properties": {
+            "target": {
+                "type": "string",
+                "enum": ["all", "firewall", "ports", "patches", "services", "users", "shares"],
+                "description": "Specific security baseline component to audit (default 'all').",
+                "default": "all"
+            },
+            "save_report": {
+                "type": "boolean",
+                "description": "Whether to save the executive security audit report to Desktop/security_audit.md.",
+                "default": False
+            }
+        },
+        "required": []
+    }
+
+    def execute(self, target: str = "all", save_report: bool = False) -> Dict[str, Any]:
+        import subprocess
+        import platform
+        from core.tools.file_tools import resolve_user_path
+
+        ps_binary = "powershell.exe" if platform.system() == "Windows" else "pwsh"
+
+        def _run_ps(cmd: str, timeout: int = 25) -> str:
+            try:
+                res = subprocess.run(
+                    [ps_binary, "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", cmd],
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout,
+                    encoding="utf-8",
+                    errors="replace"
+                )
+                return res.stdout.strip() or res.stderr.strip() or "No output returned."
+            except Exception as e:
+                return f"Error executing audit check: {e}"
+
+        findings = {}
+        report_sections = [
+            "# 🛡️ Defensive Security & System Hardening Baseline Report",
+            f"- **Host Platform:** {platform.system()} {platform.release()}",
+            f"- **Audit Scope:** {target.upper()}",
+            "\n---\n"
+        ]
+
+        # 1. Firewall Profile Check
+        if target in ["all", "firewall"]:
+            fw_out = _run_ps("Get-NetFirewallProfile | Select-Object Name, Enabled, DefaultInboundAction, DefaultOutboundAction | Format-Table -AutoSize")
+            findings["firewall"] = fw_out
+            report_sections.append("## 🧱 1. Windows Defender Firewall Profiles")
+            report_sections.append("```\n" + fw_out + "\n```\n")
+
+        # 2. Listening Ports & Sockets
+        if target in ["all", "ports"]:
+            ports_cmd = (
+                "Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | "
+                "Select-Object LocalAddress, LocalPort, OwningProcess -Unique | "
+                "Sort-Object LocalPort | Format-Table -AutoSize"
+            )
+            ports_out = _run_ps(ports_cmd)
+            if not ports_out or "error" in ports_out.lower():
+                ports_out = _run_ps("netstat -ano | findstr LISTENING")
+            findings["ports"] = ports_out
+            report_sections.append("## 🔌 2. Open Listening Network Ports")
+            report_sections.append("```\n" + ports_out + "\n```\n")
+
+        # 3. Installed Security Hotfixes / Updates
+        if target in ["all", "patches"]:
+            patches_cmd = "Get-HotFix -ErrorAction SilentlyContinue | Sort-Object InstalledOn -Descending | Select-Object -First 10 HotFixID, Description, InstalledOn | Format-Table -AutoSize"
+            patches_out = _run_ps(patches_cmd)
+            findings["patches"] = patches_out
+            report_sections.append("## 🩹 3. Installed Security Hotfixes & Patches (Top 10 Recent)")
+            report_sections.append("```\n" + patches_out + "\n```\n")
+
+        # 4. Service Integrity & Unquoted Service Paths
+        if target in ["all", "services"]:
+            unquoted_cmd = (
+                "Get-CimInstance win32_service -ErrorAction SilentlyContinue | "
+                "Where-Object { $_.PathName -notlike '\"*' -and $_.PathName -like '* *' } | "
+                "Select-Object Name, PathName, StartMode, State | Format-Table -AutoSize"
+            )
+            unquoted_out = _run_ps(unquoted_cmd)
+            if not unquoted_out or unquoted_out == "No output returned.":
+                unquoted_out = "✓ No unquoted service paths detected across registered services."
+            findings["services"] = unquoted_out
+            report_sections.append("## ⚙️ 4. Service Hardening & Unquoted Path Verification")
+            report_sections.append("```\n" + unquoted_out + "\n```\n")
+
+        # 5. Local User Accounts & Administrator Group
+        if target in ["all", "users"]:
+            users_cmd = "Get-LocalUser -ErrorAction SilentlyContinue | Select-Object Name, Enabled, PasswordRequired, LastLogon | Format-Table -AutoSize"
+            users_out = _run_ps(users_cmd)
+            admin_cmd = "Get-LocalGroupMember -Group Administrators -ErrorAction SilentlyContinue | Select-Object Name, PrincipalSource | Format-Table -AutoSize"
+            admin_out = _run_ps(admin_cmd)
+            findings["users"] = f"{users_out}\n\nAdministrators:\n{admin_out}"
+            report_sections.append("## 👥 5. Local Accounts & Administrator Group Membership")
+            report_sections.append("```\n" + findings["users"] + "\n```\n")
+
+        # 6. Active SMB Shares
+        if target in ["all", "shares"]:
+            shares_cmd = "Get-SmbShare -ErrorAction SilentlyContinue | Select-Object Name, Path, Description | Format-Table -AutoSize"
+            shares_out = _run_ps(shares_cmd)
+            findings["shares"] = shares_out
+            report_sections.append("## 📂 6. Active Network SMB Shares")
+            report_sections.append("```\n" + shares_out + "\n```\n")
+
+        # Hardening Recommendations Summary
+        report_sections.append("## 🎯 Executive Hardening Recommendations:")
+        report_sections.append("1. **Firewall:** Ensure all profiles (Domain, Private, Public) default to Inbound: Block.")
+        report_sections.append("2. **Ports:** Disable or isolate unused listening daemon ports.")
+        report_sections.append("3. **Accounts:** Disable unused local guest/default accounts; verify only intended users are in Administrators.")
+        report_sections.append("4. **Patches:** Keep OS hotfixes updated to mitigate known vulnerabilities.")
+
+        full_report = "\n".join(report_sections)
+
+        saved_path_str = None
+        if save_report:
+            try:
+                dest = resolve_user_path("Desktop/security_audit.md")
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                with open(dest, "w", encoding="utf-8") as f:
+                    f.write(full_report)
+                saved_path_str = str(dest)
+            except Exception as se:
+                saved_path_str = f"Error saving report: {se}"
+
+        output_msg = full_report
+        if saved_path_str:
+            output_msg += f"\n\n📁 Security audit report saved to: {saved_path_str}"
+
+        return {
+            "success": True,
+            "target": target,
+            "findings": findings,
+            "saved_to": saved_path_str,
+            "output": output_msg
+        }
+
+
+

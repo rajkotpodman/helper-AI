@@ -118,6 +118,8 @@ This controls the live project browser where logins and cookies are permanently 
   Action: "execute_python_code", Action args: {{ "code": "...", "timeout_seconds": 90, "auto_install_missing": true }}
 - Scaffolding & Building Multi-File Projects in 1 Operation:
   Action: "build_project_files", Action args: {{ "project_dir": "Desktop/my_project", "files": {{ "main.py": "...", "README.md": "..." }} }}
+- Defensive Security Audits, Open Ports, Firewall, Patches & Hardening:
+  Action: "audit_security_baseline", Action args: {{ "target": "all", "save_report": true }}
 - Listing / fetching GitHub repositories:
   - Via GitHub CLI: Action: "execute_powershell", Action args: {{ "command": "gh repo list --limit 100" }}
   - Via GitHub API: Action: "fetch_web_content", Action args: {{ "url": "https://api.github.com/users/<username>/repos?per_page=100" }}
@@ -358,6 +360,14 @@ class LLMClient:
                 "⚠️ MANDATORY ROBUST IMPLEMENTATION REQUIREMENT: The user requires concrete implementation of a software project, code, or heavy workflow.\n"
                 "- Use `build_project_files` to scaffold all project files, directories, and configuration in one clean atomic step.\n"
                 "- Use `execute_python_code` to execute data processing, custom scrapers, algorithms, or test scripts in a dedicated Python environment with auto-pip dependency installation."
+            )
+
+        if any(k in lower_g for k in ["security", "ethical", "audit", "hardening", "firewall", "listening ports", "ports"]):
+            extra_instructions.append(
+                "⚠️ MANDATORY DEFENSIVE SECURITY & AUDITING REQUIREMENT: The user's goal involves defensive security auditing, posture analysis, or terminal diagnostics.\n"
+                "- Use `audit_security_baseline` (with target='all', 'firewall', 'ports', 'patches', 'services', or 'users') for fast, native, structured diagnostics.\n"
+                "- Always take the shortest, most accurate, and reliable native PowerShell cmdlet path rather than convoluted workarounds.\n"
+                "- Present an executive scorecard with concrete hardening recommendations in your final summary."
             )
 
         prompt_guidance = "\n".join(extra_instructions)
@@ -964,6 +974,28 @@ class LLMClient:
                 "action_args": {"code": code_text, "auto_install_missing": True},
                 "is_complete": True,
                 "completion_message": "Python script executed successfully."
+            }
+
+        # 0.2 Specialized handling for Defensive Security Baseline Auditing
+        if any(k in lower for k in ["security audit", "audit security", "ethical hack", "defensive security", "audit ports", "audit firewall", "hardening audit", "security baseline"]):
+            target_scope = "all"
+            if "port" in lower:
+                target_scope = "ports"
+            elif "firewall" in lower:
+                target_scope = "firewall"
+            elif "patch" in lower or "hotfix" in lower:
+                target_scope = "patches"
+            elif "user" in lower or "admin" in lower:
+                target_scope = "users"
+            elif "service" in lower:
+                target_scope = "services"
+
+            return {
+                "thought": f"I will perform an authorized defensive security posture audit focusing on '{target_scope}' and generate hardening recommendations.",
+                "action": "audit_security_baseline",
+                "action_args": {"target": target_scope, "save_report": True},
+                "is_complete": True,
+                "completion_message": f"Defensive security audit completed successfully for scope: {target_scope}. Complete report and hardening recommendations generated."
             }
 
         # 1. Specialized handling for Listing/Fetching all GitHub repositories

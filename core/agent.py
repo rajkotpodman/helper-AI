@@ -374,6 +374,18 @@ class HelperAgent:
                     })
                     break
 
+            # C.1 Security Baseline Audit
+            if not has_followup_action and action == "audit_security_baseline" and action_success:
+                success = True
+                final_message = output_str
+                metrics.record_goal_complete(success=True)
+                emit("completed", {
+                    "success": True,
+                    "message": final_message,
+                    "total_steps": step_idx
+                })
+                break
+
             # D. Folder Inspection / File listing
             if not has_followup_action and action == "list_directory" and action_success:
                 if any(w in lower_goal for w in ["check contents", "list files", "list contents", "show files", "what files", "see files", "show folder"]):

@@ -9,7 +9,8 @@ from core.tools.system_tools import (
     ManageOllamaTool,
     CheckConnectionsTool,
     ExecutePythonTool,
-    BuildProjectTool
+    BuildProjectTool,
+    AuditSecurityBaselineTool
 )
 from core.tools.file_tools import (
     ListDirectoryTool,
@@ -64,6 +65,7 @@ class ToolRegistry:
             ExecutePowerShellTool(),
             ExecutePythonTool(),
             BuildProjectTool(),
+            AuditSecurityBaselineTool(),
             VoiceSpeechTool(),
             VisionBrowserTool(),
             MCPTool(),

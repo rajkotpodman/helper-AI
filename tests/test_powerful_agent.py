@@ -16,9 +16,9 @@ def registry():
     return ToolRegistry()
 
 
-def test_registry_contains_24_tools(registry):
+def test_registry_contains_25_tools(registry):
     tools = registry.get_all_tools()
-    assert len(tools) >= 24
+    assert len(tools) >= 25
     tool_names = [t.name for t in tools]
     assert "deep_web_crawl" in tool_names
     assert "batch_fetch_web" in tool_names

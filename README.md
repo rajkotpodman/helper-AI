@@ -99,10 +99,11 @@ Whether you need to clean up unorganized folders, diagnose system bottlenecks, r
 
 ---
 
-## 🧰 Complete Arsenal: All 24 Registered Tools
+## 🧰 Complete Arsenal: All 25 Registered Tools
 
 | Tool Name | Category | Description |
 | :--- | :--- | :--- |
+| `audit_security_baseline` | Security | Audits defensive security baselines, firewall profiles, open ports, patches, and service hardening |
 | `deep_web_crawl` | Web | Recursively crawls websites, documentation portals, and knowledge bases into clean markdown dossiers |
 | `batch_fetch_web` | Web | Concurrently fetches multiple web pages or search results in parallel |
 | `fetch_github_repo` | Web | Deeply inspects and fetches entire GitHub codebases, raw trees, files, README, and releases |
