@@ -199,8 +199,9 @@ async def execute_agent_goal(req: GoalExecutionRequest):
 
     # Determine loop limits
     max_steps = req.max_steps or 50
-    if "/goal" in goal_str.lower() or "5 " in goal_str.lower() or "post" in goal_str.lower():
-        max_steps = max(max_steps, 100)
+    is_heavy = any(k in goal_str.lower() for k in ["/goal", "heavy", "long", "deep", "full web", "crawl", "build", "implement", "project", "all", "5 "])
+    if is_heavy:
+        max_steps = max(max_steps, 200)
 
     # Initialize LLM and Agent
     provider = req.provider or os.getenv("LLM_PROVIDER", "gemini")
@@ -303,6 +304,13 @@ async def get_system_status():
         "provider": os.getenv("LLM_PROVIDER", "gemini"),
         "safe_mode": os.getenv("SAFE_MODE", "false").lower() == "true"
     }
+
+
+@app.get("/api/tools")
+async def get_tools():
+    """Enumerates all registered tools with schemas."""
+    tools = ToolRegistry()
+    return {"tools": tools.get_schemas(), "count": len(tools.get_all_tools())}
 
 
 # --- Connection Diagnostic Endpoints ---

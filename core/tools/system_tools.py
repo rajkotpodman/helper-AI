@@ -591,3 +591,205 @@ class CheckConnectionsTool(BaseTool):
                 "output": f"Connection check completed in {single['duration_ms']}ms. {single['connected_count']}/{single['total_checked']} connections verified."
             }
 
+
+class ExecutePythonTool(BaseTool):
+    name = "execute_python_code"
+    description = (
+        "Execute Python code directly on the host machine in a dedicated subprocess. "
+        "Ideal for heavy computational tasks, custom web scraping, data transformations, "
+        "file processing, math, machine learning, and automation. Auto-installs missing pip packages if needed."
+    )
+    parameters = {
+        "type": "object",
+        "properties": {
+            "code": {
+                "type": "string",
+                "description": "Complete Python script or code snippet to execute."
+            },
+            "timeout_seconds": {
+                "type": "integer",
+                "description": "Maximum execution time before timeout (default 90).",
+                "default": 90
+            },
+            "auto_install_missing": {
+                "type": "boolean",
+                "description": "Automatically run 'pip install' if a missing module is encountered (default True).",
+                "default": True
+            }
+        },
+        "required": ["code"]
+    }
+
+    def execute(self, code: str, timeout_seconds: int = 90, auto_install_missing: bool = True) -> Dict[str, Any]:
+        import sys
+        import time
+        import re
+        from pathlib import Path
+
+        scratch_dir = Path.cwd() / "scratch"
+        scratch_dir.mkdir(parents=True, exist_ok=True)
+        script_file = scratch_dir / f"run_{int(time.time() * 1000)}.py"
+
+        try:
+            with open(script_file, "w", encoding="utf-8") as f:
+                f.write(code)
+
+            start_t = time.perf_counter()
+            res = subprocess.run(
+                [sys.executable, str(script_file)],
+                capture_output=True,
+                text=True,
+                timeout=timeout_seconds,
+                encoding="utf-8",
+                errors="replace"
+            )
+            elapsed_ms = round((time.perf_counter() - start_t) * 1000, 1)
+
+            stdout = res.stdout.strip()
+            stderr = res.stderr.strip()
+
+            # Auto-install missing module if requested
+            if res.returncode != 0 and auto_install_missing and stderr:
+                mod_match = re.search(r"No module named ['\"]([^'\"]+)['\"]", stderr)
+                if mod_match:
+                    pkg = mod_match.group(1).split(".")[0]
+                    # Map standard package name differences
+                    pkg_map = {"bs4": "beautifulsoup4", "cv2": "opencv-python", "PIL": "pillow", "yaml": "pyyaml"}
+                    install_pkg = pkg_map.get(pkg, pkg)
+                    install_res = subprocess.run(
+                        [sys.executable, "-m", "pip", "install", install_pkg],
+                        capture_output=True,
+                        text=True,
+                        timeout=120
+                    )
+                    if install_res.returncode == 0:
+                        # Re-run after successful package install
+                        res2 = subprocess.run(
+                            [sys.executable, str(script_file)],
+                            capture_output=True,
+                            text=True,
+                            timeout=timeout_seconds,
+                            encoding="utf-8",
+                            errors="replace"
+                        )
+                        stdout = res2.stdout.strip()
+                        stderr = res2.stderr.strip()
+                        elapsed_ms = round((time.perf_counter() - start_t) * 1000, 1)
+                        res = res2
+
+            combined = ""
+            if stdout:
+                combined += stdout
+            if stderr:
+                if combined:
+                    combined += "\n[STDERR]:\n"
+                combined += stderr
+
+            if not combined and res.returncode == 0:
+                combined = "Script executed successfully with no console output."
+
+            return {
+                "success": res.returncode == 0,
+                "exit_code": res.returncode,
+                "duration_ms": elapsed_ms,
+                "stdout": stdout,
+                "stderr": stderr,
+                "output": combined
+            }
+        except subprocess.TimeoutExpired:
+            return {
+                "success": False,
+                "exit_code": -1,
+                "output": f"Python execution timed out after {timeout_seconds} seconds.",
+                "error": "TimeoutExpired"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "exit_code": -1,
+                "output": f"Execution failed: {str(e)}",
+                "error": str(e)
+            }
+        finally:
+            try:
+                if script_file.exists():
+                    script_file.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+
+class BuildProjectTool(BaseTool):
+    name = "build_project_files"
+    description = (
+        "Scaffold and create an entire multi-file project, directory tree, or codebase in one atomic operation. "
+        "Writes multiple source code files, configurations, and documentation across directories simultaneously."
+    )
+    parameters = {
+        "type": "object",
+        "properties": {
+            "project_dir": {
+                "type": "string",
+                "description": "Target root folder for the project (e.g. 'Desktop/my_project', 'src/my_app')."
+            },
+            "files": {
+                "type": "object",
+                "description": "Dictionary mapping relative file paths to their full text content, e.g. {'main.py': '...', 'README.md': '...', 'src/utils.py': '...'}.",
+                "additionalProperties": {"type": "string"}
+            },
+            "overwrite": {
+                "type": "boolean",
+                "description": "Whether to overwrite existing files (default True).",
+                "default": True
+            }
+        },
+        "required": ["project_dir", "files"]
+    }
+
+    def execute(self, project_dir: str, files: Dict[str, str], overwrite: bool = True) -> Dict[str, Any]:
+        from core.tools.file_tools import resolve_user_path
+        from pathlib import Path
+
+        root = resolve_user_path(project_dir)
+        root.mkdir(parents=True, exist_ok=True)
+
+        created_files = []
+        skipped_files = []
+        total_bytes = 0
+
+        for rel_path, content in files.items():
+            dest = root / Path(rel_path.strip().lstrip("/\\"))
+            dest.parent.mkdir(parents=True, exist_ok=True)
+
+            if dest.exists() and not overwrite:
+                skipped_files.append(rel_path)
+                continue
+
+            text_content = str(content)
+            with open(dest, "w", encoding="utf-8") as f:
+                f.write(text_content)
+
+            created_files.append(rel_path)
+            total_bytes += len(text_content.encode("utf-8"))
+
+        summary_lines = [
+            f"🚀 Project successfully built at: {root}",
+            f"Total files created: {len(created_files)} ({round(total_bytes / 1024, 1)} KB)"
+        ]
+        for f in created_files[:25]:
+            summary_lines.append(f"  ✓ {f}")
+        if len(created_files) > 25:
+            summary_lines.append(f"  ... and {len(created_files) - 25} more files.")
+
+        if skipped_files:
+            summary_lines.append(f"Skipped {len(skipped_files)} existing files (overwrite=False).")
+
+        return {
+            "success": True,
+            "project_path": str(root),
+            "files_count": len(created_files),
+            "total_bytes": total_bytes,
+            "created_files": created_files,
+            "output": "\n".join(summary_lines)
+        }
+
+

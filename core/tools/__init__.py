@@ -7,7 +7,9 @@ from core.tools.system_tools import (
     ProcessManagerTool,
     OpenAppOrFileTool,
     ManageOllamaTool,
-    CheckConnectionsTool
+    CheckConnectionsTool,
+    ExecutePythonTool,
+    BuildProjectTool
 )
 from core.tools.file_tools import (
     ListDirectoryTool,
@@ -19,7 +21,10 @@ from core.tools.file_tools import (
 from core.tools.web_tools import (
     SearchWebTool,
     FetchWebContentTool,
-    DownloadFileTool
+    DownloadFileTool,
+    DeepWebCrawlerTool,
+    BatchWebFetchTool,
+    FetchGitHubRepoTool
 )
 from core.tools.browser_tools import BrowserAutomationTool
 from core.tools.voice_tools import VoiceSpeechTool
@@ -51,9 +56,14 @@ class ToolRegistry:
             SearchWebTool(),
             FetchWebContentTool(),
             DownloadFileTool(),
+            DeepWebCrawlerTool(),
+            BatchWebFetchTool(),
+            FetchGitHubRepoTool(),
             OpenAppOrFileTool(),
             BrowserAutomationTool(),
             ExecutePowerShellTool(),
+            ExecutePythonTool(),
+            BuildProjectTool(),
             VoiceSpeechTool(),
             VisionBrowserTool(),
             MCPTool(),

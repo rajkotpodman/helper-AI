@@ -75,10 +75,24 @@ class HelperAgent:
             loop_match = re.search(r'\b(\d+)\s*(?:times|space|jobs|positions)\b', lower_goal)
         target_loop_count = int(loop_match.group(1)) if loop_match else None
 
-        # Dynamically scale step limits for /goal or multi-item tasks (preserve explicit caller limits)
+        # Dynamically scale step limits for /goal, heavy long-running tasks, or multi-item tasks
+        is_heavy_task = any(w in lower_goal for w in [
+            "/goal", "heavy", "long", "deep", "full web", "crawl", "build", "implement",
+            "project", "complete", "entire", "all"
+        ])
         if self.max_steps >= 50:
-            if "/goal" in lower_goal or (target_posts and target_posts > 1) or (target_loop_count and target_loop_count > 1):
-                self.max_steps = max(self.max_steps, 100)
+            if is_heavy_task or (target_posts and target_posts > 1) or (target_loop_count and target_loop_count > 1):
+                self.max_steps = max(self.max_steps, 200)
+
+        # Initialize multi-phase plan milestones for complex / heavy goals
+        if is_heavy_task:
+            milestones = [
+                {"id": 1, "title": "Discovery, Deep Research & Input Analysis", "status": "in_progress"},
+                {"id": 2, "title": "Architecture, Code & Scaffolding", "status": "pending"},
+                {"id": 3, "title": "Core Implementation & Multi-Tool Execution", "status": "pending"},
+                {"id": 4, "title": "Verification, Self-Testing & Final Delivery", "status": "pending"}
+            ]
+            memory.set_milestones(milestones)
 
         def get_completed_post_count() -> int:
             count = 0
@@ -312,12 +326,12 @@ class HelperAgent:
             # Fast-path early completion for successfully fulfilled single-intent goals
             lower_goal = goal.lower().strip()
 
-            # Guard: If goal requires creating, posting, publishing, saving, writing, or applying,
+            # Guard: If goal requires creating, posting, publishing, saving, writing, applying, or implementing,
             # intermediate discovery/reading/fetching actions MUST NOT cause premature exit!
             has_followup_action = any(k in lower_goal for k in [
                 "post", "publish", "share", "linkedin", "linkdin", "linkden", "facebook", "blogger", "twitter", "tweet",
                 "create", "write", "save", "paste", "copy paste", "copy and paste", "summarize", "apply", "download",
-                "then", "and then", "after that"
+                "implement", "build", "code", "run", "execute", "crawl and", "fetch and", "then", "and then", "after that"
             ])
 
             # A. App Launching (e.g. open/run/launch edge, chrome, notepad, calc, browser)
@@ -438,19 +452,30 @@ class HelperAgent:
                     })
                     break
 
-            # I. Loop breaker: Stop execution if the same action fails 3 times consecutively
+            # I. Autonomous Self-Healing Strategy Pivot: Never surrender on repeating action failures!
             if len(memory.history) >= 3:
                 last_3 = memory.history[-3:]
                 if all(not s.success and s.action == action for s in last_3):
-                    success = False
-                    final_message = f"Goal execution halted: Action '{action}' failed 3 consecutive times. Halting to avoid infinite loop."
-                    metrics.record_goal_complete(success=False)
-                    emit("completed", {
-                        "success": False,
-                        "message": final_message,
-                        "total_steps": step_idx
+                    # Instead of immediately surrendering, engage self-healing pivot protocol
+                    pivot_msg = f"⚠️ Autonomous Self-Healing Activated: Action '{action}' encountered 3 consecutive roadblocks. Autonomously switching strategy and pivoting to alternative tool."
+                    logger.warning(pivot_msg)
+                    emit("self_healing_pivot", {
+                        "step": step_idx,
+                        "failing_action": action,
+                        "message": pivot_msg
                     })
-                    break
+                    memory.pin_fact(f"Self-Healing Pivot: Action '{action}' failed consecutively. Switch to alternative tools (e.g. execute_python_code, deep_web_crawl, or search_web) instead of repeating '{action}'.")
+                    # If continuous non-progress persists across 8 steps without any success, pause safely
+                    if len(memory.history) >= 8 and sum(1 for s in memory.history[-6:] if not s.success) >= 5:
+                        success = False
+                        final_message = f"Goal execution paused after multiple self-healing attempts encountered system roadblocks. Last error: {output_str[:300]}"
+                        metrics.record_goal_complete(success=False)
+                        emit("completed", {
+                            "success": False,
+                            "message": final_message,
+                            "total_steps": step_idx
+                        })
+                        break
 
             # Small delay to keep UI smooth
             await asyncio.sleep(0.3)

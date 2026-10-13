@@ -108,6 +108,16 @@ This controls the live project browser where logins and cookies are permanently 
   Action: "manage_mcp", Action args: {{ "action": "list_servers" }}
 - Checking / Diagnosing all system connections (Internet, Google Translate, LLM APIs, Chrome port 9222, MCP, WebSocket):
   Action: "check_connections", Action args: {{ "pass_count": 2 }}
+- Deep Recursive Web Crawling & Knowledge Dossiers:
+  Action: "deep_web_crawl", Action args: {{ "start_url": "https://...", "max_pages": 8, "max_depth": 2, "save_to_path": "Desktop/crawled_knowledge.md" }}
+- Concurrent Parallel Batch Web Fetching (Multiple URLs):
+  Action: "batch_fetch_web", Action args: {{ "urls": ["https://...", "https://..."], "max_characters_per_url": 8000 }}
+- GitHub Repositories (Codebase Tree, Raw Source Files, README, Releases):
+  Action: "fetch_github_repo", Action args: {{ "repo": "owner/repo", "action": "overview" }} (or action: "tree", "file", "readme", "releases", file_path: "...")
+- Running Python Scripts Directly (Heavy Data Processing, Custom Scrapers, ML, Complex Logic):
+  Action: "execute_python_code", Action args: {{ "code": "...", "timeout_seconds": 90, "auto_install_missing": true }}
+- Scaffolding & Building Multi-File Projects in 1 Operation:
+  Action: "build_project_files", Action args: {{ "project_dir": "Desktop/my_project", "files": {{ "main.py": "...", "README.md": "..." }} }}
 - Listing / fetching GitHub repositories:
   - Via GitHub CLI: Action: "execute_powershell", Action args: {{ "command": "gh repo list --limit 100" }}
   - Via GitHub API: Action: "fetch_web_content", Action args: {{ "url": "https://api.github.com/users/<username>/repos?per_page=100" }}
@@ -334,6 +344,21 @@ class LLMClient:
                     "- Make sure post_text contains the synthesized or copied content from Step 1 formatted with clean headings and bullets (under 2,800 characters to fit LinkedIn's limit).\n"
                     "- Only mark is_complete=true AFTER browser_automation has successfully published the post!"
                 )
+
+        if any(k in lower_g for k in ["crawl", "deep web", "full web", "fetch full web", "scrape all", "documentation", "scrape web"]):
+            extra_instructions.append(
+                "⚠️ MANDATORY DEEP WEB CAPABILITY REQUIREMENT: The user's goal involves deep web fetching or crawling full web documentation.\n"
+                "- Use `deep_web_crawl` to traverse child links and assemble comprehensive markdown dossiers across multiple pages without truncation.\n"
+                "- If analyzing multiple search results or target links concurrently, use `batch_fetch_web`.\n"
+                "- If the goal also requires implementing, coding, or building from the fetched web content, do NOT set is_complete=true on Step 1! Proceed to Step 2 to build or execute the implementation!"
+            )
+
+        if any(k in lower_g for k in ["implement", "build project", "build app", "create project", "heavy", "python script"]):
+            extra_instructions.append(
+                "⚠️ MANDATORY ROBUST IMPLEMENTATION REQUIREMENT: The user requires concrete implementation of a software project, code, or heavy workflow.\n"
+                "- Use `build_project_files` to scaffold all project files, directories, and configuration in one clean atomic step.\n"
+                "- Use `execute_python_code` to execute data processing, custom scrapers, algorithms, or test scripts in a dedicated Python environment with auto-pip dependency installation."
+            )
 
         prompt_guidance = "\n".join(extra_instructions)
         if prompt_guidance:
@@ -914,6 +939,32 @@ class LLMClient:
         lower = goal.lower()
         # Check if any step has already been executed in trajectory (prevents loop when earlier steps are truncated)
         has_run = bool(trajectory_summary and ("Step " in trajectory_summary or "earlier steps" in trajectory_summary) and trajectory_summary != "No previous steps executed yet.")
+
+        # 0. Specialized handling for Deep Web Crawling / Fetching Full Web
+        if any(k in lower for k in ["crawl", "deep web", "fetch full web", "full web"]) and not any(k in lower for k in ["linkedin", "facebook"]):
+            url_match = re.search(r'https?://[^\s"\'<>]+', goal)
+            target_url = url_match.group(0) if url_match else "https://raw.githubusercontent.com/rajkotpodman/helper-AI/main/README.md"
+            if not has_run or "deep_web_crawl" not in trajectory_summary.lower():
+                has_impl = any(k in lower for k in ["implement", "build", "code", "create", "make"])
+                return {
+                    "thought": f"I will perform an exhaustive deep web crawl of '{target_url}' to extract all pages, headings, and structured content without truncation.",
+                    "action": "deep_web_crawl",
+                    "action_args": {"start_url": target_url, "max_pages": 6, "max_depth": 1, "save_to_path": "Desktop/crawled_knowledge.md"},
+                    "is_complete": not has_impl,
+                    "completion_message": "" if has_impl else "Deep web crawl completed successfully! Complete knowledge dossier assembled."
+                }
+
+        # 0.1 Specialized handling for Python execution
+        if re.search(r"\b(run python|execute python|python code|python script)\b", lower):
+            code_match = re.search(r"```(?:python)?\s*(.*?)\s*```", goal, re.DOTALL)
+            code_text = code_match.group(1) if code_match else "print('Helper-AI Python Engine Ready.')"
+            return {
+                "thought": "I will execute the Python script directly in a dedicated subprocess.",
+                "action": "execute_python_code",
+                "action_args": {"code": code_text, "auto_install_missing": True},
+                "is_complete": True,
+                "completion_message": "Python script executed successfully."
+            }
 
         # 1. Specialized handling for Listing/Fetching all GitHub repositories
         if any(k in lower for k in ["github", "repo", "repos", "repositories"]) and any(k in lower for k in ["list", "fetch", "show", "get", "find", "all"]):

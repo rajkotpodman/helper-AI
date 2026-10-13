@@ -99,28 +99,34 @@ Whether you need to clean up unorganized folders, diagnose system bottlenecks, r
 
 ---
 
-## 🧰 Complete Arsenal: All 18 Registered Tools
+## 🧰 Complete Arsenal: All 24 Registered Tools
 
 | Tool Name | Category | Description |
 | :--- | :--- | :--- |
-| `execute_powershell` | System | Executes native PowerShell or terminal scripts with stdout/stderr capture |
+| `deep_web_crawl` | Web | Recursively crawls websites, documentation portals, and knowledge bases into clean markdown dossiers |
+| `batch_fetch_web` | Web | Concurrently fetches multiple web pages or search results in parallel |
+| `fetch_github_repo` | Web | Deeply inspects and fetches entire GitHub codebases, raw trees, files, README, and releases |
+| `fetch_web_content` | Web | Extracts clean, readable text from target URLs with dynamic browser fallback for JS SPAs |
+| `duckduckgo_search` | Web | Queries DuckDuckGo for live internet snippets without API keys |
+| `download_file` | Web | Streams and downloads binary files directly to designated local paths |
+| `execute_python_code` | Code | Dedicated Python execution sandbox with automatic pip dependency installation |
+| `build_project_files` | Code | Scaffolds and writes entire multi-file projects, directory trees, and configurations in 1 atomic step |
+| `execute_powershell` | System | Executes native PowerShell or terminal scripts with stdout/stderr capture and auto-quoting |
 | `read_file` | File | Reads text content from files across the host filesystem |
 | `write_file` | File | Creates or overwrites files with provided text content |
-| `list_directory` | File | Lists children files, folders, and sizes in a target path |
+| `list_directory` | File | Lists children files, folders, and sizes in a target path (supports paths with spaces) |
 | `search_files` | File | Recursively searches for files matching wildcards or extensions |
+| `move_or_copy_file` | File | Moves, renames, or copies files and directories |
 | `process_manager` | System | Enumerates running processes and terminates target PIDs |
 | `system_health` | System | Retrieves real-time CPU load, memory percentages, and disk stats |
 | `open_application` | Apps | Launches applications, documents, or custom URLs |
-| `duckduckgo_search` | Web | Queries DuckDuckGo for live internet snippets without API keys |
-| `fetch_web_content` | Web | Extracts clean, readable text from target URLs |
-| `download_file` | Web | Streams and downloads binary files to designated local paths |
+| `manage_ollama` | AI | Manages local Ollama models, pulls models, and inspects status |
+| `check_connections` | Network | Comprehensive multi-pass network and API connectivity diagnostics |
 | `browser_automation`| Browser | Controls Selenium Project Browser for social media, Blogger, and web forms |
 | `desktop_gui_control`| GUI | Controls mouse cursor, keyboard hotkeys, and window geometry |
 | `text_to_speech` | Voice | Generates natural neural speech audio using Microsoft Edge-TTS |
 | `vision_browser` | Vision | Captures visual screenshots and DOM state via Playwright |
 | `mcp_tool` | Extensibility | Dispatches requests to external Model Context Protocol servers |
-| `read_memory` | Memory | Inspects historical conversation interactions and trajectories |
-| `clear_memory` | Memory | Resets and archives current active session memory logs |
 
 ---
 
