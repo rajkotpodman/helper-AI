@@ -32,6 +32,11 @@ from core.tools.voice_tools import VoiceSpeechTool
 from core.tools.playwright_tools import VisionBrowserTool
 from core.tools.mcp_tools import MCPTool
 from core.tools.desktop_gui_tools import DesktopGUIControlTool
+from core.tools.universal_terminal_tools import (
+    UniversalTerminalTool,
+    SynthesizeOSCommandTool,
+    CommandHubTool
+)
 
 class ToolRegistry:
     """Central registry of all tools available to Helper-AI."""
@@ -69,7 +74,10 @@ class ToolRegistry:
             VoiceSpeechTool(),
             VisionBrowserTool(),
             MCPTool(),
-            DesktopGUIControlTool()
+            DesktopGUIControlTool(),
+            UniversalTerminalTool(),
+            SynthesizeOSCommandTool(),
+            CommandHubTool()
         ]
         for t in defaults:
             self.register(t)

@@ -120,6 +120,12 @@ This controls the live project browser where logins and cookies are permanently 
   Action: "build_project_files", Action args: {{ "project_dir": "Desktop/my_project", "files": {{ "main.py": "...", "README.md": "..." }} }}
 - Defensive Security Audits, Open Ports, Firewall, Patches & Hardening:
   Action: "audit_security_baseline", Action args: {{ "target": "all", "save_report": true }}
+- Universal Cross-Platform Terminal (Run any PS or Terminal Command on Windows, Linux, macOS; Heavy/Long Background Tasks):
+  Action: "universal_terminal", Action args: {{ "command": "...", "background": false, "timeout_seconds": 120 }} (or action: "status" / "kill", task_id: "...")
+- Synthesize OS Commands (Cross-Platform Command Translator for Windows, Linux, macOS):
+  Action: "synthesize_os_command", Action args: {{ "intent": "...", "target_os": "auto", "execute_now": true }}
+- Download / Fetch Command Cheatsheets & Recipes (cheat.sh, community hubs, encyclopedia):
+  Action: "command_hub", Action args: {{ "topic": "powershell", "action": "cheatsheet" }}
 - Listing / fetching GitHub repositories:
   - Via GitHub CLI: Action: "execute_powershell", Action args: {{ "command": "gh repo list --limit 100" }}
   - Via GitHub API: Action: "fetch_web_content", Action args: {{ "url": "https://api.github.com/users/<username>/repos?per_page=100" }}
@@ -996,6 +1002,42 @@ class LLMClient:
                 "action_args": {"target": target_scope, "save_report": True},
                 "is_complete": True,
                 "completion_message": f"Defensive security audit completed successfully for scope: {target_scope}. Complete report and hardening recommendations generated."
+            }
+
+        # 0.3 Specialized handling for Universal Terminal, OS Commands & Command Hub
+        if any(k in lower for k in ["cheatsheet", "cheat sheet", "command hub", "download command", "command recipe"]) or ("download" in lower and any(p in lower for p in ["terminal command", "ps command", "powershell command"])):
+            target_topic = "powershell"
+            for t_cand in ["ffmpeg", "docker", "tar", "git", "curl", "iptables", "systemctl", "powershell", "python", "bash", "netstat", "lsof", "find"]:
+                if t_cand in lower:
+                    target_topic = t_cand
+                    break
+            return {
+                "thought": f"I will retrieve or download the command cheat sheet and verified usage recipes for '{target_topic}'.",
+                "action": "command_hub",
+                "action_args": {"topic": target_topic, "action": "cheatsheet"},
+                "is_complete": True,
+                "completion_message": f"Successfully retrieved complete command recipes and usage guidelines for '{target_topic}'."
+            }
+
+        if any(k in lower for k in ["synthesize command", "generate command", "create command for os", "command for any os", "commands for any os", "check your os and ready", "create any type of commands"]):
+            return {
+                "thought": "I will synthesize native terminal commands tailored specifically to the host operating system.",
+                "action": "synthesize_os_command",
+                "action_args": {"intent": goal, "target_os": "auto", "execute_now": True},
+                "is_complete": True,
+                "completion_message": "Cross-platform OS command synthesized and executed successfully."
+            }
+
+        if any(k in lower for k in ["universal terminal", "run terminal command", "terminal commands for goal", "heavy task", "long task"]) and any(k in lower for k in ["command", "ps", "terminal", "exec"]):
+            cmd_match = re.search(r"```(?:powershell|bash|sh|cmd)?\s*(.*?)\s*```", goal, re.DOTALL)
+            target_cmd = cmd_match.group(1).strip() if cmd_match else "Get-Process | Select-Object -First 10"
+            is_heavy = any(k in lower for k in ["heavy", "long", "background", "daemon"])
+            return {
+                "thought": "I will execute the terminal command via the universal cross-platform execution engine.",
+                "action": "universal_terminal",
+                "action_args": {"command": target_cmd, "background": is_heavy, "timeout_seconds": 120},
+                "is_complete": True,
+                "completion_message": "Universal terminal command executed successfully across host OS."
             }
 
         # 1. Specialized handling for Listing/Fetching all GitHub repositories
