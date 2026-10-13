@@ -6,7 +6,8 @@ from core.tools.system_tools import (
     GetSystemHealthTool,
     ProcessManagerTool,
     OpenAppOrFileTool,
-    ManageOllamaTool
+    ManageOllamaTool,
+    CheckConnectionsTool
 )
 from core.tools.file_tools import (
     ListDirectoryTool,
@@ -38,6 +39,7 @@ class ToolRegistry:
 
     def _register_default_tools(self):
         defaults = [
+            CheckConnectionsTool(),
             ManageOllamaTool(),
             GetSystemHealthTool(),
             ProcessManagerTool(),

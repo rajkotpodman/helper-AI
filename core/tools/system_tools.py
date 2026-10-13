@@ -543,3 +543,51 @@ class ManageOllamaTool(BaseTool):
                 return {"success": False, "output": f"Ollama service is currently not responding at {base_url}."}
 
         return {"success": False, "output": f"Unknown action: {action}"}
+
+
+class CheckConnectionsTool(BaseTool):
+    name = "check_connections"
+    description = (
+        "Diagnose, test, and verify all Helper-AI connections (Internet, Google Translate, "
+        "LLM APIs, Chrome debugging port, MCP, WebSocket). Supports double-pass check to measure "
+        "connection stability, latency, and socket reuse speedup."
+    )
+    parameters = {
+        "type": "object",
+        "properties": {
+            "pass_count": {
+                "type": "integer",
+                "description": "Number of consecutive check passes to execute (default 2 for double-check).",
+                "default": 2
+            },
+            "target": {
+                "type": "string",
+                "description": "Specific target to check ('all', 'internet', 'translate', 'llm', 'chrome', 'mcp').",
+                "default": "all"
+            }
+        }
+    }
+
+    def execute(self, pass_count: int = 2, target: str = "all") -> Dict[str, Any]:
+        from core.connection_checker import connection_checker
+        if pass_count >= 2:
+            diag = connection_checker.check_twice()
+            return {
+                "success": True,
+                "pass_count": 2,
+                "stability_score_pct": diag["stability_score_pct"],
+                "total_duration_ms": diag["total_duration_ms"],
+                "summary": diag["summary_markdown"],
+                "output": diag["summary_markdown"]
+            }
+        else:
+            single = connection_checker.check_all()
+            return {
+                "success": True,
+                "pass_count": 1,
+                "total_duration_ms": single["duration_ms"],
+                "connected_count": single["connected_count"],
+                "connections": single["connections"],
+                "output": f"Connection check completed in {single['duration_ms']}ms. {single['connected_count']}/{single['total_checked']} connections verified."
+            }
+

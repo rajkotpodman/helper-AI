@@ -4,6 +4,9 @@ import json
 import re
 from typing import Dict, Any, Optional
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SYSTEM_PROMPT = r"""You are Helper, an autonomous AI assistant with full control of the user's running PC and internet access.
 Your mandate is to accomplish the user's GOAL completely, reliably, and autonomously WITHOUT asking redundant questions.
@@ -103,6 +106,8 @@ This controls the live project browser where logins and cookies are permanently 
   Action: "vision_browser", Action args: {{ "action": "screenshot" }}
 - Model Context Protocol (MCP) servers & tools:
   Action: "manage_mcp", Action args: {{ "action": "list_servers" }}
+- Checking / Diagnosing all system connections (Internet, Google Translate, LLM APIs, Chrome port 9222, MCP, WebSocket):
+  Action: "check_connections", Action args: {{ "pass_count": 2 }}
 
 ### RESPONSE FORMAT:
 You MUST respond ONLY with a valid JSON object matching this exact schema:
@@ -134,6 +139,21 @@ class LLMClient:
         self.model = model
         self.base_url = base_url
 
+        # Shared connection pool session for high-speed API execution
+        self._session = requests.Session()
+        try:
+            from requests.adapters import HTTPAdapter
+            from urllib3.util.retry import Retry
+            adapter = HTTPAdapter(
+                pool_connections=10,
+                pool_maxsize=20,
+                max_retries=Retry(total=2, backoff_factor=0.3, status_forcelist=[502, 503, 504])
+            )
+            self._session.mount("https://", adapter)
+            self._session.mount("http://", adapter)
+        except Exception:
+            pass
+
         if not self.model:
             if self.provider == "gemini":
                 self.model = os.getenv("GEMINI_MODEL") or "gemini-flash-latest"
@@ -145,6 +165,113 @@ class LLMClient:
                 self.model = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
             else:
                 self.model = "rule_engine"
+
+    def test_connection(self, provider: Optional[str] = None) -> Dict[str, Any]:
+        """Tests connectivity and latency to the specified or configured LLM provider."""
+        import time
+        target_provider = (provider or self.provider).lower().strip()
+        start_t = time.perf_counter()
+
+        if target_provider == "gemini":
+            gemini_key = self.api_key if self.provider == "gemini" else (os.getenv("GEMINI_API_KEY") or "")
+            if not gemini_key:
+                return {"provider": "gemini", "status": "unconfigured", "latency_ms": 0, "message": "GEMINI_API_KEY is not set."}
+            try:
+                url = f"https://generativelanguage.googleapis.com/v1beta/models?key={gemini_key}"
+                resp = self._session.get(url, timeout=4.0)
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                if resp.status_code == 200:
+                    models = [m.get("name", "").replace("models/", "") for m in resp.json().get("models", []) if "gemini" in m.get("name", "")]
+                    return {
+                        "provider": "gemini",
+                        "status": "connected",
+                        "latency_ms": lat,
+                        "model": self.model or "gemini-2.5-flash",
+                        "models_count": len(models),
+                        "message": f"Gemini API connected successfully ({lat}ms)"
+                    }
+                else:
+                    return {"provider": "gemini", "status": "error", "latency_ms": lat, "message": f"HTTP {resp.status_code}: {resp.text[:100]}"}
+            except Exception as e:
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                return {"provider": "gemini", "status": "error", "latency_ms": lat, "message": str(e)}
+
+        elif target_provider == "groq":
+            groq_key = self.api_key if self.provider == "groq" else (os.getenv("GROQ_API_KEY") or "")
+            if not groq_key:
+                return {"provider": "groq", "status": "unconfigured", "latency_ms": 0, "message": "GROQ_API_KEY is not set."}
+            try:
+                url = "https://api.groq.com/openai/v1/models"
+                resp = self._session.get(url, headers={"Authorization": f"Bearer {groq_key}"}, timeout=4.0)
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                if resp.status_code == 200:
+                    return {
+                        "provider": "groq",
+                        "status": "connected",
+                        "latency_ms": lat,
+                        "model": self.model or "qwen/qwen3.8-27b",
+                        "message": f"Groq API connected successfully ({lat}ms)"
+                    }
+                else:
+                    return {"provider": "groq", "status": "error", "latency_ms": lat, "message": f"HTTP {resp.status_code}"}
+            except Exception as e:
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                return {"provider": "groq", "status": "error", "latency_ms": lat, "message": str(e)}
+
+        elif target_provider == "ollama":
+            base_url = self.base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+            # Rapid socket probe to prevent hanging if port is closed
+            import socket
+            try:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(0.2)
+                    port = 11434
+                    try:
+                        from urllib.parse import urlparse
+                        p = urlparse(base_url).port
+                        if p:
+                            port = p
+                    except Exception:
+                        pass
+                    if s.connect_ex(('127.0.0.1', port)) != 0:
+                        lat = round((time.perf_counter() - start_t) * 1000, 1)
+                        return {"provider": "ollama", "status": "offline", "latency_ms": lat, "message": "Ollama daemon offline (port closed)"}
+            except Exception:
+                pass
+
+            try:
+                resp = self._session.get(f"{base_url.rstrip('/')}/api/version", timeout=1.0)
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                if resp.status_code == 200:
+                    ver = resp.json().get("version", "unknown")
+                    return {
+                        "provider": "ollama",
+                        "status": "connected",
+                        "latency_ms": lat,
+                        "version": ver,
+                        "message": f"Ollama local service connected ({lat}ms, v{ver})"
+                    }
+                return {"provider": "ollama", "status": "offline", "latency_ms": lat, "message": "Ollama service unreachable"}
+            except Exception as e:
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                return {"provider": "ollama", "status": "offline", "latency_ms": lat, "message": "Ollama daemon offline"}
+
+        elif target_provider == "openai":
+            openai_key = self.api_key if self.provider == "openai" else (os.getenv("OPENAI_API_KEY") or "")
+            if not openai_key:
+                return {"provider": "openai", "status": "unconfigured", "latency_ms": 0, "message": "OPENAI_API_KEY is not set."}
+            try:
+                url = "https://api.openai.com/v1/models"
+                resp = self._session.get(url, headers={"Authorization": f"Bearer {openai_key}"}, timeout=4.0)
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                if resp.status_code == 200:
+                    return {"provider": "openai", "status": "connected", "latency_ms": lat, "message": f"OpenAI API connected ({lat}ms)"}
+                return {"provider": "openai", "status": "error", "latency_ms": lat, "message": f"HTTP {resp.status_code}"}
+            except Exception as e:
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                return {"provider": "openai", "status": "error", "latency_ms": lat, "message": str(e)}
+
+        return {"provider": target_provider, "status": "ready", "latency_ms": 0, "message": "Provider ready (rule_engine / offline)"}
 
     def generate_step(self, goal: str, trajectory_summary: str, tool_schemas: str, os_info: Dict[str, Any]) -> Dict[str, Any]:
         """Calls the configured provider to get the next agent decision."""
@@ -231,14 +358,14 @@ class LLMClient:
             return step
 
     def _call_gemini(self, system_instruction: str, user_prompt: str) -> Dict[str, Any]:
-        target_model = self.model or "gemini-flash-latest"
+        target_model = self.model or "gemini-2.5-flash"
         gemini_candidates = [
             target_model,
+            "gemini-2.5-flash",
             "gemini-flash-latest",
             "gemini-flash-lite-latest",
-            "gemini-3.5-flash",
-            "gemini-3-flash-preview",
-            "gemini-2.5-flash"
+            "gemini-2.5-flash-lite",
+            "gemini-3-flash-preview"
         ]
         # Deduplicate
         seen = set()
@@ -260,7 +387,7 @@ class LLMClient:
                         "responseMimeType": "application/json"
                     }
                 }
-                resp = requests.post(url, json=payload, timeout=45)
+                resp = self._session.post(url, json=payload, timeout=35)
                 if resp.status_code == 200:
                     self.model = m
                     data = resp.json()

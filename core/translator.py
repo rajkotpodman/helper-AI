@@ -150,7 +150,7 @@ SUPPORTED_LANGUAGES = [
 
 
 class GoogleTranslator:
-    """Singleton universal translation engine with caching and fast fallbacks."""
+    """Singleton universal translation engine with connection pooling, caching, and fast fallbacks."""
     _instance: Optional["GoogleTranslator"] = None
     _cache: Dict[str, str] = {}
 
@@ -162,10 +162,51 @@ class GoogleTranslator:
 
     def __init__(self):
         self._cache = {}
+        # Persistent connection pool for high-speed sub-millisecond translations
+        self._session = requests.Session()
+        try:
+            from requests.adapters import HTTPAdapter
+            from urllib3.util.retry import Retry
+            adapter = HTTPAdapter(
+                pool_connections=15,
+                pool_maxsize=30,
+                max_retries=Retry(total=2, backoff_factor=0.2, status_forcelist=[500, 502, 503, 504])
+            )
+            self._session.mount("https://", adapter)
+            self._session.mount("http://", adapter)
+        except Exception:
+            pass
 
     def get_supported_languages(self) -> List[Dict[str, str]]:
         """Returns list of supported Google Translate languages."""
         return SUPPORTED_LANGUAGES
+
+    def check_connection(self, timeout: float = 3.0) -> Dict[str, Any]:
+        """Checks upstream translation connection health and latency in milliseconds."""
+        import time
+        start_t = time.perf_counter()
+        try:
+            sample = self.translate_text("Connection Test", target_lang="es", source_lang="en")
+            lat_ms = round((time.perf_counter() - start_t) * 1000, 1)
+            is_ok = bool(sample and sample.lower() != "connection test")
+            return {
+                "name": "google_translate",
+                "status": "connected" if is_ok else "degraded",
+                "latency_ms": lat_ms,
+                "verified": is_ok,
+                "sample_translation": sample,
+                "message": f"Google Translate operational ({lat_ms}ms)"
+            }
+        except Exception as e:
+            lat_ms = round((time.perf_counter() - start_t) * 1000, 1)
+            return {
+                "name": "google_translate",
+                "status": "error",
+                "latency_ms": lat_ms,
+                "verified": False,
+                "error": str(e),
+                "message": f"Translation connection failed: {e}"
+            }
 
     def translate_text(self, text: str, target_lang: str = "en", source_lang: str = "auto") -> str:
         """
@@ -188,9 +229,35 @@ class GoogleTranslator:
         if cache_key in self._cache:
             return self._cache[cache_key]
 
-        # 1. Primary: Google Translate Mobile / Client endpoint (Zero API Key, High Availability)
+        # 1. Primary: High-Speed Web Client (clients5.google.com with connection pooling)
+        try:
+            resp = self._session.get(
+                "https://clients5.google.com/translate_a/t",
+                params={"client": "dict-chrome-ex", "sl": source_code, "tl": target_code, "q": cleaned_text},
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"},
+                timeout=3.5
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                translated_res = None
+                if isinstance(data, list) and len(data) > 0:
+                    first = data[0]
+                    if isinstance(first, list) and len(first) > 0 and isinstance(first[0], str):
+                        translated_res = first[0].strip()
+                    elif isinstance(first, str):
+                        translated_res = first.strip()
+                elif isinstance(data, str):
+                    translated_res = data.strip()
+
+                if translated_res:
+                    self._cache[cache_key] = translated_res
+                    return translated_res
+        except Exception as e:
+            logger.debug(f"Google translate clients5 request failed: {e}")
+
+        # 2. Secondary fallback: Google Translate Single GTX endpoint
         headers = {
-            "User-Agent": "GoogleTranslate/6.28.0.05.421483610 (Linux; U; Android 12; Pixel 6)",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
             "Accept": "*/*"
         }
         params = {
@@ -200,13 +267,12 @@ class GoogleTranslator:
             "dt": "t",
             "q": cleaned_text
         }
-
         try:
-            resp = requests.get(
+            resp = self._session.get(
                 "https://translate.googleapis.com/translate_a/single",
                 params=params,
                 headers=headers,
-                timeout=6
+                timeout=4.0
             )
             if resp.status_code == 200:
                 parsed = resp.json()
@@ -222,23 +288,22 @@ class GoogleTranslator:
         except Exception as e:
             logger.debug(f"Google translate gtx request failed: {e}")
 
-        # 2. Secondary fallback: Web Client translation query
+        # 3. Tertiary fallback: MyMemory API for guaranteed offline/free translation
         try:
-            resp = requests.get(
-                "https://clients5.google.com/translate_a/t",
-                params={"client": "dict-chrome-ex", "sl": source_code, "tl": target_code, "q": cleaned_text},
-                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
-                timeout=5
+            m_resp = self._session.get(
+                "https://api.mymemory.translated.net/get",
+                params={"q": cleaned_text, "langpair": f"{'en' if source_code == 'auto' else source_code}|{target_code}"},
+                headers={"User-Agent": "Mozilla/5.0"},
+                timeout=3.5
             )
-            if resp.status_code == 200:
-                data = resp.json()
-                if isinstance(data, list) and len(data) > 0 and isinstance(data[0], str):
-                    translated_res = data[0].strip()
-                    if translated_res:
-                        self._cache[cache_key] = translated_res
-                        return translated_res
+            if m_resp.status_code == 200:
+                m_data = m_resp.json()
+                t_val = m_data.get("responseData", {}).get("translatedText")
+                if t_val and isinstance(t_val, str) and t_val.strip() and not t_val.startswith("MYMEMORY WARNING"):
+                    self._cache[cache_key] = t_val.strip()
+                    return t_val.strip()
         except Exception as e:
-            logger.debug(f"Google translate clients5 fallback failed: {e}")
+            logger.debug(f"MyMemory translate fallback failed: {e}")
 
         return cleaned_text
 

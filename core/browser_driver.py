@@ -63,10 +63,20 @@ class ProjectBrowser:
         import socket
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(0.5)
+                s.settimeout(0.2)
                 return s.connect_ex(('127.0.0.1', port)) == 0
         except Exception:
             return False
+
+    def check_connection(self) -> Dict[str, Any]:
+        """Checks browser remote debugging and driver session connection health."""
+        port_9222 = self._is_port_open(9222)
+        alive = self.is_alive()
+        return {
+            "is_alive": alive,
+            "port_9222_open": port_9222,
+            "status": "connected" if alive else ("ready_on_port_9222" if port_9222 else "standby")
+        }
 
     def launch_desktop_chrome(self) -> None:
         """Launches Google Chrome on the user's interactive Windows desktop."""

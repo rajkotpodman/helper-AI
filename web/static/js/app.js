@@ -221,6 +221,16 @@ function initElements() {
   elements.permissionDetails = document.getElementById('permission-modal-details');
   elements.btnApprovePermission = document.getElementById('btn-approve-permission');
   elements.btnDenyPermission = document.getElementById('btn-deny-permission');
+
+  // Connection Diagnostics
+  elements.btnConnectionsPill = document.getElementById('btn-connections-pill');
+  elements.connectionsBadge = document.getElementById('connections-badge');
+  elements.modalConnections = document.getElementById('modal-connections');
+  elements.btnCloseConnections = document.getElementById('btn-close-connections-modal');
+  elements.btnRerunConnCheck = document.getElementById('btn-rerun-conn-check');
+  elements.connStabilityScore = document.getElementById('conn-stability-score');
+  elements.connDurationText = document.getElementById('conn-duration-text');
+  elements.connectionsReportDisplay = document.getElementById('connections-report-display');
   
   // Language Selector
   elements.btnLangDropdown = document.getElementById('btn-lang-dropdown');
@@ -546,11 +556,18 @@ function setupWebSocket() {
     
     state.ws.onopen = () => {
       console.log('⚡ Connected to Helper-AI real-time telemetry stream');
+      if (state.wsPingInterval) clearInterval(state.wsPingInterval);
+      state.wsPingInterval = setInterval(() => {
+        if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+          state.ws.send(JSON.stringify({ type: 'ping' }));
+        }
+      }, 15000);
     };
     
     state.ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        if (data.type === 'pong') return; // Heartbeat ack
         handleStreamEvent(data);
       } catch (e) {
         console.error('Error parsing WS message:', e);
@@ -558,6 +575,7 @@ function setupWebSocket() {
     };
     
     state.ws.onclose = () => {
+      if (state.wsPingInterval) clearInterval(state.wsPingInterval);
       console.warn('Telemetry stream disconnected. Reconnecting in 3s...');
       setTimeout(setupWebSocket, 3000);
     };
@@ -807,6 +825,57 @@ function setupModals() {
   // Permission Modal Buttons
   elements.btnApprovePermission?.addEventListener('click', () => submitPermission(true));
   elements.btnDenyPermission?.addEventListener('click', () => submitPermission(false));
+
+  // Connection Diagnostics Modal
+  elements.btnConnectionsPill?.addEventListener('click', runConnectionsCheck);
+  elements.btnRerunConnCheck?.addEventListener('click', runConnectionsCheck);
+  elements.btnCloseConnections?.addEventListener('click', () => elements.modalConnections?.classList.add('hidden'));
+}
+
+async function runConnectionsCheck() {
+  elements.modalConnections?.classList.remove('hidden');
+  if (elements.connectionsReportDisplay) {
+    elements.connectionsReportDisplay.innerHTML = '<div class="text-cyan-400 py-3 flex items-center gap-2"><span>⚡ Running double-pass connection diagnostic across all subsystems...</span></div>';
+  }
+  try {
+    const res = await fetch('/api/connections/check?pass_count=2');
+    const data = await res.json();
+    if (elements.connStabilityScore) {
+      elements.connStabilityScore.textContent = `${data.stability_score_pct || 100}%`;
+    }
+    if (elements.connDurationText) {
+      elements.connDurationText.textContent = `Pass 1: ${data.pass_1?.duration_ms || 0}ms | Pass 2: ${data.pass_2?.duration_ms || 0}ms | Total: ${data.total_duration_ms || 0}ms`;
+    }
+    if (elements.connectionsBadge) {
+      elements.connectionsBadge.textContent = `${data.stability_score_pct || 100}% OK`;
+    }
+    if (elements.connectionsReportDisplay) {
+      let html = `<div class="font-semibold text-emerald-400 mb-3 text-xs flex items-center justify-between">
+        <span>Diagnostic Complete (Double Pass)</span>
+        <span class="text-slate-400 font-normal">Socket reuse speedup active</span>
+      </div>`;
+      html += '<table class="w-full text-left border-collapse text-xs">';
+      html += '<tr class="border-b border-white/10 text-slate-400 pb-2"><th class="pb-1.5">Target</th><th class="pb-1.5">Pass 1</th><th class="pb-1.5">Pass 2</th><th class="pb-1.5">Speedup</th><th class="pb-1.5">Status</th></tr>';
+      for (const [target, comp] of Object.entries(data.comparison || {})) {
+        const isOk = comp.status_pass_2 === 'connected' || comp.status_pass_2 === 'standby_ready';
+        const badgeColor = isOk ? 'text-emerald-400 bg-emerald-500/10' : (comp.status_pass_2 === 'offline' ? 'text-amber-400 bg-amber-500/10' : 'text-slate-400 bg-white/5');
+        const speedup = comp.speedup_pct > 0 ? `<span class="text-cyan-400 font-bold">+${comp.speedup_pct}%</span>` : '<span class="text-slate-400">steady</span>';
+        html += `<tr class="border-b border-white/5 py-1.5">
+          <td class="py-1.5 text-slate-200 font-mono">${target}</td>
+          <td class="py-1.5 text-slate-300 font-mono">${comp.latency_pass_1_ms}ms</td>
+          <td class="py-1.5 text-slate-300 font-mono">${comp.latency_pass_2_ms}ms</td>
+          <td class="py-1.5">${speedup}</td>
+          <td class="py-1.5"><span class="px-2 py-0.5 rounded text-[10px] font-semibold ${badgeColor}">${comp.status_pass_2}</span></td>
+        </tr>`;
+      }
+      html += '</table>';
+      elements.connectionsReportDisplay.innerHTML = html;
+    }
+  } catch (err) {
+    if (elements.connectionsReportDisplay) {
+      elements.connectionsReportDisplay.innerHTML = `<span class="text-red-400">Failed to run connection diagnostics: ${err.message}</span>`;
+    }
+  }
 }
 
 function updateProviderKeyVisibility() {

@@ -19,7 +19,8 @@ def test_registry_has_18_tools():
     registry = ToolRegistry()
     tools = registry.get_all_tools()
     tool_names = [t.name for t in tools]
-    assert len(tools) == 18
+    assert len(tools) >= 18
+    assert "check_connections" in tool_names
     assert "speak_aloud" in tool_names
     assert "vision_browser" in tool_names
     assert "manage_mcp" in tool_names

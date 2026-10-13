@@ -98,6 +98,25 @@ class MCPManager:
             return {"success": True, "message": f"MCP server '{name}' removed."}
         return {"success": False, "message": f"MCP server '{name}' not found."}
 
+    def check_connection(self, name: Optional[str] = None) -> Dict[str, Any]:
+        """Validates MCP server configuration and command availability."""
+        servers = self.list_servers()
+        if name:
+            cfg = self._config.get("mcpServers", {}).get(name)
+            if not cfg:
+                return {"server": name, "status": "not_found", "message": f"Server '{name}' is not registered."}
+            return {
+                "server": name,
+                "status": "configured" if cfg.get("enabled", False) else "disabled",
+                "command": cfg.get("command"),
+                "message": f"Server '{name}' configured ({'enabled' if cfg.get('enabled') else 'disabled'})."
+            }
+        return {
+            "total_configured": len(servers),
+            "servers": servers,
+            "status": "connected" if servers else "empty"
+        }
+
     async def list_tools_async(self) -> List[Dict[str, Any]]:
         """
         Discovers tools across all enabled MCP servers.

@@ -121,6 +121,16 @@ async def get_status():
         "has_groq_key": bool(os.getenv("GROQ_API_KEY"))
     }
 
+@app.get("/api/connections/check")
+@app.get("/api/check-connections")
+async def check_all_connections(pass_count: int = 2):
+    """Diagnoses and tests all connections (Internet, Google Translate, LLM APIs, Chrome CDP, MCP, WebSocket)."""
+    from core.connection_checker import connection_checker
+    if pass_count >= 2:
+        return connection_checker.check_twice()
+    return connection_checker.check_all()
+
+
 @app.get("/api/ollama/models")
 async def get_ollama_models():
     import requests

@@ -170,7 +170,14 @@ async def websocket_telemetry(websocket: WebSocket):
             "history_count": len(current_goal_info["history"])
         }))
         while True:
-            await websocket.receive_text()
+            msg = await websocket.receive_text()
+            try:
+                msg_data = json.loads(msg)
+                if msg_data.get("type") == "ping":
+                    import time
+                    await websocket.send_text(json.dumps({"type": "pong", "timestamp": time.time()}))
+            except Exception:
+                pass
     except WebSocketDisconnect:
         if websocket in connected_websockets:
             connected_websockets.remove(websocket)
@@ -298,12 +305,30 @@ async def get_system_status():
     }
 
 
+# --- Connection Diagnostic Endpoints ---
+@app.get("/api/connections/check")
+@app.get("/api/check-connections")
+async def check_all_connections(pass_count: int = 2):
+    """Diagnoses and tests all connections (Internet, Google Translate, LLM APIs, Chrome CDP, MCP, WebSocket)."""
+    from core.connection_checker import connection_checker
+    if pass_count >= 2:
+        return connection_checker.check_twice()
+    return connection_checker.check_all()
+
+
 # --- Required Specification Endpoint: GET /api/quick-ideas ---
 @app.get("/api/quick-ideas")
 async def get_quick_ideas():
     """Returns available quick idea templates for one-click prompts."""
     return {
         "ideas": [
+            {
+                "id": "check_connections",
+                "icon": "⚡",
+                "title": "Check Connections Twice",
+                "prompt": "run check twice all connection fix with more faster accurate smart work",
+                "category": "Diagnostics"
+            },
             {
                 "id": "google_blogs",
                 "icon": "🌐",

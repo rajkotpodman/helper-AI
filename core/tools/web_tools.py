@@ -20,6 +20,17 @@ HEADERS = {
     )
 }
 
+# Shared connection pool session for high-speed web scraping
+_web_session = requests.Session()
+try:
+    from requests.adapters import HTTPAdapter
+    from urllib3.util.retry import Retry
+    _adapter = HTTPAdapter(pool_connections=10, pool_maxsize=20, max_retries=Retry(total=2, backoff_factor=0.3))
+    _web_session.mount("https://", _adapter)
+    _web_session.mount("http://", _adapter)
+except Exception:
+    pass
+
 class SearchWebTool(BaseTool):
     name = "search_web"
     description = (
@@ -44,9 +55,16 @@ class SearchWebTool(BaseTool):
 
     def execute(self, query: str, max_results: int = 5) -> Dict[str, Any]:
         results = []
-        # Attempt 1: duckduckgo_search package if available
+        # Attempt 1: ddgs / duckduckgo_search package if available
         try:
-            from duckduckgo_search import DDGS
+            try:
+                from ddgs import DDGS
+            except ImportError:
+                import warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    from duckduckgo_search import DDGS
+
             with DDGS() as ddgs:
                 raw = list(ddgs.text(query, max_results=max_results))
                 for item in raw:
