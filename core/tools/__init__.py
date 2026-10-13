@@ -37,6 +37,12 @@ from core.tools.universal_terminal_tools import (
     SynthesizeOSCommandTool,
     CommandHubTool
 )
+from core.tools.superpower_tools import (
+    DeepResearchStudioTool,
+    OrchestrateComplexGoalTool,
+    CodeStudioBuilderTool,
+    SystemSuperOptimizerTool
+)
 
 class ToolRegistry:
     """Central registry of all tools available to Helper-AI."""
@@ -77,7 +83,11 @@ class ToolRegistry:
             DesktopGUIControlTool(),
             UniversalTerminalTool(),
             SynthesizeOSCommandTool(),
-            CommandHubTool()
+            CommandHubTool(),
+            DeepResearchStudioTool(),
+            OrchestrateComplexGoalTool(),
+            CodeStudioBuilderTool(),
+            SystemSuperOptimizerTool()
         ]
         for t in defaults:
             self.register(t)

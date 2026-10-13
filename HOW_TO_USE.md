@@ -134,7 +134,7 @@ You do not need to speak "code." Just talk to Helper-AI like a helpful colleague
 
 ---
 
-## 5. The Complete 28-Tool Arsenal Explained
+## 5. The Complete 32-Tool Arsenal Explained
 
 Here is what every tool does in simple words:
 
@@ -166,6 +166,10 @@ Here is what every tool does in simple words:
 26. **`text_to_speech`**: Speaks out loud in a natural human voice using Microsoft's neural voice engine.
 27. **`vision_browser`**: Takes visual screenshots of websites and inspects the screen layout.
 28. **`mcp_tool`**: Connects external third-party tools via the Model Context Protocol.
+29. **`deep_research_studio`**: Multi-query web research studio that distills verified sources into a publication-grade intelligence dossier.
+30. **`orchestrate_complex_goal`**: Breaks massive directives into a 5-phase verified execution pipeline (Discovery -> Architecture -> Execution -> Verification -> Delivery).
+31. **`code_studio_builder`**: Scaffolds full multi-file projects, websites, or apps in 1 step with automated AST syntax checking and test execution.
+32. **`system_super_optimizer`**: Complete PC performance suite: memory optimization analysis, network latency testing, and junk file scanning.
 
 ---
 
@@ -318,7 +322,7 @@ Then double-click `start.bat` again.
 
 ---
 
-## ૪. ૨૮ પાવરફુલ ટૂલ્સની યાદી
+## ૪. ૩૨ પાવરફુલ ટૂલ્સની યાદી
 
 1. **`universal_terminal`**: વિન્ડોઝ, લિનક્સ કે મેક પર કોઈપણ કમાન્ડ અથવા બેકગ્રાઉન્ડ પ્રોસેસ ચલાવે છે.
 2. **`synthesize_os_command`**: તમારા સાદા લખાણને તમારી ઓપરેટિંગ સિસ્ટમ માટે યોગ્ય કમાન્ડમાં ફેરવે છે.
@@ -348,6 +352,10 @@ Then double-click `start.bat` again.
 26. **`text_to_speech`**: કુદરતી માનવ અવાજમાં લખાણ બોલીને સંભળાવે છે.
 27. **`vision_browser`**: સ્ક્રીનશોટ પાડે છે અને વેબસાઇટનું લેઆઉટ જુએ છે.
 28. **`mcp_tool`**: બહારના ત્રીજા પક્ષના ટૂલ્સ જોડે છે.
+29. **`deep_research_studio`**: ઈન્ટરનેટ પરથી ઊંડાણપૂર્વક સંશોધન કરી ઉચ્ચ ગુણવત્તાવાળો રિપોર્ટ બનાવે છે.
+30. **`orchestrate_complex_goal`**: મોટા અને લાંબા કામોને ૫ સ્ટેપના પ્લાનમાં વહેંચીને સફળતાપૂર્વક પૂરું કરે છે.
+31. **`code_studio_builder`**: કોઈ પણ પ્રોજેક્ટ, વેબસાઇટ કે કોડિંગ ફાઈલો ૧ જ ક્લિકમાં બનાવી ચેક કરે છે.
+32. **`system_super_optimizer`**: કમ્પ્યુટરની સ્પીડ, રેમ, ઈન્ટરનેટ લેટન્સી અને નકામી ફાઈલો સાફ કરે છે.
 
 ---
 

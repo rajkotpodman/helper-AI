@@ -124,8 +124,14 @@ This controls the live project browser where logins and cookies are permanently 
   Action: "universal_terminal", Action args: {{ "command": "...", "background": false, "timeout_seconds": 120 }} (or action: "status" / "kill", task_id: "...")
 - Synthesize OS Commands (Cross-Platform Command Translator for Windows, Linux, macOS):
   Action: "synthesize_os_command", Action args: {{ "intent": "...", "target_os": "auto", "execute_now": true }}
-- Download / Fetch Command Cheatsheets & Recipes (cheat.sh, community hubs, encyclopedia):
-  Action: "command_hub", Action args: {{ "topic": "powershell", "action": "cheatsheet" }}
+- Superpower Deep Research Studio (Multi-query search expansion, source distillation, and comprehensive markdown research dossier):
+  Action: "deep_research_studio", Action args: {{ "topic": "...", "max_sources": 6, "save_path": "Desktop/research_dossier.md" }}
+- Superpower Workflow Orchestrator (Multi-phase pipeline execution: Discovery -> Architecture -> Execution -> Verification -> Delivery):
+  Action: "orchestrate_complex_goal", Action args: {{ "goal": "..." }}
+- Superpower Code Studio (Scaffolding multi-file projects, AST syntax verification, and test execution):
+  Action: "code_studio_builder", Action args: {{ "project_dir": "Desktop/my_app", "files": {{ "main.py": "..." }}, "run_entrypoint": "main.py" }}
+- Superpower System Optimizer & Diagnostics (Granular CPU/RAM/Disk telemetry, latency tests, and junk file scanning):
+  Action: "system_super_optimizer", Action args: {{ "action": "all" }}
 - Listing / fetching GitHub repositories:
   - Via GitHub CLI: Action: "execute_powershell", Action args: {{ "command": "gh repo list --limit 100" }}
   - Via GitHub API: Action: "fetch_web_content", Action args: {{ "url": "https://api.github.com/users/<username>/repos?per_page=100" }}
@@ -1038,6 +1044,35 @@ class LLMClient:
                 "action_args": {"command": target_cmd, "background": is_heavy, "timeout_seconds": 120},
                 "is_complete": True,
                 "completion_message": "Universal terminal command executed successfully across host OS."
+            }
+
+        # 0.4 Specialized handling for Superpower Orchestrator, Deep Research & System Optimizer
+        if any(k in lower for k in ["super power", "superpower", "orchestrate", "complex goal", "pipeline"]):
+            return {
+                "thought": "I will activate the Superpower Workflow Orchestrator to plan and structure this multi-phase goal into an autonomous execution pipeline.",
+                "action": "orchestrate_complex_goal",
+                "action_args": {"goal": goal},
+                "is_complete": True,
+                "completion_message": "Superpower autonomous pipeline initialized, planned, and ready for high-throughput execution."
+            }
+
+        if any(k in lower for k in ["deep research", "research studio", "intelligence dossier", "research topic deeply"]):
+            topic_clean = re.sub(r'^(?:run |do |perform )?(?:deep research|research studio|intelligence dossier)?(?: on| for)?\s*', '', goal, flags=re.IGNORECASE).strip() or "Autonomous AI Agents"
+            return {
+                "thought": f"I will conduct multi-query deep web research and assemble a structured intelligence dossier on '{topic_clean}'.",
+                "action": "deep_research_studio",
+                "action_args": {"topic": topic_clean, "max_sources": 6, "save_path": "Desktop/research_dossier.md"},
+                "is_complete": True,
+                "completion_message": f"Deep web research successfully executed. Comprehensive intelligence dossier compiled and saved."
+            }
+
+        if any(k in lower for k in ["system optimizer", "super optimizer", "pc tuneup", "tuneup", "diagnostics snapshot"]):
+            return {
+                "thought": "I will perform comprehensive PC diagnostics, memory optimization analysis, and network latency verification.",
+                "action": "system_super_optimizer",
+                "action_args": {"action": "all"},
+                "is_complete": True,
+                "completion_message": "Comprehensive system performance analysis and optimization diagnostics completed successfully."
             }
 
         # 1. Specialized handling for Listing/Fetching all GitHub repositories

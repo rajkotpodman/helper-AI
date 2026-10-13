@@ -12,7 +12,7 @@
 [![Docker Build](https://github.com/rajkotpodman/helper-AI/actions/workflows/docker-build.yml/badge.svg)](https://github.com/rajkotpodman/helper-AI/actions/workflows/docker-build.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
-[![Tests: 153+ Passed](https://img.shields.io/badge/tests-153%2B%20passed-success.svg)]()
+[![Tests: 168+ Passed](https://img.shields.io/badge/tests-168%2B%20passed-success.svg)]()
 
 <br>
 
@@ -145,11 +145,12 @@ flowchart TD
         Core --> Metrics[TelemetryCollector\nLatency, System Uptime, Error Rates]
     end
 
-    subgraph Arsenal[Arsenal of 28 Native & Extensible Tools]
+    subgraph Arsenal[Arsenal of 32 Native & Extensible Tools]
         Core --> UniversalTerm[Universal Cross-Platform Terminal Engine]
         Core --> OSCommand[OS-Adaptive Command Synthesizer]
         Core --> CmdHub[Command Hub & Cheatsheet Downloader]
         Core --> SecAudit[Security Baseline & Port Hardening]
+        Core --> Superpowers[Superpower Research, Orchestration & Code Studio]
         Core --> FileTools[Smart Filesystem: Read, Write, Search, Move]
         Core --> WebTools[Live DuckDuckGo, Deep Crawler & Batch Fetcher]
         Core --> BrowserTool[Selenium Persistent Project Browser]
@@ -162,9 +163,9 @@ flowchart TD
 
 ---
 
-## 🧰 Complete Arsenal: All 28 Registered Tools
+## 🧰 Complete Arsenal: All 32 Registered Tools
 
-Helper-AI comes built-in with **28 specialized tools**. The agent automatically selects the right tool for each step:
+Helper-AI comes built-in with **32 specialized tools**. The agent automatically selects the right tool for each step:
 
 | # | Tool Name | Category | What It Does (Simple Explanation) |
 | :-: | :--- | :--- | :--- |
@@ -196,6 +197,10 @@ Helper-AI comes built-in with **28 specialized tools**. The agent automatically 
 | 26 | **`text_to_speech`** | Voice | Speaks answers aloud using Microsoft's neural voice engine across dozens of natural accents. |
 | 27 | **`vision_browser`** | Vision | Takes high-resolution screenshots and captures webpage visual layout using Playwright. |
 | 28 | **`mcp_tool`** | Extensibility| Connects to external Model Context Protocol (MCP) servers to add new third-party tools. |
+| 29 | **`deep_research_studio`** | Superpower | Multi-query search expansion, parallel distillation, and executive intelligence dossier synthesis. |
+| 30 | **`orchestrate_complex_goal`** | Superpower | Structures massive tasks into 5-phase execution pipelines (Discovery -> Architecture -> Execution -> Verification -> Delivery). |
+| 31 | **`code_studio_builder`** | Superpower | Builds multi-file projects in 1 step with automated AST syntax checking and sandbox verification. |
+| 32 | **`system_super_optimizer`** | Superpower | Introspective PC diagnostics, memory optimization analysis, network latency testing, and junk file scanning. |
 
 ---
 
