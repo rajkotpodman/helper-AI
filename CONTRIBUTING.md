@@ -78,19 +78,28 @@ helper-AI/
 │   ├── agent.py               # ReAct Planning & Execution Loop
 │   ├── browser_driver.py      # Selenium & Chrome session manager
 │   ├── voice_engine.py        # Edge-TTS speech synthesis engine
-│   ├── vision_browser.py      # Playwright DOM and visual analysis
+│   ├── playwright_agent.py    # Playwright DOM and visual analysis
 │   ├── memory_recorder.py     # Markdown interaction logging & 20MB rotation
 │   ├── permissions.py         # Human-in-the-Loop authorization manager
-│   ├── llm/                   # Multi-provider client (Gemini, OpenAI, Groq, Ollama)
-│   └── tools/                 # Native tool definitions & ToolRegistry
+│   ├── llm.py                 # Multi-provider client (Gemini, OpenAI, Groq, Ollama)
+│   ├── command_engine/        # Universal cross-platform terminal & cheatsheet engine
+│   └── tools/                 # Native tool definitions (28 tools registered)
 │       ├── system_tools.py    # PowerShell, process, health diagnostics
 │       ├── file_tools.py      # Smart filesystem path resolver
 │       ├── web_tools.py       # DuckDuckGo search & HTTP scraper
 │       ├── browser_tools.py   # Social media & browser automation
 │       ├── desktop_gui_tools.py # PyAutoGUI mouse, keyboard, window control
-│       └── mcp_client.py      # Model Context Protocol external servers
-└── tests/                     # 100% automated pytest coverage
+│       └── universal_terminal_tools.py # OS-adaptive execution, command hub
+├── security_toolkit/          # Modular defensive security & FIM toolkit
+└── tests/                     # 153+ automated unit & integration tests
 ```
+
+### 🌟 Non-Technical Contributions (Everyone Can Help!)
+You do **not** need to write code to contribute to Helper-AI! We warmly welcome:
+1. **Testing Real-World Prompts:** Try out goals on your computer and share ideas for what works great or where the agent can improve.
+2. **Improving Documentation:** Fix typos, add clearer explanations, or translate guides into more regional languages.
+3. **Sharing Everyday Ideas:** Suggest practical automations for daily computer tasks, file organizing, or study workflows.
+4. **Reporting Usability Roadblocks:** If something was confusing or hard to set up, let us know by opening an issue so we can make it even easier for everyone!
 
 ### How to Add a New Tool:
 1. Define your tool function with clear type annotations and Google-style docstrings.

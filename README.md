@@ -1,9 +1,10 @@
 <div align="center">
 
 # ⚡ Helper-AI
-### Autonomous AI Agent with Full PC & Internet Control
+### The Autonomous AI Agent with Full PC & Internet Control
+**Run anything on your computer, automate the web, and solve complex tasks simply by typing what you want in plain English.**
 
-*Give Helper a goal. It executes, self-heals, and works until the job is done—without endless questioning.*
+*Give Helper-AI a goal. It creates a plan, runs the right tools, self-heals around errors, and delivers 100% completed results—without endless questions.*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
@@ -11,13 +12,118 @@
 [![Docker Build](https://github.com/rajkotpodman/helper-AI/actions/workflows/docker-build.yml/badge.svg)](https://github.com/rajkotpodman/helper-AI/actions/workflows/docker-build.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
-[![Tests: 65 Passed](https://img.shields.io/badge/tests-65%20passed-success.svg)]()
+[![Tests: 153+ Passed](https://img.shields.io/badge/tests-153%2B%20passed-success.svg)]()
 
 <br>
 
-📖 **[ગુજરાતી ભાષામાં સંપૂર્ણ માર્ગદર્શિકા (Comprehensive Gujarati Guide)](HOW_TO_USE.md)**
+[📖 Non-Technical User Manual](HOW_TO_USE.md) • [🇮🇳 ગુજરાતી માર્ગદર્શિકા (Gujarati Guide)](HOW_TO_USE.md#-%E0%AA%97%E0%AB%81%E0%AA%9C%E0%AA%B0%E0%AA%BE%E0%AA%A4%E0%AB%80-%E0%AA%B5%E0%AA%BF%E0%AA%AD%E0%AA%BE%E0%AA%97-gujarati-section) • [🛡️ Security Toolkit](security_toolkit/README.md) • [📋 Changelog](CHANGELOG.md)
 
 </div>
+
+---
+
+## 🌟 What is Helper-AI? (Explained for Everyone)
+
+Imagine having a smart personal computer assistant sitting beside you. Instead of just talking to you like ChatGPT, **Helper-AI actually does the work for you on your computer**:
+
+- **Organizes your messy files:** Finds files scattered across your Downloads or Desktop and neatly groups them.
+- **Surfs the web and writes reports:** Researches any topic online and saves a clean, formatted report directly onto your Desktop.
+- **Checks your computer's health:** Tells you how much RAM, CPU, or hard drive space you have left and safely closes frozen programs.
+- **Controls the browser and social media:** Can log into websites, draft and publish posts on LinkedIn, Facebook, or Blogger, and fill out forms.
+- **Runs terminal and system commands:** Works across Windows, Mac, and Linux, adapting to whichever operating system you are using.
+- **Performs defensive security audits:** Scans open ports, audits web security headers, and alerts you if sensitive system files have been modified.
+- **Never gives up:** If a program gives an error, Helper-AI reads the error, changes its approach, and keeps working until the goal is achieved!
+
+---
+
+## ⚡ The 3-Minute Beginner Quickstart (No Technical Skills Needed!)
+
+You don't need to know any programming, coding, or terminal commands to use Helper-AI. Follow these simple steps:
+
+### Step 1: Install Python (Takes 1 Minute)
+If you don't already have Python on your computer:
+1. Visit the official Python download page: **[https://www.python.org/downloads/](https://www.python.org/downloads/)**
+2. Download and run the installer for your computer.
+3. ⚠️ **VERY IMPORTANT:** On the very first screen of the installer, check the small box at the bottom that says **"Add Python to PATH"** (or "Add python.exe to PATH").
+4. Click **Install Now**.
+
+### Step 2: Download Helper-AI
+1. Click the green **Code** button at the top right of this GitHub page and select **Download ZIP**.
+2. Unzip the downloaded folder to any place on your computer (for example, on your `Desktop` or `C:\` or `E:\` drive).
+
+### Step 3: Start Helper-AI with 1 Click
+- **On Windows:** Open the unzipped folder and **double-click the `start.bat` file**.
+- **On Linux or Mac:** Open a terminal in the folder and type:
+  ```bash
+  python app.py
+  ```
+
+### Step 4: Use the Beautiful Web Screen
+A black window will start up for a few seconds, and your default web browser will automatically open up:
+👉 **`http://localhost:8000`**
+
+You will see the Helper-AI dashboard. Simply type what you want in plain English into the goal box and press **🚀 Execute Goal**!
+
+---
+
+## 🖥️ What the Web Dashboard Looks Like
+
+```text
++-----------------------------------------------------------------------------------------+
+| ⚡ Helper-AI                     [● System Ready]      [⚙️ Settings]      [🛡️ Safe Mode]  |
++-----------------------------------------------------------------------------------------+
+|                                                                                         |
+|   🎯 What goal would you like Helper to achieve?                                        |
+|   +---------------------------------------------------------------------------------+   |
+|   | Type your goal in plain human language... (e.g. "Clean up my Downloads folder") |   |
+|   +---------------------------------------------------------------------------------+   |
+|                                                                                         |
+|   Quick Ideas:                                                                          |
+|   [💻 Check PC Health]  [🔍 Research Web & Save Report]  [📂 Clean Downloads Folder]     |
+|   [🛡️ Audit Open Ports]  [🌐 List GitHub Repositories]   [📝 Write & Publish Blog Post]  |
+|                                                                                         |
+|   Status: Ready (RuleEngine Offline Mode Active)         [⏹ Stop Agent] [🚀 Execute Goal]|
++-----------------------------------------------------------------------------------------+
+| 📊 Real-Time Execution Feed                                                             |
+|   Step 1: 💭 Thought: "I need to check the Downloads directory and group files by type."|
+|           ⚡ Action: list_directory(path="Downloads")                                   |
+|           📋 Result: Found 24 files (10 images, 8 PDFs, 6 installers)                   |
+|   Step 2: 💭 Thought: "Creating folders and organizing files..."                        |
+|   ...                                                                                   |
+|   🎉 MISSION ACCOMPLISHED! Your files have been organized into neat subfolders.         |
++-----------------------------------------------------------------------------------------+
+```
+
+---
+
+## 💡 Practical Examples of What You Can Tell Helper-AI
+
+Here are real tasks you can copy and paste into Helper-AI right now:
+
+### 📁 1. Files & Organization
+- `"Look at my Downloads folder, create subfolders for 'Images', 'Documents', and 'Installers', and move the files into them."`
+- `"Find all files larger than 100 MB on my computer and make a list on my Desktop."`
+- `"Search for all files with '.log' in their name and delete them."`
+
+### 💻 2. Computer Health & Performance
+- `"Check my PC health: how much CPU and RAM am I using? Save a summary to Desktop/health.txt."`
+- `"Check if any process is freezing or using more than 80% CPU and list them."`
+- `"Close or kill the application using port 8000 so I can free it up."`
+
+### 🌐 3. Web Research & Reports
+- `"Search the internet for the top 5 artificial intelligence news stories this week and save a detailed report to Desktop/ai_news.md."`
+- `"Fetch the text of the webpage https://example.com and summarize it in 10 bullet points."`
+- `"Download the latest cheat sheet for ffmpeg or docker and save it locally."`
+
+### 📱 4. Social Media & Content Publishing
+- `"Draft an informative LinkedIn post about autonomous AI agents and publish it to my feed."`
+- `"Create a Facebook post summarizing our newest product launch and publish it."`
+- `"Write a 5-paragraph blog post about python tips and publish it to Blogger."`
+
+### 🛡️ 5. Security & System Auditing
+- `"Run a defensive security audit on my computer and check which network ports are open."`
+- `"Audit the web security headers of http://localhost:8000 and give me a scorecard."`
+- `"Create a cryptographic baseline of my project directory so I know if any file gets tampered with."`
 
 ---
 
@@ -25,13 +131,13 @@
 
 ```mermaid
 flowchart TD
-    User([User Goal / Voice Input]) --> Frontend[Web Dashboard / CLI Runner / WebSocket]
-    Frontend --> Core[HelperAgent ReAct Planning Engine]
+    User([User Goal: Plain English or Voice]) --> Frontend[Web Dashboard / CLI Runner / REST API]
+    Frontend --> Core[HelperAgent Autonomous ReAct Planning Engine]
     
     subgraph Brain[Multi-Model Intelligence & Memory]
-        Core <--> LLM[Multi-Provider Client\nGemini 1.5/Flash • OpenAI GPT-4o • Groq • Ollama • RuleEngine]
+        Core <--> LLM[Multi-Provider Client\nGemini 2.5/Flash • OpenAI GPT-4o • Groq • Ollama • RuleEngine]
         Core <--> Memory[AgentMemory & Markdown Recorder\n20MB Auto-Rotation]
-        Core <--> Perm[PermissionManager\n1-Click Human-in-the-Loop]
+        Core <--> Perm[PermissionManager\n1-Click Human Approval Dialog]
     end
 
     subgraph Observability[Enterprise Observability]
@@ -39,232 +145,142 @@ flowchart TD
         Core --> Metrics[TelemetryCollector\nLatency, System Uptime, Error Rates]
     end
 
-    subgraph Tools[Arsenal of 18 Native & Extensible Tools]
-        Core --> PSTool[PowerShell & Shell Runner]
-        Core --> FileTool[Smart File System Resolver]
-        Core --> SysTool[Process & Health Diagnostics]
-        Core --> WebTool[DuckDuckGo Search & Scraper]
-        Core --> BrowserTool[Selenium Project Browser\nFacebook / LinkedIn / Blogger]
-        Core --> GUITool[PyAutoGUI Desktop Control\nMouse, Keyboard, Hotkeys]
-        Core --> VoiceTool[Edge-TTS Voice Engine]
-        Core --> VisionTool[Playwright Visual DOM Inspector]
+    subgraph Arsenal[Arsenal of 28 Native & Extensible Tools]
+        Core --> UniversalTerm[Universal Cross-Platform Terminal Engine]
+        Core --> OSCommand[OS-Adaptive Command Synthesizer]
+        Core --> CmdHub[Command Hub & Cheatsheet Downloader]
+        Core --> SecAudit[Security Baseline & Port Hardening]
+        Core --> FileTools[Smart Filesystem: Read, Write, Search, Move]
+        Core --> WebTools[Live DuckDuckGo, Deep Crawler & Batch Fetcher]
+        Core --> BrowserTool[Selenium Persistent Project Browser]
+        Core --> GUITool[PyAutoGUI Desktop Mouse & Keyboard Control]
+        Core --> VoiceTool[Edge-TTS Neural Voice Engine]
+        Core --> VisionTool[Playwright Visual Perception]
         Core --> MCPTool[Model Context Protocol Client]
     end
 ```
 
 ---
 
-## 🌟 What is Helper-AI?
+## 🧰 Complete Arsenal: All 28 Registered Tools
 
-**Helper-AI** is a production-grade autonomous personal AI agent designed to bridge the gap between high-level human intent and real operating system execution. Unlike conversational chatbots that only respond with text suggestions, **Helper-AI takes direct action on your PC and the internet**.
+Helper-AI comes built-in with **28 specialized tools**. The agent automatically selects the right tool for each step:
 
-Whether you need to clean up unorganized folders, diagnose system bottlenecks, research web topics and synthesize reports to your Desktop, publish social media updates, or execute complex administrative PowerShell tasks—**Helper autonomously plans the workflow, executes the actions, observes output, self-heals around errors, and stops only when your goal is fully verified.**
-
----
-
-## 🎯 Key Capabilities & Arsenal
-
-### 💻 1. Operating System & Terminal Control
-- **PowerShell & Shell Automation:** Executes native PowerShell, CMD, or Bash commands with timeout handling and safety guardrails.
-- **Smart Filesystem Operations:** Reads, writes, moves, searches, and organizes files. Automatically resolves user aliases like `Desktop`, `Downloads`, and `Documents`.
-- **System Health & Process Diagnostics:** Real-time CPU, RAM, Disk telemetry with the ability to locate, filter, and terminate unresponsive processes.
-- **Desktop Application Launcher:** Spawns native applications (Notepad, Calculator, Chrome) or file associations directly.
-
-### 🌐 2. Web & Social Media Automation
-- **Social Media Publishing Pipeline:** Drafts and publishes updates on Facebook, X/Twitter, LinkedIn, Threads, and Reddit with automated modal handling.
-- **Persistent Browser Profile:** Employs a dedicated persistent user data directory (`chrome_profile`) maintaining login sessions across agent runs.
-- **Challenge & Security Detection:** Autonomously detects CAPTCHAs, two-factor authentication, and Cloudflare Turnstile verification screens, triggering 1-click Human-in-the-Loop resolution.
-- **Live Internet Research:** Queries DuckDuckGo for real-time web answers and extracts clean, ad-free markdown content from target websites.
-- **Direct File Downloads:** Streams and stores web assets directly to specified local directories.
-
-### 🖱️ 3. Desktop GUI & Mouse Control
-- **Precise Mouse Actions:** Clicks, double clicks, right clicks, drags, and scrolls anywhere on the primary or secondary monitors.
-- **Keyboard Simulation:** Types strings, triggers single keys, and dispatches hotkeys (`Ctrl+C`, `Ctrl+V`, `Alt+Tab`, `Win+R`).
-- **Active Window Inspection:** Lists visible open application windows and geometry coordinates.
-
-### 🗣️ 4. Neural Voice & Visual Perception
-- **Edge-TTS Neural Voice Engine:** Generates natural, human-like speech output across dozens of global voices, languages, and accents at zero cost.
-- **Playwright Visual Perception:** Takes high-resolution viewport snapshots and captures atomic DOM state for visual decision-making.
-
-### 🔌 5. Model Context Protocol (MCP) Extensibility
-- Implements Anthropic's **Model Context Protocol (MCP)** specification via `mcp_servers.json`, allowing dynamic integration of third-party external tools into the agent's runtime registry.
-
-### 🛡️ 6. 1-Click Human-in-the-Loop (HITL) Authorization
-- **Non-Technical One-Click Approvals:** High-risk actions (social posting, permanent deletions) pause execution and display a clean approval dialog on the Web Dashboard.
-- **REST & WebSocket API:** Allows mobile webhooks or external applications to authorize or deny actions with a single request (`/api/permission/respond`).
-
-### 🧠 7. Persistent Markdown Memory & 20 MB Auto-Rotation
-- **Automatic Interaction Logging:** Logs all goals, status verdicts, step counts, and final replies to [`agent_memory.md`](agent_memory.md).
-- **20 MB Auto-Archive Threshold:** When the memory file reaches 20 MB, Helper-AI prompts the user, archives a timestamped backup, and resets the active log for clean continuity.
+| # | Tool Name | Category | What It Does (Simple Explanation) |
+| :-: | :--- | :--- | :--- |
+| 1 | **`universal_terminal`** | System | Runs any terminal or PowerShell command on Windows, Linux, or Mac; supports heavy background tasks. |
+| 2 | **`synthesize_os_command`** | System | Translates plain English intentions into exact, safe commands for your specific operating system. |
+| 3 | **`command_hub`** | System | Downloads, searches, and caches community command cheat sheets (from cheat.sh and encyclopedia). |
+| 4 | **`audit_security_baseline`** | Security | Audits open network ports, firewall status, security patches, and system hardening posture. |
+| 5 | **`deep_web_crawl`** | Web | Recursively crawls websites and documentation portals into full, structured markdown knowledge files. |
+| 6 | **`batch_fetch_web`** | Web | Concurrently downloads and extracts multiple web pages in parallel. |
+| 7 | **`fetch_github_repo`** | Web | Inspects any GitHub repository, fetching files, folder trees, README, releases, and codebases. |
+| 8 | **`fetch_web_content`** | Web | Extracts clean, readable article text from any web address without ads or clutter. |
+| 9 | **`duckduckgo_search`** | Web | Searches the live internet for answers without needing any paid search API keys. |
+| 10 | **`download_file`** | Web | Downloads files or documents directly from the internet onto your computer. |
+| 11 | **`execute_python_code`** | Code | Runs Python scripts in an isolated sandbox with automatic dependency installation. |
+| 12 | **`build_project_files`** | Code | Scaffolds and writes entire multi-file software projects and folder trees in 1 step. |
+| 13 | **`execute_powershell`** | System | Executes native PowerShell scripts with automatic quoting for paths with spaces. |
+| 14 | **`read_file`** | Files | Reads and inspects the contents of text, code, or configuration files. |
+| 15 | **`write_file`** | Files | Creates new files or overwrites existing files with clean text. |
+| 16 | **`list_directory`** | Files | Lists all files, folders, and sizes inside any directory (e.g. Desktop, Downloads). |
+| 17 | **`search_files`** | Files | Searches for files by name, extension, or keyword across your drives. |
+| 18 | **`move_or_copy_file`** | Files | Renames, moves, or makes duplicates of files and folders safely. |
+| 19 | **`process_manager`** | System | Lists running programs and safely terminates frozen or unresponsive processes. |
+| 20 | **`system_health`** | System | Checks CPU load, RAM usage, hard drive capacity, and computer uptime. |
+| 21 | **`open_application`** | Apps | Opens desktop applications like Edge, Chrome, Notepad, Calculator, or Spotify. |
+| 22 | **`manage_ollama`** | AI | Pulls, runs, and lists local AI models so you can run Helper-AI 100% offline. |
+| 23 | **`check_connections`** | Network | Checks internet, Google Translate, Chrome port 9222, and API status with zero hassle. |
+| 24 | **`browser_automation`** | Browser | Controls the dedicated browser to log in, navigate, click, fill forms, and post on social media. |
+| 25 | **`desktop_gui_control`** | GUI | Simulates human mouse clicks, keyboard typing, hotkeys (`Ctrl+C`, `Win+R`), and window management. |
+| 26 | **`text_to_speech`** | Voice | Speaks answers aloud using Microsoft's neural voice engine across dozens of natural accents. |
+| 27 | **`vision_browser`** | Vision | Takes high-resolution screenshots and captures webpage visual layout using Playwright. |
+| 28 | **`mcp_tool`** | Extensibility| Connects to external Model Context Protocol (MCP) servers to add new third-party tools. |
 
 ---
 
-## 🧰 Complete Arsenal: All 25 Registered Tools
+## ⚙️ AI Models & Free Offline Mode
 
-| Tool Name | Category | Description |
-| :--- | :--- | :--- |
-| `audit_security_baseline` | Security | Audits defensive security baselines, firewall profiles, open ports, patches, and service hardening |
-| `deep_web_crawl` | Web | Recursively crawls websites, documentation portals, and knowledge bases into clean markdown dossiers |
-| `batch_fetch_web` | Web | Concurrently fetches multiple web pages or search results in parallel |
-| `fetch_github_repo` | Web | Deeply inspects and fetches entire GitHub codebases, raw trees, files, README, and releases |
-| `fetch_web_content` | Web | Extracts clean, readable text from target URLs with dynamic browser fallback for JS SPAs |
-| `duckduckgo_search` | Web | Queries DuckDuckGo for live internet snippets without API keys |
-| `download_file` | Web | Streams and downloads binary files directly to designated local paths |
-| `execute_python_code` | Code | Dedicated Python execution sandbox with automatic pip dependency installation |
-| `build_project_files` | Code | Scaffolds and writes entire multi-file projects, directory trees, and configurations in 1 atomic step |
-| `execute_powershell` | System | Executes native PowerShell or terminal scripts with stdout/stderr capture and auto-quoting |
-| `read_file` | File | Reads text content from files across the host filesystem |
-| `write_file` | File | Creates or overwrites files with provided text content |
-| `list_directory` | File | Lists children files, folders, and sizes in a target path (supports paths with spaces) |
-| `search_files` | File | Recursively searches for files matching wildcards or extensions |
-| `move_or_copy_file` | File | Moves, renames, or copies files and directories |
-| `process_manager` | System | Enumerates running processes and terminates target PIDs |
-| `system_health` | System | Retrieves real-time CPU load, memory percentages, and disk stats |
-| `open_application` | Apps | Launches applications, documents, or custom URLs |
-| `manage_ollama` | AI | Manages local Ollama models, pulls models, and inspects status |
-| `check_connections` | Network | Comprehensive multi-pass network and API connectivity diagnostics |
-| `browser_automation`| Browser | Controls Selenium Project Browser for social media, Blogger, and web forms |
-| `desktop_gui_control`| GUI | Controls mouse cursor, keyboard hotkeys, and window geometry |
-| `text_to_speech` | Voice | Generates natural neural speech audio using Microsoft Edge-TTS |
-| `vision_browser` | Vision | Captures visual screenshots and DOM state via Playwright |
-| `mcp_tool` | Extensibility | Dispatches requests to external Model Context Protocol servers |
+Helper-AI works with **any AI provider** you prefer:
+
+| Mode / Provider | Internet Needed? | Cost | How to Use |
+| :--- | :---: | :---: | :--- |
+| **Smart Rule Engine** *(Built-in)* | ❌ No | **100% Free** | Default out-of-the-box mode! No API keys or credit card needed. |
+| **Google Gemini** | ✅ Yes | **Free Tier Available** | Get a free key at [Google AI Studio](https://aistudio.google.com/), add `GEMINI_API_KEY` in `.env`. |
+| **Ollama Local AI** | ❌ No | **100% Free** | Install [Ollama](https://ollama.com/), run `ollama pull qwen2.5:1.5b`. Works 100% private on your machine. |
+| **OpenAI (GPT-4o)** | ✅ Yes | Paid API | Add `OPENAI_API_KEY` in `.env`. |
+| **Groq (Ultra-Fast)** | ✅ Yes | Free Tier Available | Add `GROQ_API_KEY` in `.env`. |
+
+### How to configure your AI key (Optional):
+1. Rename or copy `.env.example` to `.env`.
+2. Open `.env` in Notepad and set:
+   ```ini
+   LLM_PROVIDER=gemini
+   GEMINI_API_KEY=your_actual_key_here
+   ```
+3. Save the file. That's it!
 
 ---
 
-## 🚀 Quick Start Guide
+## 🛡️ Safe Mode & 1-Click Approvals (Human-in-the-Loop)
 
-### 1. The 1-Click Windows Starter (Recommended)
-1. Clone or download this repository.
-2. Double-click **`start.bat`**.
-3. Your default browser will launch at `http://localhost:8000`.
-4. Enter your goal and click **🚀 Execute Goal**!
-
----
-
-### 2. Manual Installation (Developers & Power Users)
-
-```bash
-# 1. Clone repository
-git clone https://github.com/rajkotpodman/helper-AI.git
-cd helper-AI
-
-# 2. Create virtual environment
-python -m venv .venv
-# On Windows:
-.venv\Scripts\activate
-# On Linux/macOS:
-source .venv/bin/activate
-
-# 3. Install dependencies
-pip install -r requirements.txt
-```
-
-### 3. Environment Configuration
-
-Copy `.env.example` to `.env`:
-```bash
-cp .env.example .env
-```
-
-Set your preferred provider:
-```ini
-LLM_PROVIDER=gemini       # Options: gemini, openai, groq, ollama, rule_engine
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-flash-latest
-SAFE_MODE=false
-PORT=8000
-HOST=0.0.0.0
-```
-
-*(Note: Helper-AI operates 100% offline without any API keys using the built-in Smart Rule Engine or local Ollama!)*
-
-### 4. Launch the Interfaces
-
-#### 🌐 Web Dashboard (FastAPI + Glassmorphism UI)
-```bash
-python app.py
-```
-Open `http://localhost:8000` in your browser.
-
-#### 🖥️ Interactive Command Line (CLI Mode)
-```bash
-# Direct goal execution
-python helper.py "Check PC health and CPU, and write a summary to Desktop/health.txt"
-
-# Web research and synthesis
-python helper.py "Search web for top open-source AI agents and save report to Desktop/report.md"
-
-# Interactive loop
-python helper.py
-```
+You never have to worry about the agent doing something destructive:
+- **Destructive Action Blocker:** In Safe Mode (`SAFE_MODE=true`), commands that format disks or wipe system folders are automatically blocked before they can ever run.
+- **1-Click Approvals:** If Helper-AI is about to publish a post on social media or delete a file, it pauses and shows a friendly approval pop-up on your screen asking:  
+  *`"Helper-AI wants to publish this LinkedIn post. Do you approve? [Yes] / [No]"`*
+- You remain in complete control at all times!
 
 ---
 
-## 🐳 Docker Deployment & Orchestration
+## ❓ Frequently Asked Questions (FAQ) for Beginners
 
-Run Helper-AI in an isolated containerized environment:
+### Q1: Is Helper-AI free?
+**Yes!** Helper-AI is 100% open-source under the MIT license. You can use it completely free forever.
 
-```bash
-# Production Docker Compose
-docker compose up -d
+### Q2: Do I have to pay for an AI API key?
+**No!** Helper-AI comes with a built-in deterministic Smart Rule Engine and supports free local Ollama AI models. You can run it 100% offline without spending a penny.
 
-# Development Docker Compose with Live Code Reloading
-docker compose -f docker-compose.dev.yml up -d
-
-# Check container logs
-docker compose logs -f
+### Q3: When I double-click `start.bat`, nothing happens or it closes immediately. What should I do?
+Make sure Python is installed and that you checked the box **"Add Python to PATH"** during installation. You can test this by opening PowerShell or Command Prompt and typing:
+```powershell
+python --version
 ```
+If it prints `Python 3.10` or higher, you are good to go!
 
-The service will be accessible at `http://localhost:8000`.
+### Q4: How do I stop an ongoing task?
+Simply click the red **`⏹ Stop Agent`** button on the web dashboard at any time. Helper-AI will stop immediately.
 
----
-
-## 📡 REST API Reference
-
-| Method | Endpoint | Description |
-| :--- | :--- | :--- |
-| `GET` | `/api/status` | System health check, active LLM provider, and safe mode status |
-| `GET` | `/api/tools` | Enumerates all 18 registered tools with JSON schemas |
-| `GET` | `/api/metrics` | Telemetry metrics: latency percentiles, step counts, error rates |
-| `GET` | `/api/audit` | Retrieves structured audit trail logs with secret masking |
-| `GET` | `/api/memory/stats` | Returns `agent_memory.md` file size and 20MB quota status |
-| `GET` | `/api/memory/download`| Downloads the persistent memory markdown file |
-| `POST`| `/api/memory/reset` | Triggers manual backup archive and memory file reset |
-| `GET` | `/api/permission/pending` | Lists pending Human-in-the-Loop authorization requests |
-| `POST`| `/api/permission/respond` | Approves or denies a pending authorization request |
-| `WS`  | `/ws/agent` | Real-time WebSocket connection streaming thoughts, actions, and output |
+### Q5: Can Helper-AI speak to me?
+**Yes!** You can ask Helper-AI: `"Speak aloud: Welcome to my computer!"` and it will use its built-in neural text-to-speech engine to speak aloud in a natural human voice.
 
 ---
 
 ## 🧪 Automated Testing Suite
 
-We maintain 100% test coverage across all tools, agents, safety filters, and APIs:
+We maintain an exhaustive automated test suite with **153+ passing tests** covering every tool, network adapter, security module, and browser controller:
 
 ```bash
-# Run complete test suite (65 passing tests)
+# Run the complete test suite
 pytest tests/ -v
 
-# Run with coverage analysis
-pytest --cov=core tests/
-```
+# Run the security toolkit tests
+pytest tests/test_security_toolkit.py -v
 
-On Linux or CI environments without an active X11 display:
-```bash
-xvfb-run --auto-servernum pytest tests/ -v
+# Run the universal cross-platform terminal tests
+pytest tests/test_universal_terminal.py -v
 ```
 
 ---
 
-## 🤝 Community & Governance
+## 🤝 Community & Support
 
-- [Contributing Guidelines](CONTRIBUTING.md)
-- [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Security Policy](SECURITY.md)
-- [Changelog](CHANGELOG.md)
-- [Gujarati Usage Guide](HOW_TO_USE.md)
+- **Detailed User Guide:** Read the [HOW_TO_USE.md](HOW_TO_USE.md) guide for in-depth examples in English and Gujarati.
+- **Security Inquiries:** Review our [SECURITY.md](SECURITY.md) policy.
+- **Contributing:** Read our [CONTRIBUTING.md](CONTRIBUTING.md) guide to help build new features.
+- **Release History:** Check our [CHANGELOG.md](CHANGELOG.md) for all updates.
 
 ---
 
 ## 📄 License
 
-Distributed under the [MIT License](LICENSE).
+Distributed under the open-source **[MIT License](LICENSE)**. Free to use, modify, and distribute.

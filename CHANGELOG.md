@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.0] - 2026-10-13
+
+### 🛡️ Universal Cross-Platform Terminal & Security Toolkit Architecture
+- **Universal Cross-Platform Terminal Engine (`core/command_engine/`):**
+  - Added OS and shell auto-detection (`os_detector.py`) supporting Windows (PowerShell/CMD), Linux (POSIX Bash/Zsh), macOS, WSL, and BSD.
+  - Implemented encyclopedic command catalog and recipe synthesizer (`command_encyclopedia.py`) mapping natural language goals to native terminal commands.
+  - Added dynamic community command cheat sheet downloader and persistent local cache (`command_fetcher.py`).
+  - Added universal executor (`executor.py`) supporting synchronous execution and heavy background daemons with log capture, status querying, and cancellation.
+  - Registered 3 new native tools: `universal_terminal`, `synthesize_os_command`, and `command_hub`, expanding the arsenal to 28 tools.
+- **Defensive Security & Vulnerability Assessment Toolkit (`security_toolkit/`):**
+  - Non-blocking asynchronous network port scanner (`port_scanner.py`) with semaphore concurrency and service identification.
+  - OWASP HTTP security header analyzer (`header_analyzer.py`) evaluating defensive posture, technology disclosure penalties, and letter grades (A+ to F).
+  - Cryptographic SHA-256 File Integrity Monitoring engine (`integrity_checker.py`) for drift, tamper, and unauthorized drop detection.
+  - Multi-format exporter (`reporter.py`) generating JSON, CSV findings, and platform-safe ASCII reports.
+  - Unified CLI command router (`cli.py`).
+- **Non-Technical User Experience & Documentation:**
+  - Expanded `README.md` and `HOW_TO_USE.md` with beginner-friendly guides, ASCII dashboard schematics, and bilingual (English & Gujarati) walkthroughs.
+  - Test suite expanded to 153+ passing automated tests with 100% pass rate.
+
+---
+
 ## [1.4.0] - 2026-10-12
 
 ### 🚀 Autonomous Self-Healing & DevOps CI/CD Overhaul

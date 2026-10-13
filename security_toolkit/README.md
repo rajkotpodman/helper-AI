@@ -13,6 +13,14 @@ A modular, robust, and extensible Python toolkit built for authorized security a
 
 ---
 
+## 💡 What Does This Toolkit Do? (Simple Explanation for Everyone)
+
+- **Network Port Scanner (`ports`):** Think of network ports like numbered doors on your computer (like Door 80 for websites, Door 22 for remote logins). The port scanner checks which "doors" are currently open so you know if any unnecessary services are exposed.
+- **HTTP Header Analyzer (`headers`):** When your web browser talks to a website, the website sends back security instructions called "headers" (like: *"don't let anyone frame this site"* or *"only use HTTPS"*). This tool inspects those headers, gives the site a security score (0 to 100%), and gives a letter grade from A+ down to F.
+- **File Integrity Monitor (`integrity`):** Computes a unique digital fingerprint (SHA-256 hash) for every file in a folder. If any file is secretly changed, added, or deleted, this tool immediately sounds an alarm and tells you exactly which file was altered.
+
+---
+
 ## 📦 Architecture & Core Modules
 
 The toolkit is organized into modular components adhering to clean object-oriented principles, asynchronous I/O, and type hints:
