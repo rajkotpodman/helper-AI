@@ -312,8 +312,16 @@ class HelperAgent:
             # Fast-path early completion for successfully fulfilled single-intent goals
             lower_goal = goal.lower().strip()
 
+            # Guard: If goal requires creating, posting, publishing, saving, writing, or applying,
+            # intermediate discovery/reading/fetching actions MUST NOT cause premature exit!
+            has_followup_action = any(k in lower_goal for k in [
+                "post", "publish", "share", "linkedin", "linkdin", "linkden", "facebook", "blogger", "twitter", "tweet",
+                "create", "write", "save", "paste", "copy paste", "copy and paste", "summarize", "apply", "download",
+                "then", "and then", "after that"
+            ])
+
             # A. App Launching (e.g. open/run/launch edge, chrome, notepad, calc, browser)
-            if action == "open_app_or_file" and action_success:
+            if not has_followup_action and action == "open_app_or_file" and action_success:
                 if any(w in lower_goal for w in ["open", "launch", "run", "start"]):
                     target_display = action_args.get("target") or action_args.get("app_name") or "Application"
                     success = True
@@ -353,7 +361,7 @@ class HelperAgent:
                     break
 
             # D. Folder Inspection / File listing
-            if action == "list_directory" and action_success:
+            if not has_followup_action and action == "list_directory" and action_success:
                 if any(w in lower_goal for w in ["check contents", "list files", "list contents", "show files", "what files", "see files", "show folder"]):
                     success = True
                     target_dir = action_args.get("path", "folder")
@@ -404,8 +412,8 @@ class HelperAgent:
                         break
 
             # G. Web Content Fetching (e.g. fetch web, read url, read article, scrape)
-            if action in ["fetch_web_content", "search_web"] and action_success:
-                if any(w in lower_goal for w in ["fetch", "read", "get web", "search", "lookup", "look up", "find online", "scrape", "http"]):
+            if not has_followup_action and action in ["fetch_web_content", "search_web"] and action_success:
+                if any(w in lower_goal for w in ["fetch", "get web", "search", "lookup", "look up", "find online", "scrape"]):
                     success = True
                     final_message = output_str
                     metrics.record_goal_complete(success=True)
@@ -417,9 +425,9 @@ class HelperAgent:
                     break
 
             # H. Desktop GUI Control (e.g. hotkeys, screenshot, screen info, clipboard, list windows)
-            if action == "desktop_gui_control" and action_success:
+            if not has_followup_action and action == "desktop_gui_control" and action_success:
                 gui_act = action_args.get("action", "")
-                if gui_act in ["get_screen_info", "take_screenshot", "list_windows", "clipboard_paste", "hotkey"]:
+                if gui_act in ["get_screen_info", "take_screenshot"]:
                     success = True
                     final_message = output_str
                     metrics.record_goal_complete(success=True)

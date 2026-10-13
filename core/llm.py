@@ -325,6 +325,16 @@ class LLMClient:
                 "3. In your final completion_message, you MUST provide 100% of all discovered repositories in an exhaustive, numbered list showing: item number, repository name, Public/Private status, and description/link. DO NOT truncate, sample, or stop at only 3-5 items!"
             )
 
+        if any(k in lower_g for k in ["linkedin", "linkdin", "linkden", "facebook", "blogger"]) and any(k in lower_g for k in ["post", "publish", "share", "status"]):
+            if "successfully created and published" not in trajectory_summary.lower() and "live on your" not in trajectory_summary.lower():
+                extra_instructions.append(
+                    "⚠️ MANDATORY POSTING EXECUTION REQUIREMENT: The user's goal specifically requires creating and publishing a post on LinkedIn / social media.\n"
+                    "- If you already fetched or read the content / README / article in Step 1, you MUST NOT declare is_complete=true yet!\n"
+                    "- Your immediate next action MUST BE action: 'browser_automation' with args {'action': 'publish_linkedin_post', 'post_text': '...'} (or publish_facebook_post / publish_blog_post).\n"
+                    "- Make sure post_text contains the synthesized or copied content from Step 1 formatted with clean headings and bullets (under 2,800 characters to fit LinkedIn's limit).\n"
+                    "- Only mark is_complete=true AFTER browser_automation has successfully published the post!"
+                )
+
         prompt_guidance = "\n".join(extra_instructions)
         if prompt_guidance:
             prompt_guidance = f"\n\nCRITICAL CONSTRAINTS FOR THIS STEP:\n{prompt_guidance}"
@@ -1031,6 +1041,55 @@ class LLMClient:
                     "is_complete": True,
                     "completion_message": "Helper has successfully created and published your post to LinkedIn! The post is now live on your feed."
                 }
+            # If goal requests copying/pasting README.md or repo content:
+            if any(k in lower for k in ["readme", "readme.md", "copy paste", "copy and paste"]):
+                has_readme_in_traj = any(k in trajectory_summary.lower() for k in ["# ⚡ helper-ai", "page content:", "autonomous ai agent"])
+                if not has_readme_in_traj and not any(k in trajectory_summary.lower() for k in ["readme.md", "fetch_web_content", "read_file"]):
+                    readme_path = r"E:\ai agent\README.md"
+                    if os.path.exists(readme_path):
+                        return {
+                            "thought": "I will read the repository's README.md file first so I can copy its content into the LinkedIn post.",
+                            "action": "read_file",
+                            "action_args": {"file_path": readme_path},
+                            "is_complete": False,
+                            "completion_message": ""
+                        }
+                    else:
+                        return {
+                            "thought": "I will fetch the repository's README.md content from GitHub first for the LinkedIn post.",
+                            "action": "fetch_web_content",
+                            "action_args": {"url": "https://raw.githubusercontent.com/rajkotpodman/helper-AI/main/README.md"},
+                            "is_complete": False,
+                            "completion_message": ""
+                        }
+                else:
+                    raw_text = ""
+                    if "page content:" in trajectory_summary.lower():
+                        idx = trajectory_summary.lower().find("page content:")
+                        raw_text = trajectory_summary[idx + len("page content:"):].strip()
+                    elif "observation (success):" in trajectory_summary.lower():
+                        idx = trajectory_summary.lower().find("observation (success):")
+                        raw_text = trajectory_summary[idx + len("observation (success):"):].strip()
+
+                    post_body = raw_text[:2800] if len(raw_text) > 2800 else raw_text
+                    if not post_body:
+                        post_body = (
+                            "🚀 Excited to share Helper-AI: Autonomous AI Agent with Full PC & Internet Control!\n\n"
+                            "Give Helper a goal. It executes, self-heals, and works until the job is done—without endless questioning.\n\n"
+                            "⭐ Open Source on GitHub: https://github.com/rajkotpodman/helper-AI"
+                        )
+
+                    return {
+                        "thought": "Now that the README.md content is retrieved, I will create and publish the LinkedIn post with the repo text.",
+                        "action": "browser_automation",
+                        "action_args": {
+                            "action": "publish_linkedin_post",
+                            "post_text": post_body
+                        },
+                        "is_complete": False,
+                        "completion_message": ""
+                    }
+
             # Extract content if given, check for file references (like HOW_TO_USE.md), or craft freelancer pitch
             li_text = ""
             # Check for file path in goal

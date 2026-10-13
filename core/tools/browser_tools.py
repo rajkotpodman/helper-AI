@@ -638,6 +638,10 @@ class BrowserAutomationTool(BaseTool):
                 "#AIAgent #Automation #Freelancer #Python #ArtificialIntelligence #Innovation #OpenSource"
             )
 
+        # Guard against LinkedIn's 3,000 character maximum limit
+        if len(content) > 2900:
+            content = content[:2800].rstrip() + "\n\n... [Read full documentation on GitHub: https://github.com/rajkotpodman/helper-AI]"
+
         # 2. Navigate to LinkedIn feed if not already on LinkedIn
         current_url = driver.current_url or ""
         if "linkedin.com/feed" not in current_url:
