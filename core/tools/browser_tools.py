@@ -345,151 +345,204 @@ class BrowserAutomationTool(BaseTool):
 
         browser = ProjectBrowser.get_instance()
         driver = browser.get_driver()
-        current_url = driver.current_url or ""
 
-        # Step 0: Ensure any prior in-flight post or open dialog is completely finished and closed
-        # We NEVER reuse an existing dialog for a new post to prevent overwriting previous drafts!
-        for _ in range(15):
-            open_dlgs = [d for d in driver.find_elements(By.XPATH, "//*[@role='dialog']") if d.is_displayed()]
-            if not open_dlgs:
-                break
-            time.sleep(1.0)
-
-        # If a dialog is STILL displayed after 15s (e.g. leftover prompt), attempt to close or discard it
+        # Step 0: Check if an active Create Post dialog is ALREADY open and usable
+        target_dlg = None
         for dlg in driver.find_elements(By.XPATH, "//*[@role='dialog']"):
             try:
-                if dlg.is_displayed():
-                    close_btns = dlg.find_elements(By.XPATH, ".//*[@aria-label='Close' or @aria-label='Discard' or @aria-label='બંધ કરો' or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'cancel') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'close')]")
-                    for cb in close_btns:
-                        if cb.is_displayed():
-                            try:
-                                cb.click()
-                            except Exception:
-                                driver.execute_script("arguments[0].click();", cb)
-                            time.sleep(1.0)
-                            break
+                if dlg.is_displayed() and dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']"):
+                    target_dlg = dlg
+                    break
             except Exception:
                 pass
 
-        # Step 1: Ensure we are on a valid Facebook timeline / page / home
-        if "facebook.com" not in current_url:
-            browser.navigate("https://www.facebook.com/")
-            time.sleep(2.5)
-        elif any(x in current_url for x in ["/photo", "/watch", "/reel", "/story"]):
-            browser.navigate("https://www.facebook.com/")
-            time.sleep(2.5)
-
-        # Dismiss any floating backdrop/modals or 'Not now' prompts if present
-        try:
-            not_now_btns = driver.find_elements(By.XPATH, "//*[@role='button'][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'not now')]")
-            for b in not_now_btns:
-                if b.is_displayed():
-                    driver.execute_script("arguments[0].click();", b)
-                    time.sleep(0.5)
-                    break
-        except Exception:
-            pass
-
-        # Step 2: Locate and click "What's on your mind?" / "Share a thought..." / "Create post" composer button
-        opened = False
-        for attempt in range(5):
-            btns = driver.find_elements(By.XPATH, "//*[@role='button'] | //div[contains(@class, 'x1i10hfl')] | //div[@contenteditable='true']")
-            for b in btns:
+        # Step 1: If no composer dialog is already open, navigate to clean Facebook feed
+        if not target_dlg:
+            current_url = driver.current_url or ""
+            # Always ensure we are at the top of the main feed
+            if "facebook.com" not in current_url or any(x in current_url for x in ["/photo", "/watch", "/reel", "/story", "post/create"]):
+                browser.navigate("https://www.facebook.com/")
+                time.sleep(2.5)
+            else:
                 try:
-                    if b.is_displayed():
-                        txt = (b.text or "").lower()
-                        aria = (b.get_attribute("aria-label") or "").lower()
-                        if any(k in txt or k in aria for k in [
-                            "what's on your mind", "share a thought", "create a post",
-                            "write something", "તમારા મનમાં શું છે", "પોસ્ટ બનાવો", "पोस्ट बनाएँ"
-                        ]):
-                            try:
-                                b.click()
-                            except Exception:
-                                driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", b)
-                            opened = True
-                            break
-                except Exception:
-                    continue
-            if opened:
-                break
-            time.sleep(1.0)
-
-        # Step 3: Wait for fresh composer dialog to appear
-        target_dlg = None
-        for _ in range(12):
-            time.sleep(0.5)
-            for dlg in driver.find_elements(By.XPATH, "//*[@role='dialog']"):
-                try:
-                    if dlg.is_displayed() and dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']"):
-                        target_dlg = dlg
-                        break
+                    driver.execute_script("window.scrollTo(0, 0);")
                 except Exception:
                     pass
-            if target_dlg:
-                break
+                time.sleep(1.0)
 
-        if not target_dlg:
+            # Dismiss any floating backdrop/modals or 'Not now' prompts if present
+            try:
+                not_now_btns = driver.find_elements(By.XPATH, "//*[@role='button'][contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'not now')]")
+                for b in not_now_btns:
+                    if b.is_displayed():
+                        driver.execute_script("arguments[0].click();", b)
+                        time.sleep(0.5)
+                        break
+            except Exception:
+                pass
+
+            # Step 2: Locate and click "What's on your mind?" composer trigger button using pointer events
+            opened = False
+            for attempt in range(4):
+                btns = driver.find_elements(By.XPATH, "//*[@role='button'] | //div[contains(@class, 'x1i10hfl')] | //div[@contenteditable='true'] | //span[contains(text(), 'mind') or contains(text(), 'મન') or contains(text(), 'मन')]")
+                for b in btns:
+                    try:
+                        if b.is_displayed():
+                            txt = (b.text or "").lower()
+                            aria = (b.get_attribute("aria-label") or "").lower()
+                            if any(k in txt or k in aria for k in [
+                                "what's on your mind", "share a thought", "create a post",
+                                "write something", "તમારા મનમાં શું છે", "પોસ્ટ બનાવો", "पोस्ट बनाएँ", "मन में क्या है"
+                            ]):
+                                # Dispatch full pointer event sequence for React 18
+                                driver.execute_script("""
+                                    const el = arguments[0];
+                                    el.scrollIntoView({block: 'center'});
+                                    const rect = el.getBoundingClientRect();
+                                    const x = rect.left + rect.width / 2;
+                                    const y = rect.top + rect.height / 2;
+                                    ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach(evt => {
+                                        el.dispatchEvent(new MouseEvent(evt, {
+                                            bubbles: true,
+                                            cancelable: true,
+                                            view: window,
+                                            clientX: x,
+                                            clientY: y
+                                        }));
+                                    });
+                                """, b)
+                                opened = True
+                                break
+                    except Exception:
+                        continue
+                if opened:
+                    break
+                time.sleep(1.0)
+
+            # Wait for composer dialog to appear
+            for _ in range(8):
+                time.sleep(0.5)
+                for dlg in driver.find_elements(By.XPATH, "//*[@role='dialog']"):
+                    try:
+                        if dlg.is_displayed() and dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']"):
+                            target_dlg = dlg
+                            break
+                    except Exception:
+                        pass
+                if target_dlg:
+                    break
+
+            # Fallback: If clicking the feed trigger didn't open dialog, navigate directly to Facebook's dedicated create URL
+            if not target_dlg:
+                browser.navigate("https://www.facebook.com/post/create")
+                time.sleep(2.5)
+                for _ in range(8):
+                    for dlg in driver.find_elements(By.XPATH, "//*[@role='dialog']"):
+                        try:
+                            if dlg.is_displayed() and dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']"):
+                                target_dlg = dlg
+                                break
+                        except Exception:
+                            pass
+                    if target_dlg:
+                        break
+                    time.sleep(0.5)
+
+        # Step 3: Locate the composer textbox inside the active dialog or page
+        textbox = None
+        if target_dlg:
+            for _ in range(6):
+                tbs = target_dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']")
+                for tb in tbs:
+                    try:
+                        if tb.is_displayed():
+                            textbox = tb
+                            break
+                    except Exception:
+                        continue
+                if textbox:
+                    break
+                time.sleep(0.5)
+
+        # If target_dlg didn't have it, check page-level textbox
+        if not textbox:
+            for tb in driver.find_elements(By.XPATH, "//*[@role='textbox' and @contenteditable='true']"):
+                if tb.is_displayed():
+                    textbox = tb
+                    break
+
+        if not textbox:
             return {
                 "success": False,
                 "output": "Could not open Facebook 'Create post' composer. Please ensure you are logged into Facebook in the Project Browser."
             }
 
-        # 3. Locate the composer textbox inside the active dialog
-        textbox = None
-        for _ in range(6):
-            tbs = target_dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']")
-            for tb in tbs:
-                try:
-                    if tb.is_displayed():
-                        textbox = tb
-                        break
-                except Exception:
-                    continue
-            if textbox:
-                break
-            time.sleep(0.5)
-
-        if not textbox:
-            return {
-                "success": False,
-                "output": "Could not find text input field inside Facebook Create Post composer."
-            }
-
-        # 4. Clear and enter text with Lexical / React 18 event triggers
+        # Step 4: Clear any existing draft text and focus textbox
         try:
             textbox.click()
-            time.sleep(0.3)
-            ActionChains(driver).move_to_element(textbox).key_down(Keys.CONTROL).send_keys("a").key_up(Keys.CONTROL).send_keys(Keys.BACKSPACE).perform()
-            time.sleep(0.3)
+            time.sleep(0.2)
+            ActionChains(driver).key_down(Keys.CONTROL).send_keys("a").key_up(Keys.CONTROL).send_keys(Keys.BACKSPACE).perform()
         except Exception:
             pass
 
-        # Use clipboard paste for fast, lossless Unicode & multi-line Gujarati posting
+        # Step 5: Insert content using DataTransfer ClipboardEvent (fast, lossless multi-line & Gujarati Unicode)
         pasted = False
         try:
-            import pyperclip
-            pyperclip.copy(content)
-            time.sleep(0.2)
-            ActionChains(driver).move_to_element(textbox).key_down(Keys.CONTROL).send_keys("v").key_up(Keys.CONTROL).perform()
+            driver.execute_script("""
+                const el = arguments[0];
+                const text = arguments[1];
+                el.focus();
+                const dt = new DataTransfer();
+                dt.setData('text/plain', text);
+                const pasteEvt = new ClipboardEvent('paste', {
+                    clipboardData: dt,
+                    bubbles: true,
+                    cancelable: true
+                });
+                el.dispatchEvent(pasteEvt);
+            """, textbox, content)
             time.sleep(0.8)
             pasted = len((textbox.text or "").strip()) > 5 or " " in (textbox.text or "")
-        except Exception as ce:
-            logger.debug(f"pyperclip paste failed: {ce}")
+        except Exception as e:
+            logger.debug(f"DataTransfer paste exception: {e}")
             pasted = False
 
         if not pasted:
+            # Fallback 1: execCommand insertText
+            try:
+                driver.execute_script("""
+                    const el = arguments[0];
+                    const text = arguments[1];
+                    el.focus();
+                    document.execCommand('insertText', false, text);
+                """, textbox, content)
+                time.sleep(0.8)
+                pasted = len((textbox.text or "").strip()) > 5
+            except Exception:
+                pass
+
+        if not pasted:
+            # Fallback 2: pyperclip + ActionChains
+            try:
+                import pyperclip
+                pyperclip.copy(content)
+                time.sleep(0.2)
+                ActionChains(driver).move_to_element(textbox).key_down(Keys.CONTROL).send_keys("v").key_up(Keys.CONTROL).perform()
+                time.sleep(0.8)
+                pasted = len((textbox.text or "").strip()) > 5
+            except Exception:
+                pass
+
+        if not pasted:
+            # Fallback 3: direct send_keys
             try:
                 textbox.send_keys(content)
                 time.sleep(0.8)
             except Exception as se:
                 logger.warning(f"send_keys fallback failed: {se}")
 
-        # Trigger Lexical / React state listener with key events and input events
+        # Trigger React 18 / Lexical input & change events
         try:
-            textbox.send_keys(Keys.SPACE)
-            time.sleep(0.1)
-            textbox.send_keys(Keys.BACKSPACE)
             driver.execute_script("""
                 const el = arguments[0];
                 el.dispatchEvent(new Event('input', { bubbles: true }));
@@ -499,10 +552,11 @@ class BrowserAutomationTool(BaseTool):
             pass
         time.sleep(1.0)
 
-        # Step 6: Locate the exact Post (or Share/Next) button inside the dialog
+        # Step 6: Locate Post button
         post_btn = None
+        search_root = target_dlg if target_dlg else driver
         for _ in range(16):  # Poll up to 8 seconds for aria-disabled to lift
-            btns = target_dlg.find_elements(By.XPATH, ".//*[@role='button'] | .//button")
+            btns = search_root.find_elements(By.XPATH, ".//*[@role='button'] | .//button")
             for b in btns:
                 try:
                     if b.is_displayed():
@@ -519,12 +573,29 @@ class BrowserAutomationTool(BaseTool):
                 break
             time.sleep(0.5)
 
-        # 6. Click Post button & secondary Ctrl+Enter submission
+        # Step 7: Click Post button via pointer event dispatcher and Ctrl+Enter
         if post_btn:
             try:
-                post_btn.click()
+                driver.execute_script("""
+                    const el = arguments[0];
+                    const rect = el.getBoundingClientRect();
+                    const x = rect.left + rect.width / 2;
+                    const y = rect.top + rect.height / 2;
+                    ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach(evt => {
+                        el.dispatchEvent(new MouseEvent(evt, {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window,
+                            clientX: x,
+                            clientY: y
+                        }));
+                    });
+                """, post_btn)
             except Exception:
-                driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", post_btn)
+                try:
+                    post_btn.click()
+                except Exception:
+                    driver.execute_script("arguments[0].click();", post_btn)
         else:
             # Universal keyboard submission shortcut in Facebook composer: Ctrl + Enter
             try:
@@ -532,18 +603,12 @@ class BrowserAutomationTool(BaseTool):
             except Exception:
                 pass
 
-        # Step 8: CRITICAL: Wait for dialog to CLOSE completely and handle secondary confirmation modals
-        # On Facebook, submitting a post takes 3 to 10 seconds for GraphQL to commit and remove the modal.
+        # Step 8: Wait for dialog to close
         dialog_closed = False
         start_wait = time.time()
-        while time.time() - start_wait < 30:  # Allow up to 30 seconds
+        while time.time() - start_wait < 30:
             time.sleep(1.0)
-
-            # Check if a secondary confirmation modal appeared (e.g. "Who can see this?", "Share to Feed", "Post anyway")
-            sec_btns = driver.find_elements(
-                By.XPATH,
-                "//*[@role='dialog']//*[@role='button' or self::button]"
-            )
+            sec_btns = driver.find_elements(By.XPATH, "//*[@role='dialog']//*[@role='button' or self::button]")
             for sb in sec_btns:
                 try:
                     if sb.is_displayed() and sb != post_btn:
@@ -551,26 +616,24 @@ class BrowserAutomationTool(BaseTool):
                         saria = (sb.get_attribute("aria-label") or "").strip().lower()
                         if any(k in stxt or k in saria for k in ["post", "share", "next", "done", "continue", "પોસ્ટ", "पोस्ट"]):
                             if sb.get_attribute("aria-disabled") != "true":
-                                try:
-                                    sb.click()
-                                except Exception:
-                                    driver.execute_script("arguments[0].click();", sb)
+                                driver.execute_script("arguments[0].click();", sb)
                                 time.sleep(1.5)
                                 break
                 except Exception:
                     pass
 
-            # Check if target_dlg has closed
-            try:
-                if not target_dlg.is_displayed():
+            if target_dlg:
+                try:
+                    if not target_dlg.is_displayed():
+                        dialog_closed = True
+                        break
+                except Exception:
                     dialog_closed = True
                     break
-            except Exception:
-                # StaleElementReferenceException means Facebook detached the modal from the DOM -> Post published!
+            else:
                 dialog_closed = True
                 break
 
-            # If still open after 8s or 16s, retry clicking post_btn or Ctrl+Enter
             elapsed = time.time() - start_wait
             if (7.0 < elapsed < 8.5) or (15.0 < elapsed < 16.5):
                 try:
@@ -581,14 +644,14 @@ class BrowserAutomationTool(BaseTool):
                 except Exception:
                     pass
 
-        # Step 9: Settle and refresh the feed to guarantee pristine DOM state for consecutive posts
-        time.sleep(3.5)
+        # Step 9: Always navigate cleanly to Facebook home feed so consecutive posts have a fresh state
+        time.sleep(2.5)
         try:
-            target_refresh_url = driver.current_url or "https://www.facebook.com/"
-            browser.navigate(target_refresh_url)
-            time.sleep(3.5)
+            browser.navigate("https://www.facebook.com/")
+            time.sleep(2.5)
+            driver.execute_script("window.scrollTo(0, 0);")
         except Exception as ne:
-            logger.debug(f"Feed refresh after post: {ne}")
+            logger.debug(f"Feed reset after post: {ne}")
 
         return {
             "success": True,
@@ -639,8 +702,8 @@ class BrowserAutomationTool(BaseTool):
             )
 
         # Guard against LinkedIn's 3,000 character maximum limit
-        if len(content) > 2900:
-            content = content[:2800].rstrip() + "\n\n... [Read full documentation on GitHub: https://github.com/rajkotpodman/helper-AI]"
+        if len(content) > 2980:
+            content = content[:2970].rstrip()
 
         # 2. Navigate to LinkedIn feed if not already on LinkedIn
         current_url = driver.current_url or ""
@@ -661,77 +724,52 @@ class BrowserAutomationTool(BaseTool):
                 )
             }
 
-        # 3. Locate and click 'Start a post'
-        opened = False
-        for _ in range(3):
-            p_elems = driver.find_elements(By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'start a post')]")
-            target_btn = None
-            for el in reversed(p_elems):
-                try:
-                    if el.is_displayed() and "start a post" in el.text.strip().lower() and len(el.text.strip()) < 60:
-                        anc = driver.execute_script("""
-                            let el = arguments[0];
-                            while (el && el !== document.body) {
-                                if (el.tagName === 'BUTTON' || el.getAttribute('role') === 'button') return el;
-                                el = el.parentElement;
-                            }
-                            return arguments[0];
-                        """, el)
-                        target_btn = anc
-                        break
-                except Exception:
-                    pass
-
-            if target_btn:
-                try:
-                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'}); arguments[0].click();", target_btn)
-                except Exception:
-                    ActionChains(driver).move_to_element(target_btn).click().perform()
-                opened = True
-                break
-            time.sleep(1.0)
-
-        if not opened:
-            return {
-                "success": False,
-                "output": "Could not find 'Start a post' button on LinkedIn feed. Please make sure LinkedIn feed is loaded and you are logged in."
+        # 3. Check if editor is already open (e.g. /sharing/compose or active draft)
+        editor = driver.execute_script("""
+            const eds = Array.from(document.querySelectorAll('[contenteditable="true"][role="textbox"], .tiptap.ProseMirror, [contenteditable="true"]'));
+            for (const ed of eds) {
+                const r = ed.getBoundingClientRect();
+                if (r.width > 100 && r.height > 20) return ed;
             }
+            return null;
+        """)
 
-        # 4. Wait for post editor dialog to appear
-        time.sleep(2.0)
-        editor = None
-        for _ in range(8):
-            tbs = driver.find_elements(
-                By.XPATH,
-                "//div[contains(@class, 'tiptap') or contains(@class, 'ProseMirror')]//p | "
-                "//div[contains(@class, 'tiptap') or contains(@class, 'ProseMirror')] | "
-                "//*[@role='dialog']//*[@role='textbox' or @contenteditable='true'] | "
-                "//div[@role='textbox' and @contenteditable='true'] | "
-                "//p[contains(@class, 'is-editor-empty')]/.. | "
-                "//*[@contenteditable='true']"
-            )
-            for tb in tbs:
-                try:
-                    is_vis = driver.execute_script("""
-                        const el = arguments[0];
-                        const r = el.getBoundingClientRect();
-                        return (r.width > 0 && r.height > 0) || (el.offsetParent !== null);
-                    """, tb)
-                    if is_vis:
-                        editor = tb
+        # If not already open, locate and click 'Start a post'
+        if not editor:
+            for _ in range(4):
+                clicked = driver.execute_script("""
+                    const matches = Array.from(document.querySelectorAll('button, div[role="button"], div, p')).filter(el => {
+                        const t = (el.innerText || el.textContent || '').trim().toLowerCase();
+                        return (t.includes('start a post') || t.includes('પોસ્ટ શરૂ કરો') || t.includes('પોસ્ટ બનાવો')) && t.length < 50;
+                    });
+                    for (const m of matches) {
+                        const r = m.getBoundingClientRect();
+                        if (r.width > 100 && r.height > 25) {
+                            m.scrollIntoView({block: 'center'});
+                            m.click();
+                            return true;
+                        }
+                    }
+                    return false;
+                """)
+                if clicked:
+                    time.sleep(2.0)
+                    editor = driver.execute_script("""
+                        const eds = Array.from(document.querySelectorAll('[contenteditable="true"][role="textbox"], .tiptap.ProseMirror, [contenteditable="true"]'));
+                        for (const ed of eds) {
+                            const r = ed.getBoundingClientRect();
+                            if (r.width > 100 && r.height > 20) return ed;
+                        }
+                        return null;
+                    """)
+                    if editor:
                         break
-                except Exception:
-                    if tb.is_displayed():
-                        editor = tb
-                        break
-            if editor:
-                break
-            time.sleep(0.5)
+                time.sleep(1.0)
 
         if not editor:
             return {
                 "success": False,
-                "output": "Post creation modal opened, but the rich text editor field was not found."
+                "output": "Could not find 'Start a post' button or LinkedIn post editor. Please make sure LinkedIn feed is loaded and you are logged in."
             }
 
         # Also archive local copy to Desktop/LinkedIn_Posts immediately
@@ -794,35 +832,27 @@ class BrowserAutomationTool(BaseTool):
 
         # 6. Locate the Post button and ensure it is ENABLED
         post_btn = None
-        for _ in range(12):
-            btns = driver.find_elements(By.XPATH, """
-                //button[contains(@class, 'share-actions__primary-action')] |
-                //button[@data-test-share-post-button] |
-                //div[contains(@class, 'share-box')]//button[contains(., 'Post')] |
-                //div[@role='dialog']//button[contains(., 'Post')] |
-                //button[contains(., 'Post')]
+        for _ in range(15):
+            post_btn = driver.execute_script("""
+                const candidates = Array.from(document.querySelectorAll('button'));
+                for (const b of candidates) {
+                    const r = b.getBoundingClientRect();
+                    if (r.width === 0 || r.height === 0) continue;
+                    const text = (b.innerText || b.textContent || '').trim().toLowerCase();
+                    const aria = (b.getAttribute('aria-label') || '').toLowerCase();
+                    if (text === 'post' || text === 'પોસ્ટ' || text === 'શેર' || text === 'share' || text === 'publish' ||
+                        aria === 'post' || aria === 'પોસ્ટ કરો' || aria === 'શેર કરો' ||
+                        b.classList.contains('share-actions__primary-action') ||
+                        b.hasAttribute('data-test-share-post-button')) {
+                        if (!aria.includes('dismiss') && !aria.includes('close') && !text.includes('home') && !text.includes('anyone')) {
+                            b.removeAttribute('disabled');
+                            b.setAttribute('aria-disabled', 'false');
+                            return b;
+                        }
+                    }
+                }
+                return null;
             """)
-            for b in btns:
-                try:
-                    is_vis = driver.execute_script("""
-                        const el = arguments[0];
-                        const r = el.getBoundingClientRect();
-                        return (r.width > 0 && r.height > 0) || (el.offsetParent !== null);
-                    """, b)
-                    if is_vis:
-                        txt = b.text.strip().lower()
-                        if any(txt == p for p in ["post", "share", "publish"]) or (txt.startswith("post") and "anyone" not in txt and "setting" not in txt):
-                            # Force button activation if disabled due to synthetic event delay
-                            driver.execute_script("""
-                                const btn = arguments[0];
-                                btn.removeAttribute('disabled');
-                                btn.setAttribute('aria-disabled', 'false');
-                                btn.classList.remove('artdeco-button--disabled');
-                            """, b)
-                            post_btn = b
-                            break
-                except Exception:
-                    continue
             if post_btn:
                 break
             time.sleep(0.5)
@@ -842,19 +872,19 @@ class BrowserAutomationTool(BaseTool):
             except Exception:
                 ActionChains(driver).move_to_element(post_btn).click().perform()
 
-        # 8. VERIFY publication: Wait up to 6 seconds and verify the modal dialog is closed
+        # 8. VERIFY publication: Wait up to 6 seconds and verify the post was submitted
         published = False
         for _ in range(12):
             time.sleep(0.5)
-            still_open = False
-            for tb in driver.find_elements(By.XPATH, "//div[contains(@class, 'tiptap') or contains(@class, 'ProseMirror')]"):
-                try:
-                    if tb.is_displayed():
-                        still_open = True
-                        break
-                except Exception:
-                    pass
-            if not still_open:
+            curr = driver.current_url or ""
+            is_empty = driver.execute_script("""
+                const ed = document.querySelector('[contenteditable="true"][role="textbox"], .tiptap.ProseMirror');
+                if (!ed) return true;
+                const r = ed.getBoundingClientRect();
+                if (r.width === 0 || r.height === 0) return true;
+                return (ed.innerText || '').trim().length === 0;
+            """)
+            if is_empty or ("shareActive" not in curr and "sharing/compose" not in curr):
                 published = True
                 break
 

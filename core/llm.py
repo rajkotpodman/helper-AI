@@ -560,6 +560,22 @@ class LLMClient:
                     pass
 
             err_str = str(e).lower()
+            if "413" in err_str or "payload too large" in err_str:
+                short_prompt = user_prompt[:3500] + "\n...[context truncated for length]...\n" + user_prompt[-3500:]
+                try:
+                    resp = client.chat.completions.create(
+                        model=target_model,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": short_prompt}
+                        ],
+                        response_format={"type": "json_object"},
+                        temperature=0.2,
+                    )
+                    return self._parse_json_response(resp.choices[0].message.content)
+                except Exception:
+                    pass
+
             # If rate limit (429 / TPD / TPM), model not found, or tool_use_failed (400), try alternative models
             if any(k in err_str for k in ["429", "rate_limit", "rate limit", "tpd", "tokens per day", "model_not_found", "404", "does not exist", "tool_use_failed", "tool choice is none", "400"]):
                 alt_candidates = [
@@ -947,7 +963,106 @@ class LLMClient:
                 )
             }
             p_title = f"LinkedIn Post {curr_idx} of {target_posts}"
-            p_text = linkedin_catalog.get(curr_idx, linkedin_catalog[1])
+            if is_gujarati:
+                linkedin_gujarati_catalog = {
+                    1: (
+                        "🚀 ભાગ ૧/૩: ગિટહબ રિપોઝીટરી વિશે વિસ્તૃત અને ઊંડાણપૂર્વક માહિતી - પરિચય અને આર્કિટેક્ચર\n\n"
+                        "ઓપન સોર્સ સોફ્ટવેર અને આર્ટિફિશિયલ ઇન્ટેલિજન્સ (AI) ના યુગમાં આ રિપોઝીટરી આધુનિક ટેકનોલોજીનું ઉત્તમ ઉદાહરણ છે! "
+                        "આ પ્રોજેક્ટ કોમ્પ્યુટર ઓટોમેશન, વેબ ઇન્ટરેક્શન અને સ્વાયત્ત એજન્ટ સિસ્ટમ્સ માટે સંપૂર્ણ સોલ્યુશન પૂરું પાડે છે.\n\n"
+                        "⚡ મુખ્ય વિશેષતાઓ અને હાઇલાઇટ્સ:\n"
+                        "૧. ઓટોનોમસ પીસી અને ઇન્ટરનેટ કંટ્રોલ: વપરાશકર્તાની સતત મદદ વગર જટિલ કાર્યો આપમેળે પૂર્ણ કરવાની ક્ષમતા.\n"
+                        "૨. મલ્ટિમોડલ આર્કિટેક્ચર: બ્રાઉઝર ઓટોમેશન, ફાઇલ સિસ્ટમ મેનેજમેન્ટ અને ટર્મિનલ કમાન્ડ્સનું સીધું સંકલન.\n"
+                        "૩. સેલ્ફ-હીલિંગ સિસ્ટમ: કોઈ પણ એરર આવે તો સિસ્ટમ જાતે વૈકલ્પિક રસ્તો શોધીને ટાસ્ક પૂરો કરે છે.\n\n"
+                        "🔗 સત્તાવાર રિપોઝીટરી: https://github.com/rajkotpodman/helper-AI\n\n"
+                        "આગળના ભાગ ૨ માં જોઈશું આ રિપોઝીટરીનું ટેકનિકલ સેટઅપ અને લાઇવ ઓટોમેશન પ્રક્રિયા! શેર કરો અને જોડાયેલા રહો! 🚀\n\n"
+                        "#GitHub #OpenSource #AIAgents #Python #Automation #TechInGujarati #TechNews"
+                    ),
+                    2: (
+                        "⚡ ભાગ ૨/૩: ગિટહબ રિપોઝીટરીનું ટેકનિકલ સેટઅપ, કોર મોડ્યુલ્સ અને કાર્યપદ્ધતિ\n\n"
+                        "આ શ્રેણીના બીજા ભાગમાં આપણે જાણીશું આ પ્રોજેક્ટના મુખ્ય ટેકનિકલ ઘટકો અને તે કેવી રીતે કાર્ય કરે છે!\n\n"
+                        "🛠️ ટેકનિકલ સ્ટેક અને ફ્રેમવર્ક્સ:\n"
+                        "• બેકએન્ડ એન્જિન: FastAPI અને પાયથોન એસિંક્રોનસ પાઇપલાઇન\n"
+                        "• બ્રાઉઝર કંટ્રોલ: સેલેનિયમ અને ક્રોમ ડેવટૂલ્સ પ્રોટોકોલ (CDP)\n"
+                        "• સિક્યોરિટી ટૂલકીટ: ડિફેન્સિવ ઓડિટ, પોર્ટ સ્કેનિંગ અને સિસ્ટમ હેલ્થ મોનિટરિંગ\n"
+                        "• રીઅલ-ટાઇમ ટેલિમેટ્રી: WebSocket આધારિત લાઇવ ડેશબોર્ડ\n\n"
+                        "આ સિસ્ટમ વાસ્તવિક બિઝનેસ વર્કફ્લોઝ જેવા કે રિસર્ચ રિપોર્ટ્સ, ડેટા પ્રોસેસિંગ અને સોશિયલ મીડિયા ઓટોમેશન સરળતાથી કરે છે.\n\n"
+                        "આગળના આખરી ભાગ ૩ માં જોઈશું પ્રોડક્શન ડિપ્લોયમેન્ટ અને ભવિષ્યની શક્યતાઓ! 🚀\n\n"
+                        "#SoftwareEngineering #Python #FastAPI #Selenium #TechInGujarati #GujaratiDevelopers"
+                    ),
+                    3: (
+                        "🌟 ભાગ ૩/૩: ગિટહબ પ્રોજેક્ટનો વ્યવહારિક ઉપયોગ, ડિપ્લોયમેન્ટ અને ભવિષ્યનું વિઝન\n\n"
+                        "આ શ્રેણીના આખરી ભાગમાં આપણે જાણીશું આ પ્રોજેક્ટને કેવી રીતે ડિપ્લોય કરવો અને વ્યવસાયમાં કેવી રીતે ઉપયોગ કરવો!\n\n"
+                        "💡 વ્યવસાયિક મૂલ્ય (Business Value):\n"
+                        "૧. 'Result as a Service' (RaaS): કલાકોના કંટાળાજનક મેન્યુઅલ કામને મિનિટોમાં સ્વાયત્ત રીતે પૂર્ણ કરે છે.\n"
+                        "૨. ૧૦૦% ઓફલાઇન અને પ્રાઇવેટ ક્ષમતા: લોકલ AI મોડેલ્સ (Ollama) સાથે સંપૂર્ણ સુરક્ષિત ડેટા પ્રોસેસિંગ.\n"
+                        "૩. એન્ટરપ્રાઇઝ સ્કેલેબિલિટી: ડોકર કન્ટેનરાઇઝેશન અને મોડ્યુલર આર્કિટેક્ચર સાથે કોઈ પણ સર્વર પર સરળ ડિપ્લોયમેન્ટ.\n\n"
+                        "આ સાથે આ ગિટહબ પ્રોજેક્ટની ૩ ભાગની વિસ્તૃત શ્રેણી સંપન્ન થાય છે! લિંક્ડઇન પર કનેક્ટ થાઓ અને આપના પ્રતિભાવો જણાવો! 🚀\n\n"
+                        "#FutureOfWork #AIInnovation #OpenSource #TechLeadership #TechInGujarati #Automation"
+                    )
+                }
+                p_text = linkedin_gujarati_catalog.get(curr_idx, linkedin_gujarati_catalog[1])
+            else:
+                p_text = linkedin_catalog.get(curr_idx, linkedin_catalog[1])
+        elif platform == "facebook":
+            p_title = f"Facebook Post {curr_idx} of {target_posts}"
+            if is_gujarati:
+                fb_gujarati_catalog = {
+                    1: (
+                        "જય ભારત! 🚀 ફેસબુક પોસ્ટ ૧/૩ - વર્લ્ડસ ફર્સ્ટ પોસ્ટ-ક્વોન્ટમ ક્રિપ્ટોગ્રાફિક ટોકન ૯૮૯૮૦૪૮૪૮૩ (World's First Post-Quantum Cryptographic Token 9898048483)\n"
+                        "=================================================================================\n\n"
+                        "નમસ્કાર મિત્રો! 🙏\n"
+                        "આજના ડિજિટલ યુગમાં સાયબર સિક્યોરિટી અને ક્વોન્ટમ કમ્પ્યુટિંગ સૌથી મોટો પડકાર બની રહ્યા છે. ભવિષ્યના સુપર ક્વોન્ટમ કમ્પ્યુટર્સ સામાન્ય RSA અને ECC એન્ક્રિપ્શનને ગણતરીની મિનિટોમાં તોડી શકે છે. આ ગંભીર સમસ્યાના કાયમી ઉકેલ તરીકે રજૂ થાય છે: 'World's First Post-Quantum Cryptographic Token 9898048483'!\n\n"
+                        "🌟 મુખ્ય વિશેષતાઓ અને હાઇલાઇટ્સ (Key Architecture):\n"
+                        "૧. NIST FIPS 204 સ્ટાન્ડર્ડ અનુપાલન:\n"
+                        "   - આ ટોકન યુએસ નેશનલ ઇન્સ્ટિટ્યુટ ઓફ સ્ટાન્ડર્ડ્સ એન્ડ ટેકનોલોજી (NIST) ના FIPS 204 ML-DSA-87 (Module-Lattice-Based Digital Signature Algorithm) સ્ટાન્ડર્ડ પર આધારિત છે.\n"
+                        "   - ક્વોન્ટમ કમ્પ્યુટર્સના કોઈપણ હુમલા સામે ૧૦૦% અજેય સુરક્ષા પ્રદાન કરે છે.\n\n"
+                        "૨. ઝીરો-નોલેજ પ્રૂફ્સ (Zero-Knowledge Proofs - ZKP):\n"
+                        "   - વપરાશકર્તાની અંગત વિગતો કે ખાનગી કી જાહેર કર્યા વગર સુરક્ષિત વેરિફિકેશન.\n"
+                        "   - પ્રાઇવસી અને સ્વાયત્ત બ્લોકચેન વેરિફિકેશનનું ઉત્તમ સંકલન.\n\n"
+                        "૩. હાર્ડવેર સિક્યોરિટી એન્ક્લેવ (Hardware Security Enclave):\n"
+                        "   - ફિઝિકલ ટેમ્પરિંગ અને મેમરી ઇન્જેક્શન હુમલાઓ સામે હાર્ડવેર-લેવલ પ્રોટેક્શન.\n\n"
+                        "🔗 સત્તાવાર ગિટહબ રીપોઝીટરી:\n"
+                        "https://github.com/rajkotpodman/Worlds-First-Quantum-crypto-9898048483\n\n"
+                        "આગળના ભાગ ૨ માં જોઈશું આ ટોકનનું ટેકનિકલ માળખું, સ્માર્ટ કોન્ટ્રાક્ટ્સ અને ZKP ઇમ્પ્લિમેન્ટેશન! 🚀\n"
+                        "#QuantumComputing #CyberSecurity #NIST #FIPS204 #PostQuantum #MLDSA87 #Cryptography #Blockchain #GujaratiTech #Innovation"
+                    ),
+                    2: (
+                        "જય ભારત! 🚀 ફેસબુક પોસ્ટ ૨/૩ - પોસ્ટ-ક્વોન્ટમ ક્રિપ્ટોગ્રાફી: ટેકનિકલ ડીપ ડાઇવ અને ZKP વેરિફિકેશન\n"
+                        "=================================================================================\n\n"
+                        "ભાગ ૧ માં આપણે જોયું કે શા માટે ક્વોન્ટમ કમ્પ્યુટિંગ સામે પારંપરિક ક્રિપ્ટોગ્રાફી જોખમમાં છે. આજના ભાગ ૨ માં જાણીએ 9898048483 ટોકનનું ટેકનિકલ માળખું!\n\n"
+                        "⚙️ ટેકનિકલ સ્પેસિફિકેશન અને ક્રિપ્ટોગ્રાફિક સ્તરો:\n"
+                        "૧. Lattice-Based Cryptography:\n"
+                        "   - આ એલ્ગોરિધમ્સ ઉચ્ચ-પરિમાણીય લેટિસ ગણિત (Lattice Math) પર કામ કરે છે, જેને ક્વોન્ટમ શોરનો એલ્ગોરિધમ (Shor's Algorithm) પણ ઉકેલી શકતો નથી.\n"
+                        "   - ૧૨૮-બીટ થી લઈને ૨૫૬-બીટ ક્વોન્ટમ સિક્યોરિટી લેવલ.\n\n"
+                        "૨. નોન-ઇન્ટરેક્ટિવ ZK-SNARKs:\n"
+                        "   - બ્લોકચેન ટ્રાન્ઝેક્શન્સમાં ગેસ ફી બચાવવા માટે અલ્ટ્રા-લાઈટવેઇટ ગાણિતિક પ્રૂફ્સ.\n"
+                        "   - ટ્રાન્ઝેક્શન કરનાર અને રકમ બંને સંપૂર્ણ ગુપ્ત રહે છે.\n\n"
+                        "૩. હાઇબ્રિડ સહી સિસ્ટમ (Hybrid Signature Mode):\n"
+                        "   - જૂની સિસ્ટમ્સ સાથે બેકવર્ડ સુસંગતતા જાળવી રાખવા માટે ક્લાસિકલ + પોસ્ટ-ક્વોન્ટમ હાઇબ્રિડ સાઇનિંગ બ્રિજ.\n\n"
+                        "આ પ્રોજેક્ટ ઓપન સોર્સ ગિટહબ પર ઉપલબ્ધ છે: https://github.com/rajkotpodman/Worlds-First-Quantum-crypto-9898048483\n"
+                        "આગળના ભાગ ૩ માં જોઈશું વૈશ્વિક સાયબર સુરક્ષામાં આ પ્રોજેક્ટનું યોગદાન અને ભવિષ્યનું વિઝન! 🚀\n"
+                        "#PostQuantumCrypto #ZKP #ZKSnarks #QuantumSecurity #Infosec #SmartContracts #DevCommunity #GujaratiTech"
+                    ),
+                    3: (
+                        "જય ભારત! 🚀 ફેસબુક પોસ્ટ ૩/૩ - ક્વોન્ટમ યુગમાં વૈશ્વિક સાયબર સુરક્ષા અને ભવિષ્યનું વિઝન\n"
+                        "=================================================================================\n\n"
+                        "આ ૩-ભાગની વિશેષ શ્રેણીના આખરી ભાગમાં આપણે જાણીશું કે કેવી રીતે આ પોસ્ટ-ક્વોન્ટમ ક્રિપ્ટો ટોકન વૈશ્વિક ડિજિટલ સુરક્ષાનું નેતૃત્વ કરશે!\n\n"
+                        "🌐 વૈશ્વિક પ્રભાવ અને ભવિષ્યની સાયબર સુરક્ષા:\n"
+                        "૧. બેંકિંગ અને ફાઇનાન્સિયલ ઇન્ફ્રાસ્ટ્રક્ચર રક્ષણ:\n"
+                        "   - 'Harvest Now, Decrypt Later' હુમલાઓ સામે રક્ષણ. હેકર્સ આજે ડેટા ચોરીને ક્વોન્ટમ કમ્પ્યુટર્સ આવે ત્યારે ડિક્રિપ્ટ કરવાની રાહ જોઈ રહ્યા છે; આ ટોકન તે ડેટાને કાયમ માટે અજેય બનાવે છે.\n\n"
+                        "૨. ડિજિટલ સાર્વભૌમત્વ અને સુરક્ષિત કોમ્યુનિકેશન:\n"
+                        "   - આંતરરાષ્ટ્રીય સ્ટાન્ડર્ડ્સ સાથે સુસંગત રહીને દેશનું પોતાનું પોસ્ટ-ક્વોન્ટમ પ્રોટોકોલ નિર્માણ.\n\n"
+                        "૩. ઓપન-સોર્સ કમ્યુનિટી યોગદાન:\n"
+                        "   - વિશ્વભરના ડેવલપર્સ અને રિસર્ચર્સ આ ઓપન-સોર્સ પ્રોજેક્ટમાં જોડાઈને ટેસ્ટિંગ અને ઓડિટ કરી રહ્યા છે.\n\n"
+                        "⭐ સંપૂર્ણ પ્રોજેક્ટ, કોડ અને ટેકનિકલ ડોક્યુમેન્ટેશન ગિટહબ પર ઓપન સોર્સ છે:\n"
+                        "🔗 https://github.com/rajkotpodman/Worlds-First-Quantum-crypto-9898048483\n\n"
+                        "આ સંપૂર્ણ ૩ ભાગની પોસ્ટ શ્રેણી વાંચવા બદલ આપ સૌનો ખૂબ ખૂબ આભાર! પોસ્ટ શેર કરો અને ક્વોન્ટમ સુરક્ષા વિશે જાગૃતિ ફેલાવો! 🚀\n"
+                        "#QuantumResistant #CyberDefense #OpenSourceSecurity #QuantumToken #Web3Security #GlobalTech #GujaratiTech #IndiaTech"
+                    )
+                }
+                p_text = fb_gujarati_catalog.get(curr_idx, fb_gujarati_catalog[1])
+            else:
+                p_text = f"Part {curr_idx} of {target_posts} addressing goal:\n\n{goal}\n\nComprehensive execution details for item {curr_idx}."
         else:
             p_title = f"Post {curr_idx} of {target_posts}: {goal[:50]}"
             p_text = f"Part {curr_idx} of {target_posts} addressing goal:\n\n{goal}\n\nComprehensive execution details for item {curr_idx}."
@@ -1407,6 +1522,9 @@ class LLMClient:
                     "is_complete": True,
                     "completion_message": f"Helper has successfully created and published all {target_posts} comprehensive posts to Facebook! All posts are now live on your feed."
                 }
+
+            if target_posts > 1 and not any(k in lower for k in ["how_to_use", "howtouse"]):
+                return self.get_multi_post_step(goal, posts_done, target_posts, trajectory_summary)
 
             # Check if post text was already typed into composer and Post button is awaiting click
             if any(k in last_traj for k in ["post text was entered", "typed", "what's on your mind"]):

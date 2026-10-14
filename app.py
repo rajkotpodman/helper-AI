@@ -65,7 +65,13 @@ class TranslateRequest(BaseModel):
     source_lang: Optional[str] = "auto"
 
 async def broadcast_event(event_type: str, data: dict):
-    message = json.dumps({"event": event_type, "data": data})
+    payload = {"event": event_type, "type": event_type}
+    if isinstance(data, dict):
+        payload.update(data)
+        payload["data"] = data
+    else:
+        payload["data"] = data
+    message = json.dumps(payload)
     disconnected = []
     for ws in connected_websockets:
         try:
@@ -195,6 +201,7 @@ async def respond_to_permission(req: PermissionRespondRequest):
         "message": "Authorization recorded." if success else "Request not found or already closed."
     }
 
+@app.get("/api/memory/stats")
 @app.get("/api/memory/status")
 async def get_memory_status():
     return {
@@ -204,6 +211,7 @@ async def get_memory_status():
         "size_mb": memory_recorder.get_size_mb(),
         "limit_mb": round(memory_recorder.max_bytes / (1024 * 1024), 1),
         "total_prompts": memory_recorder.get_entry_count(),
+        "prompt_count": memory_recorder.get_entry_count(),
         "is_limit_reached": memory_recorder.is_limit_reached()
     }
 

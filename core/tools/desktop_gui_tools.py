@@ -314,7 +314,17 @@ class DesktopGUIControlTool(BaseTool):
                 screenshots_dir.mkdir(parents=True, exist_ok=True)
                 fn = filename or f"screenshot_{int(time.time())}.png"
                 out_path = screenshots_dir / fn
-                pyautogui.screenshot(str(out_path))
+                try:
+                    pyautogui.screenshot(str(out_path))
+                except Exception:
+                    time.sleep(0.5)
+                    try:
+                        pyautogui.screenshot(str(out_path))
+                    except Exception as sc_retry_err:
+                        return {
+                            "success": False,
+                            "output": f"Screen grab failed (modal dialog or system window may be blocking capture): {sc_retry_err}"
+                        }
                 return {
                     "success": True,
                     "output": f"Desktop screenshot saved to '{out_path.resolve()}'.",

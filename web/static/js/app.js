@@ -589,7 +589,8 @@ function setupWebSocket() {
 }
 
 function handleStreamEvent(data) {
-  const type = data.type || data.event;
+  const payload = (data && data.data && typeof data.data === 'object') ? { ...data, ...data.data } : (data || {});
+  const type = payload.type || payload.event;
   
   if (type === 'started') {
     state.isExecuting = true;
@@ -598,10 +599,10 @@ function handleStreamEvent(data) {
     elements.executionDrawer?.classList.remove('hidden');
     elements.resultContainer?.classList.add('hidden');
     updateStepper(1);
-    appendTerminalLog(`🚀 Goal initiated: "${data.goal || state.currentGoalText}"`, 'info');
+    appendTerminalLog(`🚀 Goal initiated: "${payload.goal || state.currentGoalText}"`, 'info');
   } 
   else if (type === 'step_start') {
-    state.stepCount = data.step || 1;
+    state.stepCount = payload.step || 1;
     if (elements.stepCounter) {
       elements.stepCounter.textContent = `Step ${state.stepCount} of ${state.maxSteps}`;
     }
@@ -611,16 +612,17 @@ function handleStreamEvent(data) {
     else updateStepper(3); // Executing
   } 
   else if (type === 'thought') {
-    appendTerminalLog(`💡 Plan: ${data.thought}`, 'thought');
+    const planText = payload.thought || payload.message || payload.plan || 'Analyzing next action...';
+    appendTerminalLog(`💡 Plan: ${planText}`, 'thought');
   } 
   else if (type === 'action') {
     updateStepper(3);
-    const actionName = data.action || data.tool;
-    const actionInput = JSON.stringify(data.args || data.input || '');
+    const actionName = payload.action || payload.tool;
+    const actionInput = JSON.stringify(payload.args || payload.input || payload.action_args || '');
     appendTerminalLog(`⚡ Action [${actionName}]: ${actionInput.slice(0, 180)}`, 'action');
   } 
   else if (type === 'action_result') {
-    const rawOut = data.output !== undefined ? data.output : (data.result !== undefined ? data.result : '');
+    const rawOut = payload.output !== undefined ? payload.output : (payload.result !== undefined ? payload.result : '');
     const resText = typeof rawOut === 'string' ? rawOut : JSON.stringify(rawOut || '');
     if (resText.trim()) {
       const lineCount = resText.split('\n').filter(l => l.trim()).length;
@@ -629,14 +631,14 @@ function handleStreamEvent(data) {
     }
   } 
   else if (type === 'permission_requested') {
-    showPermissionModal(data);
+    showPermissionModal(payload);
   } 
   else if (type === 'completed' || type === 'finished') {
-    handleExecutionComplete(data);
+    handleExecutionComplete(payload);
   } 
   else if (type === 'error') {
-    appendTerminalLog(`❌ Error: ${data.message || data.error}`, 'error');
-    handleExecutionComplete({ success: false, final_result: data.message });
+    appendTerminalLog(`❌ Error: ${payload.message || payload.error}`, 'error');
+    handleExecutionComplete({ success: false, final_result: payload.message || payload.error });
   }
 }
 
@@ -704,7 +706,9 @@ async function executeGoal() {
     }
     
     const result = await response.json();
-    handleExecutionComplete(result);
+    if (result && result.status === 'completed') {
+      handleExecutionComplete(result);
+    }
   } catch (err) {
     console.error('Goal execution error:', err);
     appendTerminalLog(`Execution failed: ${err.message}`, 'error');
