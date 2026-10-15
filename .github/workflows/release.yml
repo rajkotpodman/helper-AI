@@ -27,7 +27,7 @@ jobs:
           tar -czf dist/helper-ai-${{ github.ref_name }}.tar.gz --exclude='.git' --exclude='node_modules' --exclude='__pycache__' --exclude='.venv' .
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist/*
           generate_release_notes: true
