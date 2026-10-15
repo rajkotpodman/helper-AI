@@ -12,6 +12,17 @@ import tarfile
 import zipfile
 from pathlib import Path
 
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if sys.stderr and hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 def get_platform_info():
     system = platform.system().lower()
     machine = platform.machine().lower()
@@ -38,7 +49,7 @@ def build():
     # Verify PyInstaller is installed
     try:
         import PyInstaller
-        print(f"[✓] Found PyInstaller {PyInstaller.__version__}")
+        print(f"[OK] Found PyInstaller {PyInstaller.__version__}")
     except ImportError:
         print("[*] PyInstaller not found. Installing via pip...")
         subprocess.run([sys.executable, "-m", "pip", "install", "pyinstaller"], check=True)
@@ -118,7 +129,7 @@ def build():
         built_bin = dist_dir / f"helper-ai-{os_name}-{arch}.exe"
 
     if built_bin.exists():
-        print(f"[✓] Standalone binary compiled: {built_bin} ({built_bin.stat().st_size / (1024*1024):.2f} MB)")
+        print(f"[OK] Standalone binary compiled: {built_bin} ({built_bin.stat().st_size / (1024*1024):.2f} MB)")
         
         # Package into portable archive
         if os_name == "windows":
@@ -131,7 +142,7 @@ def build():
                     zf.write(root_dir / "README.md", arcname="README.md")
                 if (root_dir / ".env.example").exists():
                     zf.write(root_dir / ".env.example", arcname=".env.example")
-            print(f"[✓] Created Portable Windows Archive: {zip_dest}")
+            print(f"[OK] Created Portable Windows Archive: {zip_dest}")
         else:
             tar_dest = dist_dir / f"Helper-AI-{os_name.capitalize()}-{arch}-Portable.tar.gz"
             with tarfile.open(tar_dest, "w:gz") as tf:
@@ -140,7 +151,7 @@ def build():
                     tf.add(root_dir / "README.md", arcname="README.md")
                 if (root_dir / ".env.example").exists():
                     tf.add(root_dir / ".env.example", arcname=".env.example")
-            print(f"[✓] Created Portable Archive: {tar_dest}")
+            print(f"[OK] Created Portable Archive: {tar_dest}")
 
 if __name__ == "__main__":
     build()

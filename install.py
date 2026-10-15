@@ -10,6 +10,17 @@ import subprocess
 import shutil
 from pathlib import Path
 
+if sys.stdout and hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+if sys.stderr and hasattr(sys.stderr, "reconfigure"):
+    try:
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 def print_header(text: str):
     print("\n" + "=" * 60)
     print(f"   {text}")
@@ -19,7 +30,7 @@ def print_step(text: str):
     print(f"[*] {text}")
 
 def print_success(text: str):
-    print(f"[✓] {text}")
+    print(f"[OK] {text}")
 
 def print_error(text: str):
     print(f"[!] {text}")
