@@ -433,10 +433,11 @@ screenshots_dir = Path(__file__).parent / "screenshots"
 screenshots_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/screenshots", StaticFiles(directory=str(screenshots_dir)), name="screenshots")
 
-# Mount static files and serve index.html
-web_static_dir = Path(__file__).parent / "web" / "static"
-web_templates_dir = Path(__file__).parent / "web" / "templates"
-static_dir = Path(__file__).parent / "static"
+# Mount static files and serve index.html (supports standard and PyInstaller frozen modes)
+base_dir = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parent))
+web_static_dir = base_dir / "web" / "static"
+web_templates_dir = base_dir / "web" / "templates"
+static_dir = base_dir / "static"
 static_dir.mkdir(parents=True, exist_ok=True)
 
 if web_static_dir.exists():
@@ -457,18 +458,14 @@ async def serve_index():
 def run_server(host: str = "127.0.0.1", port: int = 8000, open_browser: bool = True):
     import uvicorn
     if open_browser:
-        async def open_tab():
-            await asyncio.sleep(1.2)
-            webbrowser.open(f"http://{host}:{port}")
-        loop = asyncio.new_event_loop()
         import threading
-        t = threading.Thread(target=lambda: (webbrowser.open(f"http://{host}:{port}")))
-        t.daemon = True
         # Schedule browser opening after server binds
-        import time
-        threading.Timer(1.0, lambda: webbrowser.open(f"http://{host}:{port}")).start()
+        threading.Timer(1.2, lambda: webbrowser.open(f"http://{host}:{port}")).start()
 
-    uvicorn.run("app:app", host=host, port=port, reload=False)
+    if getattr(sys, 'frozen', False):
+        uvicorn.run(app, host=host, port=port)
+    else:
+        uvicorn.run("app:app", host=host, port=port, reload=False)
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))

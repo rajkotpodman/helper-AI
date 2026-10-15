@@ -304,7 +304,8 @@ class LLMClient:
     def generate_step(self, goal: str, trajectory_summary: str, tool_schemas: str, os_info: Dict[str, Any]) -> Dict[str, Any]:
         """Calls the configured provider to get the next agent decision."""
         # Check if fallback to rule engine is warranted
-        if self.provider == "rule_engine" or (not self.api_key and self.provider not in ["ollama"]):
+        has_any_key = bool(self.api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("OPENAI_API_KEY"))
+        if self.provider == "rule_engine" or (not has_any_key and self.provider not in ["ollama"]):
             return self._rule_engine_step(goal, trajectory_summary)
 
         sys_prompt = SYSTEM_PROMPT.format(

@@ -1,0 +1,290 @@
+name: Multi-OS Standalone & Installer Build
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Publish assets to GitHub Releases'
+        required: false
+        default: 'true'
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  # -------------------------------------------------------------
+  # 1. WINDOWS: Standalone .EXE, Portable .ZIP, and Inno Setup
+  # -------------------------------------------------------------
+  build-windows:
+    name: Build Windows Standalone & Installer
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Standalone Executable & Portable Archive
+        run: |
+          python packaging/build_standalone.py
+
+      - name: Compile Inno Setup Windows Installer
+        run: |
+          iscc packaging/windows_installer.iss
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-ai-windows-artifacts
+          path: |
+            dist/*.exe
+            dist/*.zip
+
+  # -------------------------------------------------------------
+  # 2. LINUX: Standalone Binary, Portable .TAR.GZ, and Debian .DEB
+  # -------------------------------------------------------------
+  build-linux:
+    name: Build Linux Standalone & .DEB Package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install system build prerequisites
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y xvfb scrot python3-tk libx11-dev xclip binutils dpkg fakeroot
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Standalone Executable & Portable Tarball
+        run: |
+          python3 packaging/build_standalone.py
+
+      - name: Build Debian .deb Package
+        run: |
+          VERSION="1.2.0"
+          DEB_DIR="deb_pkg/helper-ai_${VERSION}_amd64"
+          mkdir -p "$DEB_DIR/DEBIAN"
+          mkdir -p "$DEB_DIR/usr/bin"
+          mkdir -p "$DEB_DIR/opt/helper-ai"
+          mkdir -p "$DEB_DIR/usr/share/applications"
+
+          # Copy standalone binary
+          cp dist/helper-ai-linux-x86_64 "$DEB_DIR/opt/helper-ai/helper-ai"
+          chmod +x "$DEB_DIR/opt/helper-ai/helper-ai"
+
+          # Symlink to /usr/bin
+          ln -s /opt/helper-ai/helper-ai "$DEB_DIR/usr/bin/helper-ai"
+
+          # Desktop file
+          cat << 'EOF' > "$DEB_DIR/usr/share/applications/helper-ai.desktop"
+          [Desktop Entry]
+          Name=Helper-AI
+          Comment=Autonomous PC Control & Internet Agent
+          Exec=/usr/bin/helper-ai
+          Terminal=true
+          Type=Application
+          Categories=Utility;Development;
+          EOF
+
+          # Control file
+          cat << EOF > "$DEB_DIR/DEBIAN/control"
+          Package: helper-ai
+          Version: ${VERSION}
+          Section: utils
+          Priority: optional
+          Architecture: amd64
+          Maintainer: Rajkot Podman <support@helper-ai.local>
+          Description: Autonomous PC Control & Internet Agent
+           Helper-AI is an autonomous agent for desktop and internet tasks,
+           featuring full multimodal control and resilient local/cloud AI reasoning.
+          EOF
+
+          dpkg-deb --build "$DEB_DIR"
+          mv "deb_pkg/helper-ai_${VERSION}_amd64.deb" dist/
+
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-ai-linux-artifacts
+          path: |
+            dist/*.tar.gz
+            dist/*.deb
+            dist/helper-ai-linux-x86_64
+
+  # -------------------------------------------------------------
+  # 3. MACOS: Standalone Binary & Portable .TAR.GZ
+  # -------------------------------------------------------------
+  build-macos:
+    name: Build macOS Standalone & Portable Package
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build Standalone Executable & Portable Archive
+        run: |
+          python3 packaging/build_standalone.py
+
+      - name: Upload macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-ai-macos-artifacts
+          path: |
+            dist/*.tar.gz
+            dist/helper-ai-macos-*
+
+  # -------------------------------------------------------------
+  # 4. ANDROID (TERMUX) & UNIVERSAL SOURCE PACKAGES
+  # -------------------------------------------------------------
+  build-android-and-sources:
+    name: Build Android Termux Bundle & Source Archives
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package Android Termux Standalone Bundle
+        run: |
+          mkdir -p dist
+          tar -czf dist/Helper-AI-Android-Termux.tar.gz \
+            --exclude='.git' \
+            --exclude='dist' \
+            --exclude='build' \
+            --exclude='__pycache__' \
+            --exclude='.venv' \
+            install-android-termux.sh install.py requirements.txt app.py helper.py core web static .env.example
+
+      - name: Package Universal Full Source Distributions
+        run: |
+          tar -czf dist/Helper-AI-Full-Source.tar.gz \
+            --exclude='.git' \
+            --exclude='dist' \
+            --exclude='build' \
+            --exclude='__pycache__' \
+            --exclude='.venv' .
+
+          zip -r -q dist/Helper-AI-Full-Source.zip . \
+            -x "*.git*" "dist/*" "build/*" "*__pycache__*" "*.venv*"
+
+      - name: Upload Android & Source Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: helper-ai-android-and-source-artifacts
+          path: |
+            dist/Helper-AI-Android-Termux.tar.gz
+            dist/Helper-AI-Full-Source.tar.gz
+            dist/Helper-AI-Full-Source.zip
+
+  # -------------------------------------------------------------
+  # 5. RELEASE CONSOLIDATION & GITHUB RELEASES PUBLISHER
+  # -------------------------------------------------------------
+  publish-release:
+    name: Publish Multi-OS GitHub Release
+    needs: [build-windows, build-linux, build-macos, build-android-and-sources]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.create_release == 'true' || github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all_dist
+          merge-multiple: true
+
+      - name: List collected release files
+        run: |
+          mkdir -p release_assets
+          cp -r all_dist/* release_assets/
+          ls -lah release_assets/
+
+      - name: Determine Release Tag
+        id: release_tag
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag_name=v1.2.0-release" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create or Update GitHub Release with Multi-OS Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_tag.outputs.tag_name }}
+          name: "Helper-AI Autonomous Agent - Multi-OS Release (${{ steps.release_tag.outputs.tag_name }})"
+          body: |
+            ## 🚀 Helper-AI Multi-OS Release: Standalone, Portable & Full Installers
+            
+            Autonomous PC Control & Internet Agent with full multi-provider LLM intelligence and cross-platform automation.
+            
+            ### 📦 Download Packages by Operating System:
+            
+            #### 🪟 Windows (10/11 x64):
+            - **Full Windows Installer:** `HelperAI-Setup-Windows-x64.exe` (1-click installer with Start Menu & Desktop icons)
+            - **Portable Windows Package:** `Helper-AI-Windows-x64-Portable.zip` (standalone, no installation required)
+            - **Standalone Windows Binary:** `helper-ai-windows-x64.exe`
+            
+            #### 🐧 Linux (Ubuntu, Debian, Fedora, Arch):
+            - **Debian / Ubuntu Package:** `helper-ai_1.2.0_amd64.deb` (`sudo dpkg -i helper-ai_1.2.0_amd64.deb`)
+            - **Portable Linux Package:** `Helper-AI-Linux-x86_64-Portable.tar.gz`
+            - **Standalone Linux Binary:** `helper-ai-linux-x86_64`
+            - **1-Click Linux Installer Script:** Included in source (`./install-linux.sh`)
+            
+            #### 🍎 macOS (Intel & Apple Silicon M-series):
+            - **Portable macOS Package:** `Helper-AI-Macos-*-Portable.tar.gz`
+            - **Standalone macOS Binary:** `helper-ai-macos-*`
+            - **1-Click macOS Installer Script:** Included in source (`./install-mac.sh`)
+            
+            #### 📱 Android (Termux):
+            - **Android Termux Bundle:** `Helper-AI-Android-Termux.tar.gz` (with automated `install-android-termux.sh`)
+            - **Mobile PWA Installable:** Visit `http://localhost:8000` on Android Chrome/Brave and tap "Add to Home Screen"
+            
+            #### 🌐 Universal Source Distributions:
+            - `Helper-AI-Full-Source.tar.gz`
+            - `Helper-AI-Full-Source.zip`
+          files: |
+            release_assets/*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

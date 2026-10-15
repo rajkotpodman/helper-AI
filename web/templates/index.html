@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090D16">
+  <link rel="manifest" href="/static/manifest.json">
   <title>Helper-AI • Autonomous PC Control & Internet Agent</title>
   
   <!-- Fonts -->
@@ -321,8 +323,13 @@
     </main>
 
     <!-- D. Persistent Minimal Footer -->
-    <footer class="mt-auto py-8 text-center border-t border-white/[0.06] text-xs text-slate-400">
-      Helper-AI • Autonomous PC & Internet Agent • Built for seamless autonomous productivity.
+    <footer class="mt-auto py-8 text-center border-t border-white/[0.06] text-xs text-slate-400 space-y-4">
+      <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
+        <button class="pro-btn btn-buy-pro" onclick="window.open('https://wa.me/919898048483', '_blank')">⚡ BUY NOW PRO (APPOINTMENT)</button>
+        <button class="pro-btn btn-donate" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScJ7WjuxEXqdoSlUtxN7NQ8UeKpbEAeA9iIO-IXOmBmYzlLHQ/viewform?usp=sharing&ouid=116676179363878319046', '_blank')">🪙 DONATION SYSTEM</button>
+        <button class="pro-btn btn-store" onclick="window.open('https://wa.me/c/919898048483', '_blank')">🛒 OFFICIAL DIGITAL STORE</button>
+      </div>
+      <div>Helper-AI • Autonomous PC & Internet Agent • Built for seamless autonomous productivity.</div>
     </footer>
 
   </div>
@@ -513,6 +520,13 @@
     }
   </script>
   <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <!-- Floating Side Space Dock for Pro & Store Actions (Bottom Right) -->
+  <aside class="pro-buttons-side-container fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 flex flex-col sm:flex-row items-end sm:items-center gap-2 p-1.5 sm:p-2 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl" aria-label="Official Links">
+    <button class="pro-btn btn-buy-pro" onclick="window.open('https://wa.me/919898048483', '_blank')">⚡ BUY NOW PRO (APPOINTMENT)</button>
+    <button class="pro-btn btn-donate" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScJ7WjuxEXqdoSlUtxN7NQ8UeKpbEAeA9iIO-IXOmBmYzlLHQ/viewform?usp=sharing&ouid=116676179363878319046', '_blank')">🪙 DONATION SYSTEM</button>
+    <button class="pro-btn btn-store" onclick="window.open('https://wa.me/c/919898048483', '_blank')">🛒 OFFICIAL DIGITAL STORE</button>
+  </aside>
 
   <!-- Application Logic -->
   <script src="/static/js/app.js"></script>

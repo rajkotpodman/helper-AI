@@ -106,7 +106,7 @@ def test_rule_engine_no_loop_on_search_web():
 
 def test_multi_provider_failover_gemini_to_groq():
     """Verify that when Gemini fails (e.g. 429 quota), LLMClient seamlessly fails over to Groq."""
-    llm = LLMClient(provider="gemini")
+    llm = LLMClient(provider="gemini", api_key="test_gemini_key")
 
     # Mock _call_gemini to simulate 429 Quota Exceeded error
     llm._call_gemini = MagicMock(side_effect=RuntimeError("HTTP 429: Resource has been exhausted (e.g. check quota)"))
