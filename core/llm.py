@@ -21,6 +21,7 @@ You have access to the following tools:
 4. Windows Software & Tools: To check installed applications on Windows, use `winget list`, `Get-ItemProperty HKLM:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*`, or check Program Files.
 5. Operating Environment: The host machine is {os_name} {os_release}. Standard directories like Desktop, Downloads, and Documents are directly accessible via tools.
 6. Completion & Persistence: Only set `is_complete` to true when the goal has actually succeeded. If a previous tool or command had an error, DO NOT give up or declare completion — analyze the error, fix the parameters, and try again!
+6.1 NEVER HALLUCINATE ACTION EXECUTION: If your thought or plan states that you will perform an action (e.g. 'Now I will publish a post', 'Next I will create files', 'I will now apply', 'I will download'), you MUST invoke that tool in this step! NEVER set `is_complete: true` or `action: 'none'` while an action tool call is still pending or has not executed! When the user's goal involves publishing a post ('publish', 'post publish', 'create post and publish', 'share'), you MUST call `browser_automation` (with `publish_linkedin_post`, `publish_facebook_post`, or `publish_blog_post`) before declaring completion! NEVER claim 'Successfully published' in `completion_message` unless the publishing tool actually ran and returned `success: true` in your execution history!
 7. Repetition, Loops, & Multi-Posts: When the user requests a task to be performed multiple times, for multiple items, or in multiple posts (e.g. "loop 5 times", "apply in 5 spaces/jobs", "repeat 3 times", "do this 5 times", "in 5 different posts", "5 posts"):
 - You MUST ensure the task runs for the FULL requested count (e.g. all 5 items or all 5 posts).
 - NEVER declare completion (`is_complete: true`) or stop after just 1 item if the user requested 5.
@@ -350,14 +351,25 @@ class LLMClient:
                 "3. In your final completion_message, you MUST provide 100% of all discovered repositories in an exhaustive, numbered list showing: item number, repository name, Public/Private status, and description/link. DO NOT truncate, sample, or stop at only 3-5 items!"
             )
 
-        if any(k in lower_g for k in ["linkedin", "linkdin", "linkden", "facebook", "blogger"]) and any(k in lower_g for k in ["post", "publish", "share", "status"]):
+        is_post_publishing_requested = (
+            any(k in lower_g for k in ["linkedin", "linkdin", "linkden", "facebook", "blogger"]) or
+            ("post" in lower_g and any(k in lower_g for k in ["publish", "share", "create", "make", "write", "for each", "each"])) or
+            ("publish" in lower_g and any(k in lower_g for k in ["post", "repo", "article", "feed", "timeline"]))
+        )
+        if is_post_publishing_requested:
             if "successfully created and published" not in trajectory_summary.lower() and "live on your" not in trajectory_summary.lower():
+                platform_hint = "LinkedIn via `publish_linkedin_post`"
+                if "facebook" in lower_g:
+                    platform_hint = "Facebook via `publish_facebook_post`"
+                elif "blogger" in lower_g or "blog" in lower_g:
+                    platform_hint = "Google Blogger via `publish_blog_post`"
+
                 extra_instructions.append(
-                    "⚠️ MANDATORY POSTING EXECUTION REQUIREMENT: The user's goal specifically requires creating and publishing a post on LinkedIn / social media.\n"
-                    "- If you already fetched or read the content / README / article in Step 1, you MUST NOT declare is_complete=true yet!\n"
-                    "- Your immediate next action MUST BE action: 'browser_automation' with args {'action': 'publish_linkedin_post', 'post_text': '...'} (or publish_facebook_post / publish_blog_post).\n"
-                    "- Make sure post_text contains the synthesized or copied content from Step 1 formatted with clean headings and bullets (under 2,800 characters to fit LinkedIn's limit).\n"
-                    "- Only mark is_complete=true AFTER browser_automation has successfully published the post!"
+                    f"⚠️ MANDATORY POSTING EXECUTION REQUIREMENT: The user's goal specifically requires creating and publishing a post ('{goal}').\n"
+                    f"- If you already fetched or gathered data (such as GitHub repositories or web content) in Step 1, you MUST NOT declare is_complete=true yet!\n"
+                    f"- Your immediate next action MUST BE action: 'browser_automation' with args {{'action': 'publish_linkedin_post', 'post_text': '...'}} (target platform: {platform_hint}).\n"
+                    f"- Make sure post_text contains rich, professional content in English (or the requested language) showcasing the items, repository links (https://github.com/rajkotpodman/...), features, and relevant hashtags (under 2,800 characters to fit LinkedIn's limit).\n"
+                    f"- You MUST NEVER set is_complete=true or action='none' before browser_automation has actually published the post!"
                 )
 
         if any(k in lower_g for k in ["crawl", "deep web", "full web", "fetch full web", "scrape all", "documentation", "scrape web"]):

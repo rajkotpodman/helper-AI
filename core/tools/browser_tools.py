@@ -358,9 +358,9 @@ class BrowserAutomationTool(BaseTool):
 
         # Step 1: If no composer dialog is already open, navigate to clean Facebook feed
         if not target_dlg:
-            current_url = driver.current_url or ""
-            # Always ensure we are at the top of the main feed
-            if "facebook.com" not in current_url or any(x in current_url for x in ["/photo", "/watch", "/reel", "/story", "post/create"]):
+            current_url = (driver.current_url or "").rstrip("/")
+            # Always ensure we are at the top of the main root feed
+            if current_url not in ["https://www.facebook.com", "http://www.facebook.com"]:
                 browser.navigate("https://www.facebook.com/")
                 time.sleep(2.5)
             else:
@@ -464,14 +464,43 @@ class BrowserAutomationTool(BaseTool):
                     break
                 time.sleep(0.5)
 
-        # If target_dlg didn't have it, check page-level textbox
+        # If target_dlg didn't have it, check page-level composer textbox (excluding comments)
         if not textbox:
             for tb in driver.find_elements(By.XPATH, "//*[@role='textbox' and @contenteditable='true']"):
-                if tb.is_displayed():
-                    textbox = tb
-                    break
+                try:
+                    if tb.is_displayed():
+                        aria = (tb.get_attribute("aria-label") or "").lower()
+                        if any(c in aria for c in ["comment", "टिप्पणी", "ટિપ્પણી", "reply", "જવાબ", "उत्तर"]):
+                            continue
+                        textbox = tb
+                        break
+                except Exception:
+                    continue
 
         if not textbox:
+            # Fallback: Navigate to Facebook Sharer composer URL
+            import urllib.parse
+            encoded_quote = urllib.parse.quote(content)
+            sharer_url = f"https://www.facebook.com/sharer/sharer.php?quote={encoded_quote}"
+            try:
+                browser.navigate(sharer_url)
+                time.sleep(2.5)
+                # Check for sharer submit button
+                for sb in driver.find_elements(By.XPATH, "//button[@type='submit'] | //*[@role='button']"):
+                    if sb.is_displayed():
+                        stxt = (sb.text or "").lower()
+                        saria = (sb.get_attribute("aria-label") or "").lower()
+                        if any(k in stxt or k in saria for k in ["post to facebook", "post", "share", "પોસ્ટ", "पोस्ट"]):
+                            driver.execute_script("arguments[0].click();", sb)
+                            time.sleep(2.0)
+                            return {
+                                "success": True,
+                                "output": f"Successfully published post to Facebook via Sharer interface! Content: '{content[:80]}...'",
+                                "content": content
+                            }
+            except Exception as se:
+                logger.warning(f"Facebook Sharer fallback failed: {se}")
+
             return {
                 "success": False,
                 "output": "Could not open Facebook 'Create post' composer. Please ensure you are logged into Facebook in the Project Browser."
@@ -683,32 +712,25 @@ class BrowserAutomationTool(BaseTool):
 
         # Check if content exceeds LinkedIn's 3,000 character limit
         if len(content) > 2800:
-            # Craft an optimized, high-converting LinkedIn post highlighting Helper-AI
-            content = (
-                "🚀 Proud to introduce Helper-AI: Autonomous PC Control & Internet Agent!\n\n"
-                "As an AI automation engineer & freelancer, I built this open-source autonomous agent "
-                "designed to complete real-world computer tasks without asking repetitive questions.\n\n"
-                "⚡ KEY CAPABILITIES:\n"
-                "• Full PC & PowerShell Automation: Execute commands, manage system health & software\n"
-                "• Autonomous Web & Social Media Automation: LinkedIn, Facebook, Blogger posting with persistent sessions\n"
-                "• Zero Redundant Questioning: Self-healing error correction & goal-oriented execution\n"
-                "• 1-Click Human Approval: Safe mode & 1-click approvals for critical tasks\n"
-                "• Offline & Cloud LLMs: Runs 100% offline on Ollama, or with Groq, Gemini, and OpenAI\n\n"
-                "💼 OPEN FOR FREELANCE & CONTRACT WORK:\n"
-                "Looking to automate business workflows, build customized AI assistants, or integrate autonomous agents? "
-                "Feel free to connect or reach out directly!\n\n"
-                "🔗 Open Source Repository: https://github.com/rajkotpodman/helper-AI\n\n"
-                "#AIAgent #Automation #Freelancer #Python #ArtificialIntelligence #Innovation #OpenSource"
-            )
+            # Preserve user's content by cleanly truncating at sentence/paragraph boundary
+            trim_pos = content[:2700].rfind("\n\n")
+            if trim_pos < 1200:
+                trim_pos = content[:2700].rfind("\n")
+            if trim_pos < 1200:
+                trim_pos = content[:2700].rfind(". ")
+            if trim_pos > 1200:
+                content = content[:trim_pos].rstrip() + "\n\n... [Continued in repository links] ...\n\n#Tech #OpenSource #SoftwareEngineering #Automation #AI"
+            else:
+                content = content[:2700].rstrip() + "...\n\n#Tech #OpenSource #SoftwareEngineering #Automation"
 
         # Guard against LinkedIn's 3,000 character maximum limit
         if len(content) > 2980:
             content = content[:2970].rstrip()
 
-        # 2. Navigate to LinkedIn feed if not already on LinkedIn
+        # 2. Navigate to LinkedIn feed with shareActive=true to instantly open the post composer
         current_url = driver.current_url or ""
-        if "linkedin.com/feed" not in current_url:
-            browser.navigate("https://www.linkedin.com/feed/")
+        if "shareActive=true" not in current_url:
+            browser.navigate("https://www.linkedin.com/feed/?shareActive=true")
             time.sleep(3.5)
 
         # Check for login requirement
@@ -724,12 +746,12 @@ class BrowserAutomationTool(BaseTool):
                 )
             }
 
-        # 3. Check if editor is already open (e.g. /sharing/compose or active draft)
+        # 3. Check if editor is open (e.g. via shareActive=true or active draft)
         editor = driver.execute_script("""
             const eds = Array.from(document.querySelectorAll('[contenteditable="true"][role="textbox"], .tiptap.ProseMirror, [contenteditable="true"]'));
             for (const ed of eds) {
                 const r = ed.getBoundingClientRect();
-                if (r.width > 100 && r.height > 20) return ed;
+                if (r.width > 50 && r.height > 20) return ed;
             }
             return null;
         """)
@@ -737,33 +759,42 @@ class BrowserAutomationTool(BaseTool):
         # If not already open, locate and click 'Start a post'
         if not editor:
             for _ in range(4):
-                clicked = driver.execute_script("""
-                    const matches = Array.from(document.querySelectorAll('button, div[role="button"], div, p')).filter(el => {
+                btn_el = driver.execute_script("""
+                    const candidates = Array.from(document.querySelectorAll('p, span, div, button')).filter(el => {
                         const t = (el.innerText || el.textContent || '').trim().toLowerCase();
-                        return (t.includes('start a post') || t.includes('પોસ્ટ શરૂ કરો') || t.includes('પોસ્ટ બનાવો')) && t.length < 50;
+                        return (t === 'start a post' || t.includes('start a post') || t.includes('પોસ્ટ શરૂ કરો') || t.includes('પોસ્ટ બનાવો')) && t.length < 40;
                     });
-                    for (const m of matches) {
-                        const r = m.getBoundingClientRect();
-                        if (r.width > 100 && r.height > 25) {
-                            m.scrollIntoView({block: 'center'});
-                            m.click();
-                            return true;
+                    if (candidates.length === 0) return null;
+                    const p = candidates[0];
+                    let curr = p;
+                    while (curr && curr !== document.body) {
+                        if (curr.getAttribute('role') === 'button' || curr.tagName === 'BUTTON') {
+                            return curr;
                         }
+                        curr = curr.parentElement;
                     }
-                    return false;
+                    return p;
                 """)
-                if clicked:
-                    time.sleep(2.0)
-                    editor = driver.execute_script("""
-                        const eds = Array.from(document.querySelectorAll('[contenteditable="true"][role="textbox"], .tiptap.ProseMirror, [contenteditable="true"]'));
-                        for (const ed of eds) {
-                            const r = ed.getBoundingClientRect();
-                            if (r.width > 100 && r.height > 20) return ed;
-                        }
-                        return null;
-                    """)
-                    if editor:
-                        break
+                if btn_el:
+                    try:
+                        ActionChains(driver).move_to_element(btn_el).click().perform()
+                    except Exception:
+                        try:
+                            btn_el.click()
+                        except Exception:
+                            driver.execute_script("arguments[0].click();", btn_el)
+                    time.sleep(2.5)
+
+                editor = driver.execute_script("""
+                    const eds = Array.from(document.querySelectorAll('[contenteditable="true"][role="textbox"], .tiptap.ProseMirror, [contenteditable="true"]'));
+                    for (const ed of eds) {
+                        const r = ed.getBoundingClientRect();
+                        if (r.width > 50 && r.height > 20) return ed;
+                    }
+                    return null;
+                """)
+                if editor:
+                    break
                 time.sleep(1.0)
 
         if not editor:

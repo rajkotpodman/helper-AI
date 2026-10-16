@@ -125,12 +125,18 @@ class ProjectBrowser:
 
         if not is_ci and self._is_port_open(9222):
             opts = Options()
+            opts.page_load_strategy = "eager"
             opts.add_experimental_option("debuggerAddress", "127.0.0.1:9222")
             try:
                 if service:
                     self._driver = webdriver.Chrome(service=service, options=opts)
                 else:
                     self._driver = webdriver.Chrome(options=opts)
+                try:
+                    self._driver.set_page_load_timeout(20)
+                    self._driver.set_script_timeout(20)
+                except Exception:
+                    pass
                 logger.info("Successfully attached to live desktop Chrome on port 9222.")
                 return self._driver
             except Exception as e:
@@ -138,6 +144,7 @@ class ProjectBrowser:
 
         # Fallback to starting a fresh instance
         opts = Options()
+        opts.page_load_strategy = "eager"
         if is_ci:
             opts.add_argument("--headless=new")
             opts.add_argument("--no-sandbox")
@@ -157,6 +164,11 @@ class ProjectBrowser:
                 self._driver = webdriver.Chrome(service=service, options=opts)
             else:
                 self._driver = webdriver.Chrome(options=opts)
+            try:
+                self._driver.set_page_load_timeout(20)
+                self._driver.set_script_timeout(20)
+            except Exception:
+                pass
             
             # Mask automation flags
             try:
@@ -203,7 +215,14 @@ class ProjectBrowser:
             url = f"https://{url}"
         
         driver = self.get_driver()
-        driver.get(url)
+        try:
+            driver.get(url)
+        except Exception as e:
+            logger.warning(f"Browser navigation hit timeout or error on '{url}': {e}. Forcing window.stop() to continue.")
+            try:
+                driver.execute_script("window.stop();")
+            except Exception:
+                pass
         time.sleep(1.5)
         self.bring_to_front()
         return self.get_page_summary()

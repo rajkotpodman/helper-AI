@@ -270,11 +270,12 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchSystemStatus();
   fetchMemoryStats();
   
-  // Periodic telemetry refresh
+  // Periodic telemetry refresh & execution watchdog (recovers from socket drops)
   setInterval(() => {
     fetchSystemStatus();
     fetchMemoryStats();
-  }, 10000);
+    checkGoalWatchdog();
+  }, 2500);
 });
 
 // --- 5. Textarea Auto-expand & Shortcut ---
@@ -592,7 +593,25 @@ function handleStreamEvent(data) {
   const payload = (data && data.data && typeof data.data === 'object') ? { ...data, ...data.data } : (data || {});
   const type = payload.type || payload.event;
   
-  if (type === 'started') {
+  if (type === 'init') {
+    const isRunning = Boolean(payload.is_running);
+    const history = payload.history || [];
+    if (!isRunning && (state.isExecuting || (elements.btnStop && !elements.btnStop.classList.contains('hidden')))) {
+      if (history.length > 0 && state.executionLogs.length <= 4) {
+        history.forEach(item => {
+          if (item.thought) appendTerminalLog(`💡 Plan: ${item.thought}`, 'thought');
+          if (item.action && item.action !== 'none') appendTerminalLog(`⚡ Action: ${item.action}`, 'action');
+          if (item.output) {
+            const outText = typeof item.output === 'string' ? item.output : JSON.stringify(item.output);
+            appendTerminalLog(`↳ Result: ${outText.slice(0, 450)}${outText.length > 450 ? '...' : ''}`, 'info');
+          }
+        });
+      }
+      const lastMsg = history.length > 0 ? (history[history.length - 1].output || history[history.length - 1].result) : 'Goal execution finished.';
+      handleExecutionComplete({ success: true, message: lastMsg });
+    }
+  }
+  else if (type === 'started') {
     state.isExecuting = true;
     elements.btnExecute?.classList.add('opacity-50', 'pointer-events-none');
     elements.btnStop?.classList.remove('hidden');
@@ -728,6 +747,42 @@ async function stopAgent() {
 }
 
 // --- 13. Telemetry & Memory API ---
+async function checkGoalWatchdog() {
+  const isExecutingUI = state.isExecuting || (elements.btnStop && !elements.btnStop.classList.contains('hidden'));
+  if (!isExecutingUI) return;
+
+  try {
+    const res = await fetch('/api/status');
+    if (!res.ok) return;
+    const statusData = await res.json();
+    if (!statusData.is_running) {
+      try {
+        const expRes = await fetch('/api/export');
+        if (expRes.ok) {
+          const expData = await expRes.json();
+          const history = expData.history || [];
+          if (history.length > 0 && state.executionLogs.length <= 4) {
+            history.forEach(item => {
+              if (item.thought) appendTerminalLog(`💡 Plan: ${item.thought}`, 'thought');
+              if (item.action && item.action !== 'none') appendTerminalLog(`⚡ Action: ${item.action}`, 'action');
+              if (item.output) {
+                const outText = typeof item.output === 'string' ? item.output : JSON.stringify(item.output);
+                appendTerminalLog(`↳ Result: ${outText.slice(0, 450)}${outText.length > 450 ? '...' : ''}`, 'info');
+              }
+            });
+          }
+          const lastMsg = history.length > 0 ? (history[history.length - 1].output || history[history.length - 1].result) : 'Goal execution finished.';
+          handleExecutionComplete({ success: true, message: lastMsg });
+          return;
+        }
+      } catch (e) {}
+      handleExecutionComplete({ success: true, message: 'Goal execution completed.' });
+    }
+  } catch (err) {
+    // Network silent retry
+  }
+}
+
 async function fetchSystemStatus() {
   try {
     const res = await fetch('/api/system-status');

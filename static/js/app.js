@@ -225,6 +225,13 @@ function setupWebSocket() {
 
 function handleAgentEvent(eventType, data) {
   switch (eventType) {
+    case 'init':
+      if (data && !data.is_running && isRunning) {
+        setRunningState(false);
+        fetchStatus();
+      }
+      break;
+
     case 'started':
       setRunningState(true);
       timeline.innerHTML = '';

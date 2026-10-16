@@ -102,7 +102,8 @@ async def websocket_endpoint(websocket: WebSocket):
         "data": {
             "is_running": current_goal_info["is_running"],
             "current_goal": current_goal_info["goal"],
-            "history_count": len(current_goal_info["history"])
+            "history_count": len(current_goal_info["history"]),
+            "history": current_goal_info["history"]
         }
     }))
     try:
