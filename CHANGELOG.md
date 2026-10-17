@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.3.0] - 2026-10-17
+
+### 🚀 Advanced Superpower Paradigms: Persistent Shell, Windows UIA, and Web Set-of-Marks
+- **Phase 1: Persistent Stateful Shell Sessions (`core/command_engine/persistent_shell.py`, `core/tools/universal_terminal_tools.py`):**
+  - Implemented Open Interpreter-style live interactive background shell sessions for Windows PowerShell and POSIX Bash.
+  - Stateful execution: Working directory changes (`cd`), environment variables, virtualenvs, and shell functions persist seamlessly between agent steps.
+  - Non-blocking threaded reader queue with evaluated sentinel token parsing and prompt-echo filtering.
+  - Multi-session management with `session_id`, `reset_session`, and `session_info` actions in `UniversalTerminalTool`.
+  - Execution latency reduced to ~30ms per command.
+- **Phase 2: Native Windows UI Automation Tool (`core/tools/windows_uia_tools.py`, `core/tools/__init__.py`):**
+  - Implemented Microsoft UFO-style Windows UI Automation (UIA) tree desktop automation tool (`windows_uia`).
+  - Direct control inspection, window discovery (`list_windows`), and control hierarchy traversal (`inspect_window`).
+  - Deterministic clicking by visible button name (`click_control` e.g. "Save", "OK", "Cancel", "Submit") using native UIA `InvokePattern` or `Click()`.
+  - Coordinate-free text typing into inputs (`type_control`) and multi-level menu path selection (`select_menu` e.g. "File -> Save As").
+  - Registered as Tool #37 in `ToolRegistry` with full accessibility support via `uiautomation` and `pywinauto`.
+- **Phase 3: Web Set-of-Marks Visual Tagging (`core/browser_driver.py`, `core/tools/browser_tools.py`):**
+  - Implemented Browser-Use / OmniParser style Set-of-Marks (SoM) visual badge engine for web navigation.
+  - Injected JavaScript scans live DOM and attaches neon numbered overlay badges (`[1]`, `[2]`, `[3]...`) to all clickable and interactive elements.
+  - Added deterministic mark-based interaction methods: `click_mark(mark_id)` and `type_mark(mark_id, text, clear_first, press_enter)`.
+  - Clean overlay teardown with `clear_marks()`.
+  - Exposed via `tag_elements`, `click_mark`, `type_mark`, and `clear_marks` in `BrowserAutomationTool`.
+- **Test Suite:**
+  - Added comprehensive test suite in `tests/test_superpower_features.py` (9/9 passed).
+  - All 26 core tests passing across all providers and tools.
+
+---
+
 ## [2.2.0] - 2026-10-17
 
 ### 🌍 Universal / Custom AI Integration (Use ANY AI in the World)

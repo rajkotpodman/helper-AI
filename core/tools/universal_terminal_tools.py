@@ -10,17 +10,20 @@ from core.command_engine.os_detector import OSDetector
 from core.command_engine.command_encyclopedia import CommandEncyclopedia
 from core.command_engine.command_fetcher import CommandFetcher
 from core.command_engine.executor import UniversalCommandExecutor
+from core.command_engine.persistent_shell import PersistentShellManager
 
 
 class UniversalTerminalTool(BaseTool):
-    """Executes terminal commands on any operating system with background task capabilities."""
+    """Executes terminal commands on any operating system with stateful persistent shell and background capabilities."""
 
     name = "universal_terminal"
     description = (
         "Execute any terminal or PowerShell command on the host machine. "
-        "Automatically adapts to the host operating system (Windows, Linux, macOS). "
+        "Maintains a live, stateful interactive shell session (variables, directory changes, "
+        "and virtual environments persist across steps). "
         "Supports long-running heavy background tasks with 'background: true', "
-        "status checking with action='status', and task cancellation with action='kill'."
+        "status checking with action='status', task cancellation with action='kill', "
+        "and session management with action='reset_session' or action='session_info'."
     )
     parameters = {
         "type": "object",
@@ -31,9 +34,19 @@ class UniversalTerminalTool(BaseTool):
             },
             "action": {
                 "type": "string",
-                "enum": ["execute", "status", "kill"],
+                "enum": ["execute", "status", "kill", "reset_session", "session_info"],
                 "default": "execute",
-                "description": "Action to perform: 'execute' (run command), 'status' (check background task), 'kill' (stop task)."
+                "description": "Action to perform: 'execute' (run command), 'status' (check background task), 'kill' (stop task), 'reset_session' (restart shell), 'session_info' (view shell details)."
+            },
+            "persistent": {
+                "type": "boolean",
+                "default": True,
+                "description": "If true (default), runs in persistent stateful shell preserving directory and variables across steps."
+            },
+            "session_id": {
+                "type": "string",
+                "default": "default",
+                "description": "Identifier for the persistent shell session (default: 'default')."
             },
             "background": {
                 "type": "boolean",
@@ -47,7 +60,7 @@ class UniversalTerminalTool(BaseTool):
             "timeout_seconds": {
                 "type": "integer",
                 "default": 120,
-                "description": "Maximum seconds to wait for synchronous execution."
+                "description": "Maximum seconds to wait for execution."
             },
             "cwd": {
                 "type": "string",
@@ -61,11 +74,20 @@ class UniversalTerminalTool(BaseTool):
         self,
         command: Optional[str] = None,
         action: str = "execute",
+        persistent: bool = True,
+        session_id: str = "default",
         background: bool = False,
         task_id: Optional[str] = None,
         timeout_seconds: int = 120,
         cwd: Optional[str] = None
     ) -> Dict[str, Any]:
+        if action == "reset_session":
+            return PersistentShellManager.reset_session(session_id)
+
+        if action == "session_info":
+            sess = PersistentShellManager.get_session(session_id)
+            return sess.get_info()
+
         if action == "status":
             if not task_id:
                 return {"success": False, "error": "task_id is required for action='status'."}
@@ -81,12 +103,21 @@ class UniversalTerminalTool(BaseTool):
 
         if background:
             return UniversalCommandExecutor.execute_background(command=command, cwd=cwd)
-        else:
-            return UniversalCommandExecutor.execute_sync(
-                command=command,
-                timeout_seconds=timeout_seconds,
-                cwd=cwd
-            )
+
+        # Stateful persistent shell execution (Open Interpreter style)
+        if persistent:
+            sess = PersistentShellManager.get_session(session_id)
+            if cwd:
+                # If explicit cwd provided, navigate to it in persistent shell
+                sess.execute(f'cd "{cwd}"', timeout_seconds=10)
+            return sess.execute(command, timeout_seconds=timeout_seconds)
+
+        # Fallback to single-shot isolated execution
+        return UniversalCommandExecutor.execute_sync(
+            command=command,
+            timeout_seconds=timeout_seconds,
+            cwd=cwd
+        )
 
 
 class SynthesizeOSCommandTool(BaseTool):

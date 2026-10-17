@@ -972,3 +972,195 @@ class ProjectBrowser:
             except Exception:
                 pass
             self._driver = None
+
+    # =========================================================================
+    # Set-of-Marks (SoM) Web Tagging Engine (Browser-Use Pattern)
+    # =========================================================================
+
+    def inject_set_of_marks(self) -> Dict[str, Any]:
+        """
+        Injects numbered visual badge tags on all interactive elements in the DOM.
+        Inspired by browser-use and OmniParser Set-of-Marks.
+
+        Returns a structured dictionary of all marked elements with their IDs and metadata.
+        """
+        driver = self.get_driver()
+        js_code = """
+        return (function() {
+            const oldContainer = document.getElementById('__helper_ai_som_container');
+            if (oldContainer) {
+                oldContainer.remove();
+            }
+            window.__helper_ai_marks = {};
+
+            const container = document.createElement('div');
+            container.id = '__helper_ai_som_container';
+            container.style.position = 'absolute';
+            container.style.top = '0';
+            container.style.left = '0';
+            container.style.width = '100%';
+            container.style.height = '100%';
+            container.style.pointerEvents = 'none';
+            container.style.zIndex = '2147483647';
+            document.body.appendChild(container);
+
+            const candidates = document.querySelectorAll(
+                'button, a[href], input, textarea, select, [role="button"], [role="link"], [role="tab"], [role="menuitem"], [role="checkbox"], [onclick], [tabindex]:not([tabindex="-1"])'
+            );
+
+            const marked = [];
+            let count = 0;
+
+            candidates.forEach((el) => {
+                const rect = el.getBoundingClientRect();
+                if (rect.width <= 0 || rect.height <= 0) return;
+                const style = window.getComputedStyle(el);
+                if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return;
+
+                count++;
+                window.__helper_ai_marks[count] = el;
+
+                const badge = document.createElement('div');
+                badge.innerText = '[' + count + ']';
+                badge.style.position = 'absolute';
+                badge.style.top = (rect.top + window.scrollY) + 'px';
+                badge.style.left = (rect.left + window.scrollX) + 'px';
+                badge.style.backgroundColor = '#00e676';
+                badge.style.color = '#000000';
+                badge.style.fontWeight = 'bold';
+                badge.style.fontSize = '12px';
+                badge.style.lineHeight = '14px';
+                badge.style.padding = '2px 4px';
+                badge.style.borderRadius = '3px';
+                badge.style.border = '1px solid #000000';
+                badge.style.boxShadow = '0 2px 4px rgba(0,0,0,0.5)';
+                badge.style.pointerEvents = 'none';
+                badge.style.fontFamily = 'monospace';
+                container.appendChild(badge);
+
+                let text = (el.innerText || el.value || el.placeholder || el.getAttribute('aria-label') || el.title || '').trim();
+                if (text.length > 60) text = text.substring(0, 57) + '...';
+
+                marked.push({
+                    mark_id: count,
+                    tag: el.tagName.toLowerCase(),
+                    text: text,
+                    type: el.type || '',
+                    placeholder: el.placeholder || '',
+                    aria_label: el.getAttribute('aria-label') || '',
+                    rect: {
+                        x: Math.round(rect.left),
+                        y: Math.round(rect.top),
+                        width: Math.round(rect.width),
+                        height: Math.round(rect.height)
+                    }
+                });
+            });
+
+            return marked;
+        })();
+        """
+        try:
+            marked_elements = driver.execute_script(js_code) or []
+            return {
+                "success": True,
+                "total_marked": len(marked_elements),
+                "marks": marked_elements,
+                "output": f"Tagged {len(marked_elements)} interactive elements with visual badges."
+            }
+        except Exception as e:
+            logger.error(f"Failed to inject Set-of-Marks: {e}")
+            return {"success": False, "error": str(e)}
+
+    def click_mark(self, mark_id: int) -> Dict[str, Any]:
+        """Directly clicks a tagged interactive element by its mark ID."""
+        driver = self.get_driver()
+        js_code = """
+        return (function(id) {
+            if (!window.__helper_ai_marks || !window.__helper_ai_marks[id]) {
+                return { success: false, error: 'Mark ID [' + id + '] not found on page.' };
+            }
+            const el = window.__helper_ai_marks[id];
+            el.scrollIntoView({ behavior: 'instant', block: 'center', inline: 'center' });
+            
+            const mouseEvents = ['mouseover', 'mousedown', 'mouseup', 'click'];
+            mouseEvents.forEach(evt => {
+                el.dispatchEvent(new MouseEvent(evt, { bubbles: true, cancelable: true, view: window }));
+            });
+            if (typeof el.click === 'function') {
+                el.click();
+            }
+            return {
+                success: true,
+                tag: el.tagName.toLowerCase(),
+                text: (el.innerText || el.value || '').trim()
+            };
+        })(arguments[0]);
+        """
+        try:
+            res = driver.execute_script(js_code, int(mark_id))
+            time.sleep(0.5)
+            return res or {"success": True, "output": f"Clicked mark [{mark_id}]."}
+        except Exception as e:
+            logger.error(f"Failed to click mark [{mark_id}]: {e}")
+            return {"success": False, "error": str(e)}
+
+    def type_mark(self, mark_id: int, text: str, clear_first: bool = True, press_enter: bool = False) -> Dict[str, Any]:
+        """Types text directly into a tagged input field by mark ID."""
+        driver = self.get_driver()
+        js_code = """
+        return (function(id, text, clearFirst, pressEnter) {
+            if (!window.__helper_ai_marks || !window.__helper_ai_marks[id]) {
+                return { success: false, error: 'Mark ID [' + id + '] not found on page.' };
+            }
+            const el = window.__helper_ai_marks[id];
+            el.scrollIntoView({ behavior: 'instant', block: 'center', inline: 'center' });
+            el.focus();
+            if (clearFirst) {
+                el.value = '';
+            }
+            el.value = (el.value || '') + text;
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+
+            if (pressEnter) {
+                el.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+                el.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+                el.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true }));
+                if (el.form && typeof el.form.submit === 'function') {
+                    el.form.submit();
+                }
+            }
+            return {
+                success: true,
+                tag: el.tagName.toLowerCase(),
+                current_value: el.value
+            };
+        })(arguments[0], arguments[1], arguments[2], arguments[3]);
+        """
+        try:
+            res = driver.execute_script(js_code, int(mark_id), text, clear_first, press_enter)
+            time.sleep(0.5)
+            return res or {"success": True, "output": f"Typed text into mark [{mark_id}]."}
+        except Exception as e:
+            logger.error(f"Failed to type into mark [{mark_id}]: {e}")
+            return {"success": False, "error": str(e)}
+
+    def clear_marks(self) -> Dict[str, Any]:
+        """Removes all Set-of-Marks visual badges from the active webpage."""
+        driver = self.get_driver()
+        js_code = """
+        return (function() {
+            const container = document.getElementById('__helper_ai_som_container');
+            if (container) {
+                container.remove();
+            }
+            window.__helper_ai_marks = {};
+            return { success: true, output: 'Cleared all marks.' };
+        })();
+        """
+        try:
+            return driver.execute_script(js_code) or {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+

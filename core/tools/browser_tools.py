@@ -77,8 +77,17 @@ class BrowserAutomationTool(BaseTool):
                     "switch_tab",
                     "close_tab",
                     "close_browser",
-                    "draft_social_post"
+                    "draft_social_post",
+                    "tag_elements",
+                    "set_of_marks",
+                    "click_mark",
+                    "type_mark",
+                    "clear_marks"
                 ]
+            },
+            "mark_id": {
+                "type": "integer",
+                "description": "Numeric visual badge ID of the interactive element to click or type into (for click_mark and type_mark actions)."
             },
             "title": {
                 "type": "string",
@@ -155,6 +164,7 @@ class BrowserAutomationTool(BaseTool):
         keywords: Optional[str] = None,
         resume_path: Optional[str] = None,
         count: Optional[int] = 5,
+        mark_id: Optional[int] = None,
         **kwargs
     ) -> Dict[str, Any]:
         browser = ProjectBrowser.get_instance()
@@ -163,7 +173,25 @@ class BrowserAutomationTool(BaseTool):
         post_title = title or kwargs.get("post_title") or target_name or "New Blog Post"
 
         try:
-            if action in ["apply_linkedin_jobs", "apply_linkedin", "linkedin_apply", "apply_jobs"]:
+            if action in ["tag_elements", "set_of_marks", "tag_page"]:
+                return browser.inject_set_of_marks()
+
+            elif action == "click_mark":
+                mid = mark_id if mark_id is not None else kwargs.get("id") or target_name
+                if mid is None or str(mid).strip() == "":
+                    return {"success": False, "output": "Please provide 'mark_id' (e.g. mark_id=3) to click."}
+                return browser.click_mark(int(mid))
+
+            elif action == "type_mark":
+                mid = mark_id if mark_id is not None else kwargs.get("id") or target_name
+                if mid is None or str(mid).strip() == "":
+                    return {"success": False, "output": "Please provide 'mark_id' (e.g. mark_id=2) to type into."}
+                return browser.type_mark(int(mid), type_content, press_enter=press_enter)
+
+            elif action in ["clear_marks", "remove_marks"]:
+                return browser.clear_marks()
+
+            elif action in ["apply_linkedin_jobs", "apply_linkedin", "linkedin_apply", "apply_jobs"]:
                 kw = keywords or kwargs.get("role") or target_name or "Technical Support"
                 cv = resume_path or kwargs.get("cv_path") or kwargs.get("file_path") or url
                 num = int(count or kwargs.get("num") or 5)

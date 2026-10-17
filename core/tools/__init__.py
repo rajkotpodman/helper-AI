@@ -49,6 +49,7 @@ from core.tools.reverse_engineering_tools import (
     FastAppOperateTool,
     McpReaCallTool
 )
+from core.tools.windows_uia_tools import WindowsUIATool
 
 class ToolRegistry:
     """Central registry of all tools available to Helper-AI."""
@@ -97,7 +98,8 @@ class ToolRegistry:
             ReverseEngineerAppTool(),
             QueryAppMemoryTool(),
             FastAppOperateTool(),
-            McpReaCallTool()
+            McpReaCallTool(),
+            WindowsUIATool()
         ]
         for t in defaults:
             self.register(t)
