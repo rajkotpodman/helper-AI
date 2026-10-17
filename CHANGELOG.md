@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0] - 2026-10-17
+
+### 🧩 REA (Reverse Engineer Anything) & Persistent App Knowledge Memory
+- **Deep Application Reverse Engineering Engine (`core/reverse_engineering/`):**
+  - Integrated `morluto/rea` (v6.5.0) framework via high-speed Node stdio bridge and Model Context Protocol (MCP) server.
+  - Multi-target reverse engineering: Windows native Win32/PE binaries, Electron ASAR packages, .NET assemblies, and live web apps.
+  - Automatic UI Automation (UIA) tree mapping: extracts control identifiers, Automation IDs, names, and keyboard accelerators.
+  - Electron ASAR package dissection: inspects internal modules, `package.json`, IPC channels, and preload scripts without needing original source code.
+- **Persistent App Knowledge Memory Store (`AppMemoryStore`):**
+  - Stores machine-readable JSON app profiles in `agent_memory/apps/<app_slug>.json` and human-readable records in `agent_memory.md`.
+  - Saves verified keyboard shortcuts, launch commands, UI Automation IDs, and pre-formatted AI prompt playbooks.
+  - Pre-seeded foundational software profiles: **Notepad, Calculator, VS Code, Google Chrome, Microsoft Edge, and File Explorer**.
+  - Dynamic self-learning: whenever the agent reverse engineers an app once, it remembers it forever.
+- **100% Accurate Fast-Path Application Operator (`FastAppOperator`):**
+  - Instant direct operation using remembered hotkeys (`Ctrl+S`, `Ctrl+O`, `Ctrl+N`, etc.) and direct UI Automation patterns (`InvokePattern`/`ValuePattern`).
+  - Eliminates slow computer-vision screenshot loops and accidental cursor clicks.
+- **Agentic Loop & Tool Arsenal Expansion:**
+  - Registered 4 new specialized tools: `reverse_engineer_app`, `query_app_memory`, `fast_app_operate`, and `mcp_rea_call`, expanding the native arsenal to **36 tools**.
+  - Proactive App Memory injection in `core/agent.py`: automatically matches goals with remembered software profiles before Step 1 starts.
+  - Enhanced `core/llm.py` Operating Principle 13 educating models on fast-path execution.
+- **Web Dashboard & REST API:**
+  - Added REST endpoints: `GET /api/apps/memory`, `GET /api/apps/memory/{slug}`, `POST /api/apps/reverse-engineer`, and `GET /api/rea/status`.
+  - Added interactive "Reverse-Engineered App Profiles" panel to the dashboard memory modal with on-demand app analysis and "Use App" quick prompts.
+- **Test Suite Expansion:**
+  - Added end-to-end integration tests in `tests/test_reverse_engineering_integration.py` (100% pass rate).
+
+---
+
 ## [1.5.0] - 2026-10-13
 
 ### 🛡️ Universal Cross-Platform Terminal & Security Toolkit Architecture

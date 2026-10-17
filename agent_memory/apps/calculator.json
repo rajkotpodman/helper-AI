@@ -1,0 +1,39 @@
+{
+  "app_name": "Calculator",
+  "app_slug": "calculator",
+  "process_name": "CalculatorApp.exe",
+  "app_type": "wpf_winui",
+  "window_matchers": [
+    "Calculator"
+  ],
+  "reverse_engineering_summary": "Windows UWP/WinUI Calculator. Keyboard digits and operators work directly via hotkey/send_keys. AutomationIds map directly to buttons.",
+  "fast_path": {
+    "launch_command": "calc",
+    "keyboard_shortcuts": {
+      "clear": "esc",
+      "equals": "enter",
+      "add": "+",
+      "subtract": "-",
+      "multiply": "*",
+      "divide": "/"
+    },
+    "ui_controls": [
+      {
+        "name": "Display",
+        "type": "Text",
+        "automation_id": "CalculatorResults"
+      },
+      {
+        "name": "Clear",
+        "type": "Button",
+        "automation_id": "clearButton"
+      },
+      {
+        "name": "Equals",
+        "type": "Button",
+        "automation_id": "equalButton"
+      }
+    ]
+  },
+  "last_updated": "2026-10-17T11:49:14.751891"
+}

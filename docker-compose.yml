@@ -27,6 +27,7 @@ services:
       - ./logs:/app/logs
       - ./history:/app/history
       - ./downloads:/app/downloads
+      - ./agent_memory:/app/agent_memory
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:

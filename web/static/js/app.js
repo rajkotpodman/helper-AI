@@ -797,6 +797,56 @@ async function fetchSystemStatus() {
   }
 }
 
+async function loadAppMemories() {
+  const container = document.getElementById('app-memory-cards-container');
+  if (!container) return;
+  try {
+    const res = await fetch('/api/apps/memory');
+    const data = await res.json();
+    const profiles = data.profiles || [];
+    if (profiles.length === 0) {
+      container.innerHTML = '<div class="text-slate-500 text-center py-2">No applications in memory yet.</div>';
+      return;
+    }
+    container.innerHTML = '';
+    profiles.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'p-2.5 rounded-lg bg-slate-900/90 border border-white/5 flex items-center justify-between hover:border-cyan-500/30 transition';
+      card.innerHTML = `
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 font-bold text-xs">
+            ${p.app_name.substring(0, 2).toUpperCase()}
+          </div>
+          <div>
+            <div class="font-semibold text-white text-xs flex items-center gap-1.5">
+              ${p.app_name}
+              <span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-mono">${p.app_type}</span>
+            </div>
+            <div class="text-[10px] text-slate-400">
+              ⚡ ${p.shortcuts_count} Hotkeys • ${p.controls_count} UI Controls
+            </div>
+          </div>
+        </div>
+        <button class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-400 font-mono text-[10px]" onclick="useAppPrompt('${p.app_name}')">
+          Use App
+        </button>
+      `;
+      container.appendChild(card);
+    });
+  } catch (e) {
+    container.innerHTML = '<div class="text-red-400 text-center py-2">Failed to load app profiles</div>';
+  }
+}
+
+window.useAppPrompt = function(appName) {
+  if (elements.goalInput) {
+    elements.goalInput.value = `Open ${appName} and use its direct fast-path shortcuts`;
+    elements.goalInput.dispatchEvent(new Event('input'));
+    elements.goalInput.focus();
+    elements.modalMemory?.classList.add('hidden');
+  }
+};
+
 async function fetchMemoryStats() {
   try {
     const res = await fetch('/api/memory/stats');
@@ -839,11 +889,37 @@ function setupModals() {
   // Memory Modal
   elements.btnMemoryPill?.addEventListener('click', () => {
     fetchMemoryStats();
+    loadAppMemories();
     elements.modalMemory?.classList.remove('hidden');
   });
   elements.btnCloseMemory?.addEventListener('click', () => elements.modalMemory?.classList.add('hidden'));
   elements.btnCloseMemoryBtn?.addEventListener('click', () => elements.modalMemory?.classList.add('hidden'));
   elements.btnResetMemory?.addEventListener('click', resetMemoryLog);
+
+  // Reverse Engineering Trigger Button
+  document.getElementById('btn-trigger-re')?.addEventListener('click', async () => {
+    const input = document.getElementById('input-re-target');
+    const target = input ? input.value.trim() : '';
+    if (!target) return;
+    const btn = document.getElementById('btn-trigger-re');
+    if (btn) btn.innerHTML = '<span>Scanning...</span>';
+    try {
+      const res = await fetch('/api/apps/reverse-engineer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: target, depth: 'deep' })
+      });
+      const data = await res.json();
+      appendTerminalLog(`Reverse engineered '${target}': ${data.output || 'Saved to memory'}`, 'action');
+      await loadAppMemories();
+      if (input) input.value = '';
+    } catch (e) {
+      alert('Analysis failed: ' + e.message);
+    } finally {
+      if (btn) btn.innerHTML = '<i data-lucide="scan" class="w-3.5 h-3.5"></i> Analyze';
+      if (window.lucide) lucide.createIcons();
+    }
+  });
   
   // Metrics Modal
   elements.btnMetricsPill?.addEventListener('click', async () => {

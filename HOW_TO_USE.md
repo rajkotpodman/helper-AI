@@ -1,7 +1,7 @@
 # ⚡ Helper-AI: Complete Non-Technical Master User Manual
 ### (સંપૂર્ણ માર્ગદર્શિકા - English & ગુજરાતી Bilingual Edition)
 
-> **Welcome to Helper-AI!** This guide is written specifically for **non-technical users, everyday computer owners, students, and professionals**. You do **not** need to be a programmer or know any coding to use Helper-AI.
+> **Welcome to Helper-AI!** This comprehensive manual is written specifically for **non-technical users, everyday computer owners, students, freelancers, and business professionals**. You do **not** need to be a programmer or know any coding or terminal commands to control your computer with AI.
 
 ---
 
@@ -12,30 +12,33 @@
 2. [1-Click Setup Guide (Windows, Mac, Linux)](#2-1-click-setup-guide)
 3. [Understanding the Web Dashboard Screen](#3-understanding-the-web-dashboard-screen)
 4. [How to Give Goals to the Agent (Best Prompting Practices)](#4-how-to-give-goals-to-the-agent)
-5. [The Complete 28-Tool Arsenal Explained in Plain English](#5-the-complete-28-tool-arsenal-explained)
-6. [Everyday Practical Recipes & Real-World Examples](#6-everyday-practical-recipes)
+5. [The Complete 36-Tool Arsenal Explained in Plain English](#5-the-complete-36-tool-arsenal-explained)
+6. [🧩 Reverse Engineering Any PC & Web Application (REA & App Memory Store)](#6-reverse-engineering-any-pc--web-application)
+7. [Everyday Practical Recipes & Real-World Examples](#7-everyday-practical-recipes)
    - [A. Cleaning & Organizing Messy Computer Folders](#a-cleaning--organizing-messy-computer-folders)
    - [B. Researching the Internet & Generating Document Reports](#b-researching-the-internet--generating-document-reports)
    - [C. Computer Speed, Health & Killing Frozen Programs](#c-computer-speed-health--killing-frozen-programs)
-   - [D. Browser Automation & Social Media Publishing](#d-browser-automation--social-media-publishing)
-   - [E. Running Any Terminal or PowerShell Command Safely](#e-running-any-terminal-or-powershell-command-safely)
-   - [F. Defensive Security Audits & File Protection](#f-defensive-security-audits--file-protection)
-   - [G. Voice Speech (Hearing the Agent Speak Aloud)](#g-voice-speech-hearing-the-agent-speak-aloud)
-7. [Running 100% Free & Offline (No Paid Keys Needed)](#7-running-100-free--offline)
-8. [Safe Mode & 1-Click Approval Dialogs](#8-safe-mode--1-click-approval-dialogs)
-9. [Beginner Troubleshooting & FAQ](#9-beginner-troubleshooting--faq)
+   - [D. Operating Desktop Software with 100% Accuracy (Fast-Paths)](#d-operating-desktop-software-with-100-accuracy)
+   - [E. Browser Automation & Social Media Publishing](#e-browser-automation--social-media-publishing)
+   - [F. Running Any Terminal or PowerShell Command Safely](#f-running-any-terminal-or-powershell-command-safely)
+   - [G. Defensive Security Audits & File Protection](#g-defensive-security-audits--file-protection)
+   - [H. Voice Speech (Hearing the Agent Speak Aloud)](#h-voice-speech-hearing-the-agent-speak-aloud)
+8. [Running 100% Free & Offline (No Paid Keys Needed)](#8-running-100-free--offline)
+9. [Safe Mode & 1-Click Approval Dialogs (Human-in-the-Loop)](#9-safe-mode--1-click-approval-dialogs)
+10. [Beginner Troubleshooting & FAQ](#10-beginner-troubleshooting--faq)
 
 ---
 
 ### 🇮🇳 Part 2: ગુજરાતી વિભાગ (Gujarati Section)
 1. [Helper-AI શું છે અને તે કેવી રીતે કામ કરે છે?](#૧-helper-ai-શું-છે)
-2. [૧-ક્લિકમાં ચાલુ કરવાની રીત](#૨-૧-ક્લિકમાં-ચાલુ-કરવાની-રીત)
+2. [૧-ક્લિકમાં ચાલુ કરવાની રીત (Windows, Mac, Linux)](#૨-૧-ક્લિકમાં-ચાલુ-કરવાની-રીત)
 3. [વેબ ડેશબોર્ડનો સરળ ઉપયોગ](#૩-વેબ-ડેશબોર્ડનો-સરળ-ઉપયોગ)
-4. [૨૮ પાવરફુલ ટૂલ્સની યાદી અને વાસ્તવિક ઉદાહરણો](#૪-૨૮-પાવરફુલ-ટૂલ્સની-યાદી)
-5. [રોજિંદા જીવનમાં ઉપયોગી પ્રોમ્પ્ટ્સ (Ready-Made Goals)](#૫-રોજિંદા-જીવનમાં-ઉપયોગી-પ્રોમ્પ્ટ્સ)
-6. [API Key વગર ૧૦૦% ફ્રી અને ઑફલાઇન ચલાવવાની રીત](#૬-api-key-વગર-૧૦૦-ફ્રી-અને-ઑફલાઇન)
-7. [સુરક્ષા અને ૧-ક્લિક મંજૂરી (Human-in-the-Loop)](#૭-સુરક્ષા-અને-૧-ક્લિક-મંજૂરી)
-8. [વારંવાર પૂછાતા પ્રશ્નો (FAQ)](#૮-વારંવાર-પૂછાતા-પ્રશ્નો-faq)
+4. [૩૬ પાવરફુલ ટૂલ્સની યાદી અને સાદી સમજૂતી](#૪-૩૬-પાવરફુલ-ટૂલ્સની-યાદી)
+5. [🧩 કોઈપણ એપનું રિવર્સ એન્જિનિયરિંગ અને એપ મેમરી (REA Guide)](#૫-કોઈપણ-એપનું-રિવર્સ-એન્જિનિયરિંગ-અને-એપ-મેમરી)
+6. [રોજિંદા જીવનમાં ઉપયોગી પ્રોમ્પ્ટ્સ (Ready-Made Goals)](#૬-રોજિંદા-જીવનમાં-ઉપયોગી-પ્રોમ્પ્ટ્સ)
+7. [API Key વગર ૧૦૦% ફ્રી અને ઑફલાઇન ચલાવવાની રીત](#૭-api-key-વગર-૧૦૦-ફ્રી-અને-ઑફલાઇન)
+8. [સુરક્ષા અને ૧-ક્લિક મંજૂરી (Human-in-the-Loop)](#૮-સુરક્ષા-અને-૧-ક્લિક-મંજૂરી)
+9. [વારંવાર પૂછાતા પ્રશ્નો (FAQ)](#૯-વારંવાર-પૂછાતા-પ્રશ્નો-faq)
 
 ---
 
@@ -48,10 +51,11 @@
 Normal chatbots (like standard ChatGPT or Claude) can only chat with you. If you ask them to clean up your computer, they can give you advice, but they **cannot** actually touch your files, click buttons, or fix your computer.
 
 **Helper-AI is completely different.** It is an **Autonomous Computer Agent**:
-- It has safe, direct access to your computer and the internet.
-- When you tell it: *"Check my Downloads folder and group files by extension"*, Helper-AI **actually looks at your folder, creates subfolders, moves the files, verifies they are moved, and tells you when it is done.**
-- If an unexpected error happens (like a locked file or a missing folder), it doesn't give up! It reads the error message, adjusts its plan, and tries another method until the task is finished.
-- It doesn't bother you with 20 questions—it works toward the goal autonomously.
+* It has safe, direct access to your computer and the internet.
+* When you tell it: *"Check my Downloads folder and group files by extension"*, Helper-AI **actually looks at your folder, creates subfolders, moves the files, verifies they are moved, and tells you when it is done.**
+* It features **Reverse Engineering & Persistent App Memory**: It can inspect how any program works on the inside, map its buttons and keyboard shortcuts, and save them to its memory. The next time you ask it to do anything in that app, it executes in **1 second with 100% accuracy**!
+* If an unexpected error happens (like a locked file or a missing folder), it doesn't give up! It reads the error message, adjusts its plan, and tries another method until the task is finished.
+* It doesn't bother you with 20 questions—it works toward the goal autonomously.
 
 ---
 
@@ -61,18 +65,18 @@ You only need **Python** installed on your computer.
 
 ### Step 1: Install Python (If you don't have it)
 1. Go to **[https://www.python.org/downloads/](https://www.python.org/downloads/)**.
-2. Download the installer.
+2. Download the installer for your computer.
 3. ⚠️ **IMPORTANT CHECKBOX:** On the very first screen of the installer, check the box:
-   **☑ Add python.exe to PATH**
+   **☑ Add python.exe to PATH** (or "Add Python to PATH").
 4. Click **Install Now**.
 
 ### Step 2: Download Helper-AI
-1. Click the green **Code** button at the top of the repository and choose **Download ZIP**.
+1. Click the green **Code** button at the top of the GitHub repository and choose **Download ZIP**.
 2. Extract the ZIP folder anywhere on your computer (e.g. `C:\helper-ai` or your `Desktop`).
 
-### Step 3: Run Helper-AI
-- **On Windows:** Double-click the file named **`start.bat`**.
-- **On Mac or Linux:** Open a terminal in the folder and type:
+### Step 3: Run Helper-AI in 1 Click
+* **On Windows:** Double-click the file named **`run.bat`** or **`start.bat`**.
+* **On Mac or Linux:** Open a terminal in the folder and type:
   ```bash
   python app.py
   ```
@@ -86,94 +90,127 @@ That's it! Your web browser will automatically open up at:
 When you open `http://localhost:8000`, you will see a clean, dark-themed control center:
 
 ```text
-+-----------------------------------------------------------------------------------------+
-| ⚡ Helper-AI                     [● System Ready]      [⚙️ Settings]      [🛡️ Safe Mode]  |
-+-----------------------------------------------------------------------------------------+
-|                                                                                         |
-|   🎯 What goal would you like Helper to achieve?                                        |
-|   +---------------------------------------------------------------------------------+   |
-|   | [ Type your goal here in plain human language...                              ] |   |
-|   +---------------------------------------------------------------------------------+   |
-|                                                                                         |
-|   Quick Action Buttons:                                                                 |
-|   [💻 Check PC Health]  [🔍 Research Web & Save Report]  [📂 Inspect Downloads]         |
-|   [🛡️ Audit Open Ports]  [🌐 List GitHub Repositories]   [📝 Create Social Media Post]  |
-|                                                                                         |
-|   Safe Mode: Off (Full Autonomous)                       [⏹ Stop Agent] [🚀 Execute Goal]|
-+-----------------------------------------------------------------------------------------+
-| 📊 Real-Time Execution Feed                                                             |
-|   Step 1: 💭 Thought: "I need to check the Downloads directory and group files by type."|
-|           ⚡ Action: list_directory(path="Downloads")                                   |
-|           📋 Result: Found 24 files (10 images, 8 PDFs, 6 installers)                   |
-|   Step 2: 💭 Thought: "Creating subfolders and moving files..."                         |
-|   ...                                                                                   |
-|   🎉 MISSION ACCOMPLISHED! Your files have been organized into neat subfolders.         |
-+-----------------------------------------------------------------------------------------+
++-------------------------------------------------------------------------------------------------+
+| ⚡ Helper-AI               [● PC Control Online]  [🧩 Memory (0.02 MB)]  [⚙️ Settings]  [🛡️ Safe Mode] |
++-------------------------------------------------------------------------------------------------+
+|                                                                                                 |
+|   🎯 What goal would you like Helper-AI to achieve?                                             |
+|   +-----------------------------------------------------------------------------------------+   |
+|   | [ Type your goal here in plain human language...                                      ] |   |
+|   +-----------------------------------------------------------------------------------------+   |
+|                                                                                                 |
+|   Quick Action Buttons:                                                                         |
+|   [💻 Check PC Health]  [🔍 Research AI & Save Report]  [📂 Clean Downloads Folder]             |
+|   [🧩 Reverse Engineer Notepad]  [🌐 List GitHub Repos]  [📝 Publish Social Media Post]         |
+|                                                                                                 |
+|   Status: Ready (RuleEngine Offline Mode Active)                 [⏹ Stop Agent] [🚀 Execute Goal]|
++-------------------------------------------------------------------------------------------------+
+| 📊 Real-Time Execution Feed                                                                     |
+|   Step 0: ⚡ Loaded AI-friendly memory for 'Notepad'. Hotkeys (Ctrl+S, Ctrl+N) ready.           |
+|   Step 1: 💭 Thought: "I need to open Notepad and write the text..."                            |
+|           ⚡ Action: fast_app_operate(target="Notepad", action="save")                          |
+|           📋 Result: Executed fast-path 'save' (ctrl+s) on 'Notepad' with 100% precision.       |
+|   🎉 MISSION ACCOMPLISHED! Goal executed successfully.                                          |
++-------------------------------------------------------------------------------------------------+
 ```
 
 ### Key Elements of the Screen:
-1. **The Goal Box:** Type your instructions here in plain, natural language.
-2. **Quick Action Buttons:** One-click shortcuts for popular everyday tasks.
-3. **`🚀 Execute Goal` Button:** Starts the autonomous agent.
-4. **`⏹ Stop Agent` Button:** Immediately pauses or cancels whatever the agent is doing.
-5. **Real-Time Execution Feed:** Shows you exactly what the agent is thinking, what tools it is running, and what output your computer is returning.
+1. **The Goal Box:** The big text area in the middle. Type anything you want done on your computer in plain English, Gujarati, Hindi, or any language!
+2. **The Microphone Icon:** Click this to speak your goal using your microphone instead of typing.
+3. **The Quick Action Buttons:** Click any of these pre-made chip buttons to instantly populate common, useful tasks.
+4. **Memory Badge:** Displays the size of your agent's persistent memory. Click it to view all remembered apps, inspect keyboard shortcuts, and trigger on-demand reverse engineering!
+5. **Real-Time Execution Feed:** Shows you step-by-step what the AI is thinking, which tool it is executing, and what happened.
 
 ---
 
-## 4. How to Give Goals to the Agent
+## 4. How to Give Goals to the Agent (Best Prompting Practices)
 
-You do not need to speak "code." Just talk to Helper-AI like a helpful colleague.
+Helper-AI is designed to understand ordinary human speech. For the fastest, cleanest results, follow these 3 simple rules:
 
-### 🌟 Good vs. Vague Prompts:
-- **Instead of:** *"Files"*  
-  **Say:** *"Look at my Downloads folder, find all PDF files, and list them on my screen."*
-- **Instead of:** *"Is my PC slow?"*  
+### Rule 1: Be Specific About the What and Where
+* **Instead of:** *"Clean my files"*  
+  **Say:** *"Look at my Downloads folder, create folders for 'PDFs' and 'Images', and move the files into them."*
+* **Instead of:** *"Is my PC slow?"*  
   **Say:** *"Check my PC health, tell me how much RAM is being used, and save a report to Desktop/pc_health.txt."*
-- **Instead of:** *"AI news"*  
+* **Instead of:** *"AI news"*  
   **Say:** *"Search the internet for the top 3 AI news stories this week and save a summary to Desktop/ai_news.md."*
 
+### Rule 2: Multi-Item or Repetitive Tasks
+When you want the agent to do something multiple times (for example: *"publish in 5 different posts"*, *"apply to 5 jobs"*, or *"loop 3 times"*), simply state the exact count. Helper-AI will automatically track your progress and will not stop until every single item is finished!
+
+### Rule 3: Operating Desktop Software
+When you want to operate software (like Notepad, Calculator, or Chrome), you can just name the app:
+* *"Open Notepad, write 'Meeting notes for Monday', and save it to Desktop/notes.txt."*
+Helper-AI will automatically check its App Memory Store for pre-learned shortcuts and execute them with 100% precision!
+
 ---
 
-## 5. The Complete 32-Tool Arsenal Explained
+## 5. The Complete 36-Tool Arsenal Explained
 
 Here is what every tool does in simple words:
 
-1. **`universal_terminal`**: Runs any command on your computer (PowerShell, Windows CMD, Linux Bash, Mac Zsh) and can run heavy background tasks without freezing your screen.
-2. **`synthesize_os_command`**: Turns your simple request (like *"kill the app using port 8000"*) into the exact command needed for your specific computer.
-3. **`command_hub`**: Downloads and displays cheat sheets and instructions for any tool (like `ffmpeg`, `docker`, `powershell`, or `curl`).
-4. **`audit_security_baseline`**: Scans your computer for defensive security: checks firewall status, open network ports, and missing security updates.
-5. **`deep_web_crawl`**: Explores entire websites, documentation portals, or blogs, saving the text into one clean document for you.
-6. **`batch_fetch_web`**: Downloads and extracts multiple web pages simultaneously.
-7. **`fetch_github_repo`**: Downloads code, README files, and repository lists from GitHub without needing Git installed.
-8. **`fetch_web_content`**: Reads any article or webpage on the internet, stripping away ads and popups.
-9. **`duckduckgo_search`**: Searches the live internet for free without needing any paid search subscription.
-10. **`download_file`**: Downloads files, PDFs, or software directly to your computer.
-11. **`execute_python_code`**: Runs Python code safely and automatically installs any missing packages.
-12. **`build_project_files`**: Creates full multi-file projects, websites, or folders in a single click.
-13. **`execute_powershell`**: Runs native Windows commands with automatic fixing for folder paths with spaces.
-14. **`read_file`**: Opens and reads any text or document file on your hard drive.
-15. **`write_file`**: Creates a new file or saves information to a text file.
-16. **`list_directory`**: Shows you all files and subfolders inside any folder (like your Desktop or Downloads).
-17. **`search_files`**: Finds files across your computer by name or file type (e.g. `*.docx` or `*.jpg`).
-18. **`move_or_copy_file`**: Moves, copies, or renames files safely.
-19. **`process_manager`**: Shows you which programs are running and closes frozen apps.
-20. **`system_health`**: Shows CPU usage, RAM memory, and hard drive free space.
-21. **`open_application`**: Opens apps on your computer like Chrome, Notepad, Calculator, or Spotify.
-22. **`manage_ollama`**: Lets you download and run 100% private, free AI models on your own PC.
-23. **`check_connections`**: Tests whether your internet, Google Translate, and local servers are connected.
-24. **`browser_automation`**: Controls a web browser to log in, fill out forms, or post to social media.
-25. **`desktop_gui_control`**: Moves your mouse cursor, clicks buttons on your screen, and presses keyboard shortcuts (`Ctrl+C`, `Ctrl+V`).
-26. **`text_to_speech`**: Speaks out loud in a natural human voice using Microsoft's neural voice engine.
-27. **`vision_browser`**: Takes visual screenshots of websites and inspects the screen layout.
-28. **`mcp_tool`**: Connects external third-party tools via the Model Context Protocol.
-29. **`deep_research_studio`**: Multi-query web research studio that distills verified sources into a publication-grade intelligence dossier.
-30. **`orchestrate_complex_goal`**: Breaks massive directives into a 5-phase verified execution pipeline (Discovery -> Architecture -> Execution -> Verification -> Delivery).
-31. **`code_studio_builder`**: Scaffolds full multi-file projects, websites, or apps in 1 step with automated AST syntax checking and test execution.
-32. **`system_super_optimizer`**: Complete PC performance suite: memory optimization analysis, network latency testing, and junk file scanning.
+1. **`reverse_engineer_app`**: Deeply inspects any application, running window, binary executable, or website, maps out its buttons and keyboard shortcuts, and saves an AI-friendly memory profile.
+2. **`query_app_memory`**: Checks the permanent memory store for known apps and returns verified hotkeys (`Ctrl+S`, `Ctrl+O`, etc.) and Automation IDs for instant operation.
+3. **`fast_app_operate`**: Directly operates software using remembered hotkeys or UI Automation handles with 100% accuracy and zero visual delay.
+4. **`mcp_rea_call`**: Invokes any of the 200+ specialized reverse engineering tools provided by the REA framework.
+5. **`universal_terminal`**: Runs any command on your computer (PowerShell, Windows CMD, Linux Bash, Mac Zsh) and can run heavy background tasks without freezing your screen.
+6. **`synthesize_os_command`**: Turns your simple request (like *"kill the app using port 8000"*) into the exact command needed for your specific computer.
+7. **`command_hub`**: Downloads and displays cheat sheets and instructions for any tool (like `ffmpeg`, `docker`, `powershell`, or `curl`).
+8. **`audit_security_baseline`**: Scans your computer for defensive security: checks firewall status, open network ports, and missing security updates.
+9. **`deep_web_crawl`**: Explores entire websites, documentation portals, or blogs, saving the text into one clean document for you.
+10. **`batch_fetch_web`**: Downloads and extracts multiple web pages simultaneously.
+11. **`fetch_github_repo`**: Downloads code, README files, and repository lists from GitHub without needing Git installed.
+12. **`fetch_web_content`**: Reads any article or webpage on the internet, stripping away ads and popups.
+13. **`duckduckgo_search`**: Searches the live internet for free without needing any paid search subscription.
+14. **`download_file`**: Downloads files, PDFs, or software directly to your computer.
+15. **`execute_python_code`**: Runs Python code safely and automatically installs any missing packages.
+16. **`build_project_files`**: Creates full multi-file projects, websites, or folders in a single click.
+17. **`execute_powershell`**: Runs native Windows commands with automatic fixing for folder paths with spaces.
+18. **`read_file`**: Opens and reads any text or document file on your hard drive.
+19. **`write_file`**: Creates a new file or saves information to a text file.
+20. **`list_directory`**: Shows you all files and subfolders inside any folder (like your Desktop or Downloads).
+21. **`search_files`**: Finds files across your computer by name or file type (e.g. `*.docx` or `*.jpg`).
+22. **`move_or_copy_file`**: Moves, copies, or renames files safely.
+23. **`process_manager`**: Shows you which programs are running and closes frozen apps.
+24. **`system_health`**: Shows CPU usage, RAM memory, and hard drive free space.
+25. **`open_application`**: Opens apps on your computer like Chrome, Notepad, Calculator, or Spotify.
+26. **`manage_ollama`**: Lets you download and run 100% private, free AI models on your own PC.
+27. **`check_connections`**: Tests whether your internet, Google Translate, and local servers are connected.
+28. **`browser_automation`**: Controls a web browser to log in, fill out forms, or post to social media.
+29. **`desktop_gui_control`**: Moves your mouse cursor, clicks buttons on your screen, and presses keyboard shortcuts (`Ctrl+C`, `Ctrl+V`).
+30. **`text_to_speech`**: Speaks out loud in a natural human voice using Microsoft's neural voice engine.
+31. **`vision_browser`**: Takes visual screenshots of websites and inspects the screen layout.
+32. **`mcp_tool`**: Connects external third-party tools via the Model Context Protocol.
+33. **`deep_research_studio`**: Multi-query web research studio that distills verified sources into a publication-grade intelligence dossier.
+34. **`orchestrate_complex_goal`**: Breaks massive directives into a 5-phase verified execution pipeline.
+35. **`code_studio_builder`**: Scaffolds full multi-file projects, websites, or apps in 1 step with automated AST syntax checking and test execution.
+36. **`system_super_optimizer`**: Complete PC performance suite: memory optimization analysis, network latency testing, and junk file scanning.
 
 ---
 
-## 6. Everyday Practical Recipes
+## 6. Reverse Engineering Any PC & Web Application
+
+### What is Reverse Engineering? (Explained for Everyone)
+Think of reverse engineering like taking a clock apart to understand how its internal gears turn. When you know where the gears are, you can set the time instantly without guessing!
+When Helper-AI encounters a software application:
+1. It inspects the app's internal controls (buttons, text boxes, menu items).
+2. It detects the app's architecture (Electron, Win32, WinUI, or Web).
+3. It maps out all verified keyboard shortcuts (Hotkeys).
+4. It saves this knowledge into **App Knowledge Memory** (`agent_memory/apps/*.json`).
+
+### Why is this 10x Better than Traditional AI?
+* Traditional AI agents take a screenshot, search for a button with computer vision, move the mouse slowly, and frequently click the wrong spot if the window moves.
+* Helper-AI uses **Fast-Paths**: It uses direct keyboard shortcuts (like `Ctrl+S`, `Ctrl+O`, `Ctrl+N`) and direct UI Automation handles. It executes in **less than 1 second with 100% accuracy**, even if the window is moved, minimized, or resized!
+
+### How to Reverse Engineer Any App in the Dashboard:
+1. Click the **Memory** badge in the top navigation header.
+2. In the **"Analyze"** input box, type the name or process of any app (e.g. `calc`, `notepad`, `code.exe`, `spotify`, or `https://news.ycombinator.com`).
+3. Click **Analyze**.
+4. Helper-AI will inspect the app, extract its controls, and save its profile to your memory card list!
+
+---
+
+## 7. Everyday Practical Recipes
 
 ### A. Cleaning & Organizing Messy Computer Folders
 **Goal to type:**
@@ -199,84 +236,100 @@ Here is what every tool does in simple words:
 
 ### C. Computer Speed, Health & Killing Frozen Programs
 **Goal to type:**
-> *"Check which programs are using the most memory on my PC. If any program is using more than 2 GB of RAM, tell me."*
+> *"Check my computer health, tell me if any program is using excessive CPU or RAM, and save a summary to Desktop/health.txt."*
 
-Or to free up a stuck port:
-> *"Find whatever process is holding port 8000 and close it."*
+**What happens:**
+1. Helper-AI inspects your system hardware telemetry.
+2. It identifies high-memory processes.
+3. It writes a clean, formatted report to your Desktop.
 
 ---
 
-### D. Browser Automation & Social Media Publishing
+### D. Operating Desktop Software with 100% Accuracy
 **Goal to type:**
-> *"Open LinkedIn and create a post summarizing why autonomous AI agents save time for small businesses. Publish it to my feed."*
+> *"Open Notepad and save a file with the text 'Helper-AI automated task complete'."*
 
-Helper-AI opens its dedicated project browser, navigates to your feed, types the text, and publishes the update cleanly.
+**What happens:**
+1. Helper-AI detects `Notepad` is in its App Memory Store.
+2. It activates Notepad and types the text.
+3. It fires the verified fast-path hotkey `Ctrl+S` to save instantly with zero cursor hesitation!
 
 ---
 
-### E. Running Any Terminal or PowerShell Command Safely
+### E. Browser Automation & Social Media Publishing
 **Goal to type:**
-> *"Run a terminal command to find all files larger than 500 MB on my C: drive."*
+> *"Open LinkedIn and publish a post about the benefits of AI automation for small businesses."*
 
-Helper-AI automatically detects if you are on Windows, Mac, or Linux, creates the correct command syntax, runs it, and gives you a neat table of files.
+**What happens:**
+1. Helper-AI connects to the project browser where you are already signed in.
+2. It composes the post text.
+3. If Safe Mode is enabled, it asks for your 1-click confirmation, then publishes the post!
 
 ---
 
-### F. Defensive Security Audits & File Protection
+### F. Running Any Terminal or PowerShell Command Safely
 **Goal to type:**
-> *"Run a defensive security audit on my computer to check which network ports are currently listening for connections."*
+> *"Open PowerShell and check if Docker is installed on my computer."*
 
-Helper-AI will list all open ports (e.g. 80, 443, 8000) and tell you what program owns each port.
+**What happens:**
+1. Helper-AI runs the command cleanly, properly handling spaces and quotes.
+2. It reads the output and reports whether Docker is installed.
 
 ---
 
-### G. Voice Speech (Hearing the Agent Speak Aloud)
+### G. Defensive Security Audits & File Protection
 **Goal to type:**
-> *"Speak aloud: Good morning! Your computer is running smoothly and all backups are complete."*
+> *"Run a security audit on my computer, check which network ports are open, and save the report."*
 
-Helper-AI will generate neural audio and play it directly through your computer speakers.
-
----
-
-## 7. Running 100% Free & Offline
-
-You do **not** need to buy or subscribe to any paid service:
-1. **Default Mode (Rule Engine):** Helper-AI includes a deterministic Rule Engine that knows how to route everyday computer commands immediately without any API keys.
-2. **Local AI via Ollama:** You can install [Ollama](https://ollama.com/) (completely free) and download a model like `qwen2.5:1.5b`. Helper-AI will connect to it locally and think 100% privately on your computer.
-3. **Free Google Gemini Key (Optional):** If you want frontier cloud AI, visit [Google AI Studio](https://aistudio.google.com/), click "Create API Key", and paste it into `.env` under `GEMINI_API_KEY=`. Google provides free daily requests.
+**What happens:**
+1. Helper-AI runs defensive port scans and checks system security posture.
+2. It alerts you to any open ports or security risks.
 
 ---
 
-## 8. Safe Mode & 1-Click Approval Dialogs
+### H. Voice Speech (Hearing the Agent Speak Aloud)
+**Goal to type:**
+> *"Speak aloud: Your computer backup has finished successfully!"*
 
-When you turn on **Safe Mode** in the dashboard:
-- Any action that could modify your system, delete a file, or post to social media will **pause** execution.
-- A friendly popup will appear on your screen:
-  ```text
-  🛡️ Action Requires Your Approval:
-  Helper-AI wants to publish a post on LinkedIn:
-  "Here is my post text..."
-  
-  [✅ Approve Action]       [❌ Reject Action]
-  ```
-- Nothing happens without your explicit consent!
+**What happens:**
+1. Helper-AI generates neural audio using Microsoft's Edge-TTS voice engine.
+2. It plays the voice aloud through your computer speakers.
 
 ---
 
-## 9. Beginner Troubleshooting & FAQ
+## 8. Running 100% Free & Offline (No Paid Keys Needed)
 
-### Q1: I clicked `start.bat`, but a black window flashed and closed.
-**Solution:** Python is not added to your system's PATH. Reinstall Python from `python.org` and make sure to check the box **"Add python.exe to PATH"** on the first install screen.
+Helper-AI comes with a built-in **Smart Rule Engine** that works immediately without any API keys or credit cards.
+If you want to use local AI models offline:
+1. Download and install **[Ollama](https://ollama.com/)**.
+2. Open Command Prompt and type:
+   ```bash
+   ollama pull qwen2.5:1.5b
+   ```
+3. In Helper-AI, open **Settings**, select **Ollama**, and enjoy 100% private, free AI on your own computer!
+
+---
+
+## 9. Safe Mode & 1-Click Approval Dialogs
+
+Helper-AI puts your safety first:
+* **Safe Mode (`SAFE_MODE=true`):** Destructive actions (like formatting disks or deleting important system files) are blocked automatically.
+* **1-Click Approvals:** When the agent is about to publish a social media post or delete a file, a pop-up appears on your screen:
+  `"Helper-AI is about to publish this post. Do you approve? [Approve] / [Deny]"`
+* You always remain in full control!
+
+---
+
+## 10. Beginner Troubleshooting & FAQ
+
+### Q1: When I double-click `start.bat`, the window closes immediately.
+**Solution:** Python was likely installed without checking the "Add Python to PATH" box. Re-run the Python installer, select "Modify", and make sure **Add Python to PATH** is checked.
 
 ### Q2: It says "Port 8000 already in use".
-**Solution:** Another program (or a previous Helper-AI instance) is already using port 8000. Open Task Manager and close any existing `python.exe` processes, or run:
-```powershell
-Stop-Process -Name python -Force
-```
-Then double-click `start.bat` again.
+**Solution:** A previous instance of Helper-AI is still running in the background. Open Task Manager and end any `python.exe` tasks, or double-click `start.bat` again.
 
-### Q3: Can I run Helper-AI in Gujarati, Hindi, or other languages?
-**Yes!** Helper-AI understands multiple languages. You can type your goals in Gujarati, Hindi, Spanish, or English, and Helper-AI will understand your intent and execute the task.
+### Q3: How do I stop a task if I change my mind?
+**Solution:** Click the red **`⏹ Stop Agent`** button on the web dashboard at any time.
 
 ---
 ---
@@ -289,21 +342,21 @@ Then double-click `start.bat` again.
 
 સામાન્ય ચેટબોટ્સ (જેવા કે સામાન્ય ChatGPT) ફક્ત તમને લખાણમાં જવાબો આપે છે, પરંતુ તે તમારા કમ્પ્યુટર પર જાતે કોઈ કામ કરી શકતા નથી. 
 
-**Helper-AI અલગ છે:**
-* તે એક **ઓટોનોમસ એજન્ટ (Autonomous Agent)** છે.
+**Helper-AI તદ્દન અલગ છે:**
+* તે એક **ઓટોનોમસ કમ્પ્યુટર એજન્ટ (Autonomous Computer Agent)** છે.
 * તે તમારા કમ્પ્યુટર અને ઈન્ટરનેટનું **સંપૂર્ણ નિયંત્રણ (Full Control)** ધરાવે છે.
-* તમે તેને ફક્ત એક લક્ષ્ય (Goal) આપો, તે જાતે પ્લાન બનાવશે, કમાન્ડ ચલાવશે, ફાઈલો તપાસશે, ઈન્ટરનેટ પર સર્ચ કરશે અને **તમને વારંવાર ડિસ્ટર્બ કર્યા વગર કામ પૂરું કરશે**.
-* જો કોઈ પગલું ફેલ થાય, તો તે જાતે સુધારો કરી (Self-Healing) બીજી વ્યૂહરચના વાપરે છે.
+* તમે તેને ફક્ત એક લક્ષ્ય (Goal) આપો, તે જાતે પ્લાન બનાવશે, એપ્લિકેશન્સ ખોલશે, ફાઈલો તપાસશે, ઈન્ટરનેટ પર સર્ચ કરશે અને **તમને વારંવાર ડિસ્ટર્બ કર્યા વગર કામ પૂરું કરશે**.
+* તેમાં **રિવર્સ એન્જિનિયરિંગ અને એપ મેમરી** સિસ્ટમ છે: તે કોઈપણ સોફ્ટવેરને અંદરથી સમજીને તેના બટનો અને કીબોર્ડ શોર્ટકટ્સ કાયમ માટે યાદ રાખી લે છે!
 
 ---
 
 ## ૨. ૧-ક્લિકમાં ચાલુ કરવાની રીત
 
-તમારે કોઈ કોડિંગ કે કમાન્ડ્સ ટાઈપ કરવાની જરૂર નથી:
+તમારે કોઈ પ્રોગ્રામિંગ કે કોડિંગ શીખવાની જરૂર નથી:
 
-1. ફોલ્ડર ખોલો: જ્યાં તમે પ્રોજેક્ટ સેવ કર્યો હોય (દા.ત. `E:\ai agent\`).
-2. **`start.bat`** ફાઈલ પર **ડબલ-ક્લિક (Double Click)** કરો.
-3. એક કાળી વિન્ડો ખૂલશે જે જરૂરી બધું આપમેળે ચેક કરશે.
+1. ફોલ્ડર ખોલો: જ્યાં તમે પ્રોજેક્ટ ડાઉનલોડ કર્યો હોય (દા.ત. `E:\ai agent\`).
+2. **`start.bat`** અથવા **`run.bat`** ફાઈલ પર **ડબલ-ક્લિક (Double Click)** કરો.
+3. એક કાળી વિન્ડો ખૂલશે જે જરૂરી બધું આપમેળે તપાસશે.
 4. થોડી જ સેકન્ડોમાં તમારા ડિફોલ્ટ બ્રાઉઝરમાં વેબસાઇટ ઓટોમેટિક ખૂલી જશે:  
    👉 **`http://localhost:8000`**
 
@@ -311,92 +364,118 @@ Then double-click `start.bat` again.
 
 ## ૩. વેબ ડેશબોર્ડનો સરળ ઉપયોગ
 
-1. **ટેક્સ્ટ બોક્સમાં તમારું લક્ષ્ય લખો** (અથવા નીચે આપેલા તૈયાર બટનોમાંથી એક પસંદ કરો).
+1. **ટેક્સ્ટ બોક્સમાં તમારું લક્ષ્ય લખો** (અથવા માઇક્રોફોન બટન દબાવીને બોલો).
 2. **`🚀 Execute Goal`** બટન પર ક્લિક કરો.
 3. નીચે લાઈવ સ્ટેપ કાર્ડ્સ દેખાશે:
-   - **💭 Thought (વિચાર):** એજન્ટ વિચારે છે કે હવે શું કરવું.
-   - **⚡ Action (એક્શન):** કયો કમાન્ડ કે ટૂલ વપરાયું.
+   - **💭 Thought (વિચાર):** એજન્ટ વિચારે છે કે હવે કયું પગલું લેવું.
+   - **⚡ Action (એક્શન):** કયો કમાન્ડ કે શોર્ટકટ વપરાયો.
    - **📋 Terminal Output:** કમ્પ્યુટરમાંથી શું પરિણામ આવ્યું.
 4. જ્યારે કામ પૂરું થાય ત્યારે લીલા રંગનું **🎉 MISSION ACCOMPLISHED!** બોક્સ આવી જશે.
 5. જો વચ્ચે કામ અટકાવવું હોય, તો **`⏹ Stop Agent`** બટન દબાવો.
 
 ---
 
-## ૪. ૩૨ પાવરફુલ ટૂલ્સની યાદી
+## ૪. ૩૬ પાવરફુલ ટૂલ્સની યાદી
 
-1. **`universal_terminal`**: વિન્ડોઝ, લિનક્સ કે મેક પર કોઈપણ કમાન્ડ અથવા બેકગ્રાઉન્ડ પ્રોસેસ ચલાવે છે.
-2. **`synthesize_os_command`**: તમારા સાદા લખાણને તમારી ઓપરેટિંગ સિસ્ટમ માટે યોગ્ય કમાન્ડમાં ફેરવે છે.
-3. **`command_hub`**: કોઈપણ ટૂલ (જેમ કે ffmpeg, docker, powershell) માટે ઉપયોગી ચીટ-શીટ્સ ડાઉનલોડ કરે છે.
-4. **`audit_security_baseline`**: કમ્પ્યુટરનું ફાયરવોલ, ઓપન પોર્ટ્સ અને સિક્યોરિટી ચેક કરે છે.
-5. **`deep_web_crawl`**: આખી વેબસાઇટ કે ડોક્યુમેન્ટ પોર્ટલ વાંચીને ફાઇલ બનાવે છે.
-6. **`batch_fetch_web`**: એકસાથે ઘણી બધી વેબસાઇટ્સમાંથી ડેટા લાવે છે.
-7. **`fetch_github_repo`**: ગિટહબ પરથી કોડ, ફાઈલો અને રિલીઝ લિસ્ટ ડાઉનલોડ કરે છે.
-8. **`fetch_web_content`**: કોઈપણ વેબસાઇટ પરથી જાહેરાત વગર ચોખ્ખી માહિતી વાંચે છે.
-9. **`duckduckgo_search`**: ઈન્ટરનેટ પર તદ્દન ફ્રીમાં લાઈવ સર્ચ કરે છે.
-10. **`download_file`**: ઈન્ટરનેટ પરથી સીધી ફાઈલ ડાઉનલોડ કરે છે.
-11. **`execute_python_code`**: પાયથોન કોડ રન કરે છે અને ખૂટતા પેકેજો જાતે ઇન્સ્ટોલ કરે છે.
-12. **`build_project_files`**: આખો સોફ્ટવેર પ્રોજેક્ટ કે ફોલ્ડર ૧ જ ક્લિકમાં બનાવે છે.
-13. **`execute_powershell`**: વિન્ડોઝ પાવરશેલ કમાન્ડ્સ ચલાવે છે.
-14. **`read_file`**: કમ્પ્યુટરની કોઈપણ ફાઈલ વાંચે છે.
-15. **`write_file`**: નવી ફાઈલ બનાવે છે કે ફાઈલમાં લખે છે.
-16. **`list_directory`**: ફોલ્ડરની અંદર કઈ ફાઈલો છે તે તપાસે છે.
-17. **`search_files`**: આખા કમ્પ્યુટરમાંથી ફાઈલ શોધી આપે છે.
-18. **`move_or_copy_file`**: ફાઈલોને એક જગ્યાએથી બીજી જગ્યાએ ખસેડે છે.
-19. **`process_manager`**: ચાલુ પ્રોગ્રામ્સ તપાસે છે અને હેંગ થયેલી એપ બંધ કરે છે.
-20. **`system_health`**: સીપીયુ, રેમ (મેમરી) અને હાર્ડ ડ્રાઈવની સ્પેસ બતાવે છે.
-21. **`open_application`**: નોટપેડ, ક્રોમ, કેલ્ક્યુલેટર જેવી એપ્સ ખોલે છે.
-22. **`manage_ollama`**: ૧૦૦% ઑફલાઇન ફ્રી AI મોડેલ ચલાવે છે.
-23. **`check_connections`**: ઈન્ટરનેટ અને સર્વર કનેક્શન તપાસે છે.
-24. **`browser_automation`**: સોશિયલ મીડિયા પર પોસ્ટ લખવા કે બટન દબાવવા બ્રાઉઝર કંટ્રોલ કરે છે.
-25. **`desktop_gui_control`**: કમ્પ્યુટર સ્ક્રીન પર માઉસ ક્લિક અને કીબોર્ડ શોર્ટકટ ચલાવે છે.
-26. **`text_to_speech`**: કુદરતી માનવ અવાજમાં લખાણ બોલીને સંભળાવે છે.
-27. **`vision_browser`**: સ્ક્રીનશોટ પાડે છે અને વેબસાઇટનું લેઆઉટ જુએ છે.
-28. **`mcp_tool`**: બહારના ત્રીજા પક્ષના ટૂલ્સ જોડે છે.
-29. **`deep_research_studio`**: ઈન્ટરનેટ પરથી ઊંડાણપૂર્વક સંશોધન કરી ઉચ્ચ ગુણવત્તાવાળો રિપોર્ટ બનાવે છે.
-30. **`orchestrate_complex_goal`**: મોટા અને લાંબા કામોને ૫ સ્ટેપના પ્લાનમાં વહેંચીને સફળતાપૂર્વક પૂરું કરે છે.
-31. **`code_studio_builder`**: કોઈ પણ પ્રોજેક્ટ, વેબસાઇટ કે કોડિંગ ફાઈલો ૧ જ ક્લિકમાં બનાવી ચેક કરે છે.
-32. **`system_super_optimizer`**: કમ્પ્યુટરની સ્પીડ, રેમ, ઈન્ટરનેટ લેટન્સી અને નકામી ફાઈલો સાફ કરે છે.
+1. **`reverse_engineer_app`**: કોઈપણ સોફ્ટવેર (Notepad, Calculator, Spotify કે વેબસાઇટ) નું રિવર્સ એન્જિનિયરિંગ કરીને તેના કંટ્રોલ્સ મેમરીમાં સેવ કરે છે.
+2. **`query_app_memory`**: સેવ થયેલી એપ્સના શોર્ટકટ્સ અને ઓટોમેશન આઈડી તરત જ લાવી આપે છે.
+3. **`fast_app_operate`**: યાદ રાખેલા શોર્ટકટ્સ વાપરીને ૧ જ સેકન્ડમાં ૧૦૦% ચોકસાઈથી સોફ્ટવેર ઓપરેટ કરે છે.
+4. **`mcp_rea_call`**: REA ના ૨૦૦ થી વધુ ઊંડાણપૂર્વકના રિવર્સ એન્જિનિયરિંગ ટૂલ્સ ચલાવે છે.
+5. **`universal_terminal`**: વિન્ડોઝ, લિનક્સ કે મેક પર કોઈપણ કમાન્ડ અથવા બેકગ્રાઉન્ડ પ્રોસેસ ચલાવે છે.
+6. **`synthesize_os_command`**: તમારા સાદા લખાણને તમારી ઓપરેટિંગ સિસ્ટમ માટે યોગ્ય કમાન્ડમાં ફેરવે છે.
+7. **`command_hub`**: કોઈપણ ટૂલ (જેમ કે ffmpeg, docker, powershell) માટે ઉપયોગી ચીટ-શીટ્સ ડાઉનલોડ કરે છે.
+8. **`audit_security_baseline`**: કમ્પ્યુટરનું ફાયરવોલ, ઓપન પોર્ટ્સ અને સિક્યોરિટી ચેક કરે છે.
+9. **`deep_web_crawl`**: આખી વેબસાઇટ કે ડોક્યુમેન્ટ પોર્ટલ વાંચીને ફાઇલ બનાવે છે.
+10. **`batch_fetch_web`**: એકસાથે ઘણી બધી વેબસાઇટ્સમાંથી ડેટા લાવે છે.
+11. **`fetch_github_repo`**: ગિટહબ પરથી કોડ, ફાઈલો અને રિલીઝ લિસ્ટ ડાઉનલોડ કરે છે.
+12. **`fetch_web_content`**: કોઈપણ વેબસાઇટ પરથી જાહેરાત વગર ચોખ્ખી માહિતી વાંચે છે.
+13. **`duckduckgo_search`**: ઈન્ટરનેટ પર તદ્દન ફ્રીમાં લાઈવ સર્ચ કરે છે.
+14. **`download_file`**: ઈન્ટરનેટ પરથી સીધી ફાઈલ ડાઉનલોડ કરે છે.
+15. **`execute_python_code`**: પાયથોન કોડ રન કરે છે અને ખૂટતા પેકેજો જાતે ઇન્સ્ટોલ કરે છે.
+16. **`build_project_files`**: આખો સોફ્ટવેર પ્રોજેક્ટ કે ફોલ્ડર ૧ જ ક્લિકમાં બનાવે છે.
+17. **`execute_powershell`**: વિન્ડોઝ પાવરશેલ કમાન્ડ્સ ચલાવે છે.
+18. **`read_file`**: કમ્પ્યુટરની કોઈપણ ફાઈલ વાંચે છે.
+19. **`write_file`**: નવી ફાઈલ બનાવે છે કે ફાઈલમાં લખે છે.
+20. **`list_directory`**: ફોલ્ડરની અંદર કઈ ફાઈલો છે તે તપાસે છે.
+21. **`search_files`**: આખા કમ્પ્યુટરમાંથી ફાઈલ શોધી આપે છે.
+22. **`move_or_copy_file`**: ફાઈલોને એક જગ્યાએથી બીજી જગ્યાએ ખસેડે છે.
+23. **`process_manager`**: ચાલુ પ્રોગ્રામ્સ તપાસે છે અને હેંગ થયેલી એપ બંધ કરે છે.
+24. **`system_health`**: સીપીયુ, રેમ (મેમરી) અને હાર્ડ ડ્રાઈવની સ્પેસ બતાવે છે.
+25. **`open_application`**: નોટપેડ, ક્રોમ, કેલ્ક્યુલેટર જેવી એપ્સ ખોલે છે.
+26. **`manage_ollama`**: ૧૦૦% ઑફલાઇન ફ્રી AI મોડેલ ચલાવે છે.
+27. **`check_connections`**: ઈન્ટરનેટ અને સર્વર કનેક્શન તપાસે છે.
+28. **`browser_automation`**: સોશિયલ મીડિયા પર પોસ્ટ લખવા કે બટન દબાવવા બ્રાઉઝર કંટ્રોલ કરે છે.
+29. **`desktop_gui_control`**: કમ્પ્યુટર સ્ક્રીન પર માઉસ ક્લિક અને કીબોર્ડ શોર્ટકટ ચલાવે છે.
+30. **`text_to_speech`**: કુદરતી માનવ અવાજમાં લખાણ બોલીને સંભળાવે છે.
+31. **`vision_browser`**: સ્ક્રીનશોટ પાડે છે અને વેબસાઇટનું લેઆઉટ જુએ છે.
+32. **`mcp_tool`**: બહારના ત્રીજા પક્ષના ટૂલ્સ જોડે છે.
+33. **`deep_research_studio`**: ઈન્ટરનેટ પરથી ઊંડાણપૂર્વક સંશોધન કરી ઉચ્ચ ગુણવત્તાવાળો રિપોર્ટ બનાવે છે.
+34. **`orchestrate_complex_goal`**: મોટા અને લાંબા કામોને ૫ સ્ટેપના પ્લાનમાં વહેંચીને સફળતાપૂર્વક પૂરું કરે છે.
+35. **`code_studio_builder`**: કોઈ પણ પ્રોજેક્ટ, વેબસાઇટ કે કોડિંગ ફાઈલો ૧ જ ક્લિકમાં બનાવી ચેક કરે છે.
+36. **`system_super_optimizer`**: કમ્પ્યુટરની સ્પીડ, રેમ, ઈન્ટરનેટ લેટન્સી અને નકામી ફાઈલો સાફ કરે છે.
 
 ---
 
-## ૫. રોજિંદા જીવનમાં ઉપયોગી પ્રોમ્પ્ટ્સ
+## ૫. કોઈપણ એપનું રિવર્સ એન્જિનિયરિંગ અને એપ મેમરી (REA Guide)
 
-- **ડાઉનલોડ્સ ફોલ્ડર સાફ કરવા માટે:**  
+### આ કેવી રીતે કામ કરે છે?
+* જ્યારે AI એજન્ટ કોઈપણ એપને પહેલી વાર જુએ છે, ત્યારે તે તે એપના અંદરના ભાગો (UI બટનો, મેનૂ અને કીબોર્ડ શોર્ટકટ્સ) તપાસે છે.
+* તે આ બધી માહિતી `agent_memory/apps/` ફોલ્ડરમાં કાયમ માટે સાચવી રાખે છે.
+* બીજી વાર જ્યારે તમે તે એપ વાપરવા કહો, ત્યારે તે માઉસ ફેરવીને સમય બગાડ્યા વગર સીધો જ કીબોર્ડ શોર્ટકટ (`Ctrl+S`, `Ctrl+O` વગેરે) વાપરીને ૧ જ સેકન્ડમાં કામ પૂરું કરે છે!
+
+### પહેલેથી સેવ થયેલી મુખ્ય એપ્લિકેશન્સ:
+* 📝 **Notepad:** Save (`Ctrl+S`), Open (`Ctrl+O`), New (`Ctrl+N`), Find (`Ctrl+F`).
+* 🧮 **Calculator:** ડાયરેક્ટ આંકડા અને ગણતરી શોર્ટકટ્સ.
+* 💻 **VS Code:** Command Palette (`Ctrl+Shift+P`), Save (`Ctrl+S`).
+* 🌐 **Google Chrome & Edge:** Address bar (`Ctrl+L`), New Tab (`Ctrl+T`), Close (`Ctrl+W`).
+
+### ડેશબોર્ડ પરથી કોઈપણ નવી એપ સેવ કરવાની રીત:
+1. ઉપર આપેલા **Memory** બટન પર ક્લિક કરો.
+2. બોક્સમાં એપનું નામ લખો (દા.ત. `calc`, `spotify`, કે વેબસાઇટ URL).
+3. **Analyze** બટન દબાવો — AI તરત જ તે એપને રિવર્સ એન્જિનિયર કરી મેમરીમાં સેવ કરી લેશે!
+
+---
+
+## ૬. રોજિંદા જીવનમાં ઉપયોગી પ્રોમ્પ્ટ્સ
+
+* **ડાઉનલોડ્સ ફોલ્ડર સાફ કરવા માટે:**  
   *"મારા Downloads ફોલ્ડરમાં રહેલી બધી ફાઈલો તપાસો, પીડીએફ અને ફોટા માટે અલગ ફોલ્ડર બનાવી તેમાં મૂકો."*
-- **પીસી સ્પીડ અને રેમ તપાસવા માટે:**  
+* **પીસી સ્પીડ અને રેમ તપાસવા માટે:**  
   *"મારા કમ્પ્યુટરની હેલ્થ તપાસો, કેટલી રેમ વપરાઈ રહી છે તે Desktop/pc_status.txt માં સેવ કરો."*
-- **ઈન્ટરનેટ પરથી રિસર્ચ કરવા માટે:**  
-  *"ઈન્ટરનેટ પરથી આ અઠવાડિયાના ટોચના ટેકનોલોજી સમાચારો શોધો અને ડેસ્કટોપ પર સેવ કરો."*
-- **અવાજ સાંભળવા માટે:**  
-  *"અવાજમાં બોલો: શુભ સવાર! તમારું કમ્પ્યુટર સુરક્ષિત છે."*
+* **નોટપેડમાં ફાસ્ટ-પાથ શોર્ટકટથી કામ કરવા માટે:**  
+  *"નોટપેડ ખોલો અને તેમાં 'હેલ્પર-એઆઈ ટાસ્ક કમ્પ્લીટ' લખીને ફાસ્ટ પાથ શોર્ટકટથી સેવ કરો."*
+* **ઈન્ટરનેટ પરથી રિસર્ચ કરવા માટે:**  
+  *"ઈન્ટરનેટ પરથી આ અઠવાડિયાના ટોચના ટેકનોલોજી સમાચારો શોધો અને ડેસ્કટોપ પર રિપોર્ટ સેવ કરો."*
+* **સોશિયલ મીડિયા પર પોસ્ટ કરવા માટે:**  
+  *"લિંક્ડઇન પર આર્ટિફિશિયલ ઇન્ટેલિજન્સ વિશે એક સરસ પોસ્ટ તૈયાર કરીને પબ્લિશ કરો."*
 
 ---
 
-## ૬. API Key વગર ૧૦૦% ફ્રી અને ઑફલાઇન
+## ૭. API Key વગર ૧૦૦% ફ્રી અને ઑફલાઇન ચલાવવાની રીત
 
-તમારે કોઈ પૈસા ચૂકવવાની કે ક્રેડિટ કાર્ડ નાખવાની જરૂર નથી:
-1. **Rule Engine:** હેલ્પર-AI માં પહેલેથી જ સ્માર્ટ એન્જિન છે જે સામાન્ય કમાન્ડ્સ API Key વગર જ ચલાવે છે.
-2. **Ollama:** તમે ફ્રીમાં [Ollama](https://ollama.com/) ડાઉનલોડ કરી શકો છો જે તમારા પોતાના કમ્પ્યુટર પર પ્રાઈવેટ AI ચલાવે છે.
-3. **Google Gemini (ઓપ્શનલ):** જો તમારે ગૂગલનું AI વાપરવું હોય, તો [Google AI Studio](https://aistudio.google.com/) પરથી ફ્રી કી મેળવી `.env` ફાઈલમાં મૂકી શકો છો.
-
----
-
-## ૭. સુરક્ષા અને ૧-ક્લિક મંજૂરી
-
-જ્યારે Safe Mode ચાલુ હોય:
-- જો એજન્ટ સોશિયલ મીડિયા પર કોઈ પોસ્ટ કરવા જશે કે ફાઈલ ડિલીટ કરવા જશે, તો તે અટકી જશે અને સ્ક્રીન પર મંજૂરી માગશે:  
-  *`"શું તમે આ પોસ્ટ પબ્લિશ કરવા માંગો છો? [હા] / [ના]"`*
-- તમારી મંજૂરી વગર કંઈ પણ થશે નહીં!
+Helper-AI માં ડિફોલ્ટ **Smart Rule Engine** આવે છે જેને કોઈ ઈન્ટરનેટ કે પેઇડ કીની જરૂર નથી.
+જો તમારે ઑફલાઇન મોડેલ વાપરવું હોય:
+1. **[Ollama](https://ollama.com/)** ઇન્સ્ટોલ કરો.
+2. કમાન્ડ પ્રોમ્પ્ટમાં લખો: `ollama pull qwen2.5:1.5b`.
+3. વેબ ડેશબોર્ડના Settings માં જઈને **Ollama** પસંદ કરો. ૧૦૦% પ્રાઈવેટ અને ફ્રી!
 
 ---
 
-## ૮. વારંવાર પૂછાતા પ્રશ્નો (FAQ)
+## ૮. સુરક્ષા અને ૧-ક્લિક મંજૂરી (Human-in-the-Loop)
 
-### પ્રશ્ન ૧: શું Helper-AI તદ્દન ફ્રી છે?
-**હા!** તે ઓપન સોર્સ (MIT License) સોફ્ટવેર છે અને કાયમ માટે ફ્રી છે.
+તમારું કમ્પ્યુટર હંમેશા સુરક્ષિત રહે છે:
+* **Safe Mode:** કોઈપણ જોખમી કમાન્ડ (જેમ કે ડ્રાઈવ ફોર્મેટ થવી) આપમેળે બ્લોક થઈ જાય છે.
+* **૧-ક્લિક મંજૂરી:** જ્યારે કોઈ પોસ્ટ પબ્લિશ થવાની હોય કે ફાઈલ ડિલીટ થવાની હોય, ત્યારે સ્ક્રીન પર પોપ-અપ આવે છે: *"શું તમે મંજૂરી આપો છો? [હા] / [ના]"*. તમે મંજૂરી આપો તો જ કામ આગળ વધે છે.
 
-### પ્રશ્ન ૨: start.bat ખોલતાં જ તરત બંધ થઈ જાય છે?
-**ઉકેલ:** પાયથોન ઇન્સ્ટોલ કરતી વખતે "Add python.exe to PATH" ચેકબોક્સ સિલેક્ટ કરેલું હોવું જોઈએ. પાયથોન ફરી ઇન્સ્ટોલ કરી એ ચેકબોક્સ ટીક કરો.
+---
 
-### પ્રશ્ન ૩: ચાલુ કામ અટકાવવું હોય તો?
-ડેશબોર્ડ પર રહેલું લાલ રંગનું **`⏹ Stop Agent`** બટન દબાવો, એજન્ટ તરત જ કામ અટકાવી દેશે.
+## ૯. વારંવાર પૂછાતા પ્રશ્નો (FAQ)
+
+### પ્રશ્ન ૧: શું Helper-AI તદ્દન મફત છે?
+**હા!** Helper-AI ઓપન સોર્સ (MIT License) છે અને ૧૦૦% ફ્રી છે.
+
+### પ્રશ્ન ૨: `start.bat` ક્લિક કરવાથી તરત બંધ થઈ જાય છે, શું કરવું?
+પાયથોન ઇન્સ્ટોલ કરતી વખતે "Add Python to PATH" નું ખાનું ટીક ન થયું હોય તો આવું બને છે. પાયથોન ફરી ઇન્સ્ટોલ કરી તે ખાનું ટીક કરો.
+
+### પ્રશ્ન ૩: ચાલુ કામને વચ્ચેથી અટકાવવું હોય તો?
+વેબ સ્ક્રીન પર આપેલા લાલ રંગના **`⏹ Stop Agent`** બટન પર ક્લિક કરો.

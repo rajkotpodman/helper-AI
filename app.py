@@ -425,8 +425,46 @@ async def get_quick_ideas():
             {"id": "pc_health", "icon": "💻", "title": "PC Health Diagnostic", "prompt": "Check my PC health, CPU, RAM and disk usage"},
             {"id": "ai_research", "icon": "🔍", "title": "Web Research Report", "prompt": "Search the web for top 5 AI agent frameworks and write summary to Desktop"},
             {"id": "clean_downloads", "icon": "📁", "title": "Inspect Downloads", "prompt": "List the largest files in my Downloads folder"},
-            {"id": "sysinfo_desktop", "icon": "📄", "title": "System Info to Desktop", "prompt": "Open PowerShell, test git version and write system info to Desktop/sysinfo.txt"}
+            {"id": "sysinfo_desktop", "icon": "📄", "title": "System Info to Desktop", "prompt": "Open PowerShell, test git version and write system info to Desktop/sysinfo.txt"},
+            {"id": "reverse_engineer_app", "icon": "🧩", "title": "Reverse Engineer App", "prompt": "Reverse engineer Notepad, extract its UI automation controls, and save it to app memory"}
         ]
+    }
+
+class ReverseEngineerRequest(BaseModel):
+    target: str
+    depth: Optional[str] = "deep"
+    save_to_memory: Optional[bool] = True
+
+@app.get("/api/apps/memory")
+async def list_app_memories():
+    from core.reverse_engineering.app_memory_store import AppMemoryStore
+    store = AppMemoryStore.get_instance()
+    return {"profiles": store.list_all_profiles()}
+
+@app.get("/api/apps/memory/{slug}")
+async def get_app_memory(slug: str):
+    from core.reverse_engineering.app_memory_store import AppMemoryStore
+    store = AppMemoryStore.get_instance()
+    prof = store.get_app_profile(slug)
+    if not prof:
+        return JSONResponse(status_code=404, content={"error": f"App '{slug}' not found in memory"})
+    return {"profile": prof, "prompt": store.format_for_ai_prompt(prof)}
+
+@app.post("/api/apps/reverse-engineer")
+async def trigger_reverse_engineer(req: ReverseEngineerRequest):
+    from core.reverse_engineering.app_analyzer import ReverseEngineeringEngine
+    engine = ReverseEngineeringEngine.get_instance()
+    result = await asyncio.to_thread(engine.reverse_engineer, target=req.target, depth=req.depth or "deep", save_to_memory=req.save_to_memory if req.save_to_memory is not None else True)
+    return result
+
+@app.get("/api/rea/status")
+async def get_rea_status():
+    from core.reverse_engineering.rea_bridge import REABridge
+    bridge = REABridge.get_instance()
+    return {
+        "available": bridge.is_available(),
+        "version": bridge.get_version(),
+        "tools_count": len(bridge.list_mcp_tools())
     }
 
 # Mount screenshots directory

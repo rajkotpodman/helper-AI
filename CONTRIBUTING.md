@@ -26,9 +26,11 @@ All contributors and maintainers are expected to adhere to our [Code of Conduct]
 
 ### 1. Requirements
 - **Python:** 3.10, 3.11, or 3.12
+- **Node.js & npm (Optional, for REA reverse engineering):** Node 22.x or 24.x+
 - **Operating System:** Windows 10/11, Ubuntu 20.04+, or macOS 12+
 - **Git:** 2.30+
 - **Optional Tools:** Docker Desktop, Google Chrome (for Selenium / Playwright automation), Ollama (for offline LLM testing).
+
 
 ### 2. Fork and Clone
 ```bash

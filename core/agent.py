@@ -125,6 +125,27 @@ class HelperAgent:
         emit("started", {"goal": goal, "system_info": memory.system_info})
         tool_schemas_json = self.tools.get_concise_schema_text()
 
+        # Check if goal targets a remembered application profile
+        try:
+            from core.reverse_engineering.app_memory_store import AppMemoryStore
+            app_store = AppMemoryStore.get_instance()
+            matched_profile = app_store.find_matching_profile_for_goal(goal)
+            if matched_profile:
+                ai_instruction = app_store.format_for_ai_prompt(matched_profile)
+                memory.add_step(
+                    f"Autonomous App Memory Retrieval: Loaded fast-path profile for '{matched_profile.get('app_name')}'",
+                    "query_app_memory",
+                    {"action": "get", "app_name": matched_profile.get("app_slug")},
+                    ai_instruction,
+                    True
+                )
+                emit("status_update", {
+                    "step": 0,
+                    "message": f"⚡ Loaded AI-friendly memory for '{matched_profile.get('app_name')}'. Hotkeys and Automation IDs ready for 100% accurate operation."
+                })
+        except Exception as e:
+            logger.warning(f"Could not query proactive app memory: {e}")
+
         final_message = ""
         success = False
 

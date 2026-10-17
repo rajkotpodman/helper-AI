@@ -1,0 +1,25 @@
+{
+  "app_name": "Google Chrome",
+  "app_slug": "chrome",
+  "process_name": "chrome.exe",
+  "app_type": "web_browser",
+  "window_matchers": [
+    "Google Chrome"
+  ],
+  "reverse_engineering_summary": "Chromium multi-process browser. Address bar focused instantly via Ctrl+L. Tabs operated directly via hotkeys.",
+  "fast_path": {
+    "launch_command": "start chrome",
+    "keyboard_shortcuts": {
+      "focus_address_bar": "ctrl+l",
+      "new_tab": "ctrl+t",
+      "close_tab": "ctrl+w",
+      "reopen_closed_tab": "ctrl+shift+t",
+      "reload": "ctrl+r",
+      "downloads": "ctrl+j",
+      "history": "ctrl+h",
+      "incognito": "ctrl+shift+n"
+    },
+    "ui_controls": []
+  },
+  "last_updated": "2026-10-17T11:49:14.751891"
+}

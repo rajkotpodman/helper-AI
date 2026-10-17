@@ -1,0 +1,27 @@
+{
+  "app_name": "example.com",
+  "app_slug": "example_com",
+  "process_name": "chrome.exe",
+  "app_type": "web_application",
+  "window_matchers": [
+    "example.com"
+  ],
+  "reverse_engineering_summary": "Web application at https://example.com. Host: example.com.",
+  "fast_path": {
+    "launch_command": "start https://example.com",
+    "keyboard_shortcuts": {
+      "reload": "ctrl+r",
+      "focus_address": "ctrl+l",
+      "find": "ctrl+f"
+    },
+    "ui_controls": [
+      {
+        "name": "Main URL",
+        "type": "WebNavigation",
+        "automation_id": "https://example.com"
+      }
+    ]
+  },
+  "rea_inspection": {},
+  "last_updated": "2026-10-17T12:12:07.481808"
+}

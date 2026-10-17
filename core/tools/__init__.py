@@ -43,6 +43,12 @@ from core.tools.superpower_tools import (
     CodeStudioBuilderTool,
     SystemSuperOptimizerTool
 )
+from core.tools.reverse_engineering_tools import (
+    ReverseEngineerAppTool,
+    QueryAppMemoryTool,
+    FastAppOperateTool,
+    McpReaCallTool
+)
 
 class ToolRegistry:
     """Central registry of all tools available to Helper-AI."""
@@ -87,7 +93,11 @@ class ToolRegistry:
             DeepResearchStudioTool(),
             OrchestrateComplexGoalTool(),
             CodeStudioBuilderTool(),
-            SystemSuperOptimizerTool()
+            SystemSuperOptimizerTool(),
+            ReverseEngineerAppTool(),
+            QueryAppMemoryTool(),
+            FastAppOperateTool(),
+            McpReaCallTool()
         ]
         for t in defaults:
             self.register(t)

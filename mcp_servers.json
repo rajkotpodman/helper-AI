@@ -1,5 +1,15 @@
 {
   "mcpServers": {
+    "rea": {
+      "description": "REA: Reverse Engineer Anything across binaries, applications, and runtime behavior",
+      "command": "npx",
+      "args": [
+        "-y",
+        "rea-agents@latest",
+        "--mcp"
+      ],
+      "enabled": true
+    },
     "sqlite_demo": {
       "description": "Local SQLite database inspector (MCP reference)",
       "command": "python",

@@ -1,0 +1,42 @@
+{
+  "app_name": "Notepad",
+  "app_slug": "notepad",
+  "process_name": "notepad.exe",
+  "app_type": "native_win32",
+  "window_matchers": [
+    "Notepad",
+    "Untitled - Notepad"
+  ],
+  "reverse_engineering_summary": "Standard Windows text editor. Has Edit control (AutomationId 15) and Menu bar. Direct hotkeys allow instant document operations.",
+  "fast_path": {
+    "launch_command": "notepad",
+    "keyboard_shortcuts": {
+      "save": "ctrl+s",
+      "save_as": "ctrl+shift+s",
+      "open": "ctrl+o",
+      "new": "ctrl+n",
+      "find": "ctrl+f",
+      "replace": "ctrl+h",
+      "select_all": "ctrl+a",
+      "exit": "alt+f4"
+    },
+    "ui_controls": [
+      {
+        "name": "Text Editor",
+        "type": "Edit",
+        "automation_id": "15"
+      },
+      {
+        "name": "File",
+        "type": "MenuItem",
+        "automation_id": "Item 1"
+      },
+      {
+        "name": "Edit",
+        "type": "MenuItem",
+        "automation_id": "Item 2"
+      }
+    ]
+  },
+  "last_updated": "2026-10-17T11:49:14.751891"
+}

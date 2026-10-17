@@ -1,0 +1,22 @@
+{
+  "app_name": "Microsoft Edge",
+  "app_slug": "edge",
+  "process_name": "msedge.exe",
+  "app_type": "web_browser",
+  "window_matchers": [
+    "Microsoft Edge"
+  ],
+  "reverse_engineering_summary": "Windows default Chromium browser. Address bar (Ctrl+L), DevTools (F12), Tabs (Ctrl+T/Ctrl+W).",
+  "fast_path": {
+    "launch_command": "start msedge",
+    "keyboard_shortcuts": {
+      "focus_address_bar": "ctrl+l",
+      "new_tab": "ctrl+t",
+      "close_tab": "ctrl+w",
+      "reload": "ctrl+r",
+      "favorites": "ctrl+shift+o"
+    },
+    "ui_controls": []
+  },
+  "last_updated": "2026-10-17T11:49:14.751891"
+}

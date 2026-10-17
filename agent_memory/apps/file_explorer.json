@@ -1,0 +1,24 @@
+{
+  "app_name": "File Explorer",
+  "app_slug": "file_explorer",
+  "process_name": "explorer.exe",
+  "app_type": "native_win32",
+  "window_matchers": [
+    "File Explorer",
+    "This PC"
+  ],
+  "reverse_engineering_summary": "Windows Shell File Manager. Alt+D focuses the address bar instantly to paste or type paths. Ctrl+Shift+N creates new folder.",
+  "fast_path": {
+    "launch_command": "explorer",
+    "keyboard_shortcuts": {
+      "focus_address_bar": "alt+d",
+      "new_folder": "ctrl+shift+n",
+      "rename": "f2",
+      "search": "ctrl+e",
+      "new_window": "ctrl+n",
+      "properties": "alt+enter"
+    },
+    "ui_controls": []
+  },
+  "last_updated": "2026-10-17T11:49:14.751891"
+}

@@ -1,0 +1,24 @@
+{
+  "app_name": "Visual Studio Code",
+  "app_slug": "vscode",
+  "process_name": "Code.exe",
+  "app_type": "electron",
+  "window_matchers": [
+    "Visual Studio Code"
+  ],
+  "reverse_engineering_summary": "Electron code editor. IPC channels handle window and workbench actions. Command palette is fastest entrypoint for any action.",
+  "fast_path": {
+    "launch_command": "code",
+    "keyboard_shortcuts": {
+      "command_palette": "ctrl+shift+p",
+      "quick_open": "ctrl+p",
+      "save": "ctrl+s",
+      "toggle_terminal": "ctrl+`",
+      "find": "ctrl+f",
+      "close_editor": "ctrl+w",
+      "split_editor": "ctrl+\\"
+    },
+    "ui_controls": []
+  },
+  "last_updated": "2026-10-17T11:49:14.751891"
+}

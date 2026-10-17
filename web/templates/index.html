@@ -421,7 +421,33 @@
         </div>
       </div>
 
-      <div class="flex items-center justify-between pt-2">
+      <!-- Reverse-Engineered Application Knowledge Store -->
+      <div class="mt-4 pt-4 border-t border-white/10">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+            <i data-lucide="cpu" class="w-4 h-4 text-cyan-400"></i> Reverse-Engineered App Profiles (100% Fast-Path)
+          </h4>
+          <span id="re-status-badge" class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono">REA 6.5.0 Active</span>
+        </div>
+        <p class="text-[11px] text-slate-400 mb-3">
+          AI stores UI Automation maps & keyboard shortcuts so future tasks on these apps run with 100% accuracy and 0 latency.
+        </p>
+
+        <!-- Quick Analyze Box -->
+        <div class="flex gap-2 mb-3">
+          <input id="input-re-target" type="text" placeholder="Target app, process, or URL (e.g. Notepad, calc, code.exe)" class="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+          <button id="btn-trigger-re" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1">
+            <i data-lucide="scan" class="w-3.5 h-3.5"></i> Analyze
+          </button>
+        </div>
+
+        <!-- App Profiles List -->
+        <div id="app-memory-cards-container" class="max-h-48 overflow-y-auto space-y-2 pr-1 text-xs">
+          <div class="text-slate-500 text-center py-2">Loading remembered applications...</div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t border-white/10 mt-4">
         <button id="btn-reset-memory-modal" class="px-3.5 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-xs border border-red-500/30">
           Clear & Reset Log
         </button>
