@@ -227,7 +227,7 @@ class LLMClient:
             elif self.provider in ["custom", "universal", "any"]:
                 self.model = os.getenv("CUSTOM_LLM_MODEL") or os.getenv("UNIVERSAL_LLM_MODEL") or "default"
             elif self.provider == "ollama":
-                self.model = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
+                self.model = os.getenv("OLLAMA_MODEL", "dolphin-llama3")
             else:
                 self.model = "rule_engine"
 
@@ -973,31 +973,42 @@ class LLMClient:
             if r.status_code == 200:
                 installed_models = [m.get("name", "") for m in r.json().get("models", [])]
                 if not installed_models:
-                    return target or "qwen2.5:1.5b"
+                    return target or "dolphin-llama3"
 
                 # 1. Exact match
                 for m in installed_models:
                     if m.lower() == target:
                         return m
 
-                # 2. Check for prefix or alias (e.g. quiene/qwen -> qwen2.5:1.5b)
+                # 2. Check for dolphin match (compulsory local model)
+                if "dolphin" in target:
+                    for m in installed_models:
+                        if "dolphin" in m.lower():
+                            return m
+
+                # 3. Check for prefix or alias (e.g. quiene/qwen -> qwen2.5:1.5b)
                 target_clean = target.replace("quiene", "qwen")
                 for m in installed_models:
                     m_lower = m.lower()
                     if target_clean and (target_clean in m_lower or m_lower.startswith(target_clean)):
                         return m
 
-                # 3. If target contains llama
+                # 4. If target contains llama
                 if "llama" in target_clean:
                     for m in installed_models:
                         if "llama" in m.lower():
                             return m
 
-                # 4. Fallback to first available model
+                # 5. Check if dolphin is installed among models
+                for m in installed_models:
+                    if "dolphin" in m.lower():
+                        return m
+
+                # 6. Fallback to first available model
                 return installed_models[0]
         except Exception:
             pass
-        return target or "qwen2.5:1.5b"
+        return target or "dolphin-llama3"
 
     def _call_ollama(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
         base_url = self.base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")

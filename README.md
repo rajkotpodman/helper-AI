@@ -97,6 +97,32 @@ You will see the dark-themed control center. Simply type what you want in plain 
 
 ---
 
+## 🐬 Compulsory Local AI: Dolphin-2.9-Llama3 & Zero-Touch Installer
+
+Helper-AI includes native, compulsory support for **Eric Hartford's Dolphin-2.9-Llama3 (8B)**, an uncensored, state-of-the-art local LLM designed specifically for unrestricted autonomous agent execution.
+
+### Why Dolphin-2.9-Llama3 is Compulsory:
+1. **Uncensored Autonomous Execution:** Unlike standard corporate cloud models that trigger refusals when asked to inspect files, edit system settings, or run PowerShell scripts, Dolphin executes all local automation tasks obediently and reliably.
+2. **100% Free & Offline:** Zero monthly subscription fees, zero API key limits, and 100% privacy—runs entirely on your local machine.
+3. **Optimized for 8GB+ RAM:** Runs seamlessly on standard consumer hardware with Q4 quantization and CPU/GPU offloading.
+
+### ⚡ 1-Click Zero-Touch Setup (`setup_dolphin_ai.bat`):
+If you or any user does not have Ollama installed or Dolphin downloaded:
+1. Double-click **`setup_dolphin_ai.bat`** (or `start.bat`).
+2. Helper-AI automatically:
+   - Detects your operating system.
+   - Downloads and silently installs the official Ollama platform if missing.
+   - Starts the Ollama background daemon on port 11434.
+   - Pulls the latest `dolphin-llama3` model from the registry.
+   - Configures `.env` with `LLM_PROVIDER=ollama` and `OLLAMA_MODEL=dolphin-llama3`.
+   - Runs a live automated test verification prompt: `"hello i m helper ai"`.
+   - Launches the live Helper-AI Web UI at `http://localhost:8000`.
+
+### 🔄 Automatic Fallback Support:
+If your system is temporarily constrained on storage or network bandwidth, the bootstrapper automatically detects and falls back to lighter models (`llama3.2:3b` or `qwen2.5:1.5b`) so you are never left without an operational agent.
+
+---
+
 ## 🧩 REA: Reverse Engineer Anything & AI App Memory Store
 
 One of Helper-AI's most revolutionary capabilities is its integration with **REA (Reverse Engineer Anything)** and its **Persistent App Knowledge Memory Store**:

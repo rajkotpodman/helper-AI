@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.0] - 2026-10-17
+
+### 🐬 Compulsory Dolphin-2.9-Llama3 Local Model & Zero-Touch Auto-Installer
+- **Compulsory Local AI Engine (`dolphin-llama3:8b`):**
+  - Integrated Eric Hartford's Dolphin 2.9 (Llama 3 8B) as the premier compulsory local AI engine for Helper-AI.
+  - Zero refusals: Uncensored weights enable unrestricted, obedient PC control, tool calling, and automation without corporate refusal blocks.
+  - Updated `core/llm.py` with `dolphin-llama3` defaults, automatic model alias resolution, and fallback cascades.
+- **Zero-Touch Bootstrapper & Auto-Installer (`core/auto_setup_ollama.py`):**
+  - Cross-platform detection and silent installation of the official Ollama platform if missing (`OllamaSetup.exe /silent` on Windows, official shell script on Linux/macOS).
+  - Background daemon health checker and automatic spawn on port 11434.
+  - Streaming model pull with percent progress reporting.
+  - Automatic `.env` configuration (`LLM_PROVIDER=ollama`, `OLLAMA_MODEL=dolphin-llama3`).
+  - Automated first-prompt validation test (`"hello i m helper ai"`) ensuring live end-to-end responsiveness.
+- **1-Click Launchers (`setup_dolphin_ai.bat`, `start.bat`):**
+  - Added dedicated `setup_dolphin_ai.bat` 1-click Windows installer script.
+  - Updated `start.bat` to proactively ensure Ollama and Dolphin models are ready before launching the dashboard.
+- **Web UI & API Endpoints (`app.py`, `web/templates/index.html`, `web/static/js/app.js`):**
+  - Added `GET /api/ollama/status` and `POST /api/setup/ollama-dolphin` endpoints.
+  - Added Dolphin AI status pill with real-time status in top navigation bar (`Online`, `Pulling`, `Ready`).
+  - Added 1-click model preset chips for Dolphin-2.9-Llama3, Llama 3.2 3B, Qwen 2.5 Coder 1.5B, and Qwen 2.5 1.5B.
+  - Added 1-click Zero-Touch Auto-Setup button directly inside the settings modal with live feedback.
+- **Test Suite (`tests/test_dolphin_ollama_setup.py`):**
+  - Added 5 unit tests verifying status API, Ollama detection, LLM defaults, and model resolution (5/5 passed).
+
+---
+
 ## [2.3.0] - 2026-10-17
 
 ### 🚀 Advanced Superpower Paradigms: Persistent Shell, Windows UIA, and Web Set-of-Marks

@@ -437,9 +437,32 @@ async def get_system_status():
         "tools_registered": len(tools.get_all_tools()),
         "memory_file_size_mb": memory_recorder.get_size_mb(),
         "memory_entries": memory_recorder.get_entry_count(),
-        "provider": os.getenv("LLM_PROVIDER", "gemini"),
+        "provider": os.getenv("LLM_PROVIDER", "ollama"),
+        "ollama_model": os.getenv("OLLAMA_MODEL", "dolphin-llama3"),
         "safe_mode": os.getenv("SAFE_MODE", "false").lower() == "true"
     }
+
+@app.get("/api/ollama/status")
+async def get_ollama_status():
+    from core.auto_setup_ollama import OllamaAutoSetup
+    installed = OllamaAutoSetup.is_ollama_installed()
+    running = OllamaAutoSetup.ensure_server_running() if installed else False
+    models = OllamaAutoSetup.get_installed_models() if running else []
+    dolphin_ready = any("dolphin" in m.lower() for m in models)
+    return {
+        "installed": installed,
+        "running": running,
+        "models": models,
+        "dolphin_ready": dolphin_ready,
+        "active_model": os.getenv("OLLAMA_MODEL", "dolphin-llama3"),
+        "provider": os.getenv("LLM_PROVIDER", "ollama")
+    }
+
+@app.post("/api/setup/ollama-dolphin")
+async def setup_ollama_dolphin():
+    from core.auto_setup_ollama import OllamaAutoSetup
+    result = await asyncio.to_thread(OllamaAutoSetup.run_full_setup, "dolphin-llama3")
+    return result
 
 @app.get("/api/quick-ideas")
 async def get_quick_ideas():

@@ -329,14 +329,22 @@ DeepSeek provides world-class reasoning and tool execution at a fraction of the 
 * **Groq:** Ultra-fast sub-second responses with Llama 3.3.
 * **OpenAI:** GPT-4o / GPT-4o-mini support.
 
-### 🔒 100% Free & Offline Mode (Ollama):
-If you want to use local AI models offline without internet:
-1. Download and install **[Ollama](https://ollama.com/)**.
-2. Open Command Prompt and type:
-   ```bash
-   ollama pull qwen2.5:1.5b
-   ```
-3. In Helper-AI, open **Settings**, select **Ollama**, and enjoy 100% private, free AI on your own computer!
+### 🐬 Compulsory Local AI: Dolphin-2.9-Llama3 & 1-Click Auto Setup:
+Helper-AI is configured natively to run on **Eric Hartford's Dolphin-2.9-Llama3 (8B)**, an uncensored local powerhouse that executes PC control tasks without safety guard refusals:
+1. Simply double-click **`setup_dolphin_ai.bat`** (or `start.bat`).
+2. The automated zero-touch bootstrapper will:
+   * Auto-install Ollama if not present on your system.
+   * Start the local AI daemon on port 11434.
+   * Download and verify `dolphin-llama3`.
+   * Configure `.env` (`LLM_PROVIDER=ollama`, `OLLAMA_MODEL=dolphin-llama3`).
+   * Run the live initial verification prompt: `"hello i m helper ai"`.
+   * Launch the Web Dashboard at `http://localhost:8000`.
+3. If your computer needs a lighter model, simply select **Llama 3.2 3B** or **Qwen 2.5 Coder 1.5B** in the Settings menu with 1 click!
+
+### 🔒 Other 100% Free & Offline Models (Ollama):
+You can also use other downloaded models anytime:
+1. Open Command Prompt and type: `ollama pull llama3.2:3b` or `ollama pull qwen2.5-coder:1.5b`.
+2. In Helper-AI Settings, click the model chip or type the model name, and click **Save Settings**!
 
 ---
 
@@ -509,11 +517,20 @@ DeepSeek એ અત્યંત હોંશિયાર અને ખૂબ જ
    ```
    *(અઘરા લોજિકલ અને ગણતરી વાળા ટાસ્ક માટે તમે `deepseek-reasoner` પણ વાપરી શકો છો)*
 
-### 🔒 ૧૦૦% ફ્રી અને ઑફલાઇન રીત (Ollama):
-જો તમારે ઈન્ટરનેટ વગર સંપૂર્ણ ઑફલાઇન મોડેલ વાપરવું હોય:
-1. **[Ollama](https://ollama.com/)** ઇન્સ્ટોલ કરો.
-2. કમાન્ડ પ્રોમ્પ્ટમાં લખો: `ollama pull qwen2.5:1.5b`.
-3. વેબ ડેશબોર્ડના Settings માં જઈને **Ollama** પસંદ કરો. ૧૦૦% પ્રાઈવેટ અને ફ્રી!
+### 🐬 ફરજિયાત લોકલ મોડેલ: Dolphin-2.9-Llama3 અને ૧-ક્લિક ઓટો સેટઅપ:
+Helper-AI ને કોઈ પણ જાતના ઇનકાર કે અટકાવ વગર ૧૦૦% સ્વાયત્ત (Uncensored) રીતે કમ્પ્યુટર ચલાવવા માટે **Dolphin-2.9-Llama3 (8B)** મોડેલ સાથે સજ્જ કરવામાં આવ્યું છે:
+1. ફક્ત **`setup_dolphin_ai.bat`** (અથવા `start.bat`) પર ડબલ-ક્લિક કરો.
+2. સિસ્ટમ જાતે જ:
+   * જો Ollama ન હોય તો ઓટોમેટિક ડાઉનલોડ કરીને સાયલન્ટ ઇન્સ્ટોલ કરશે.
+   * બેકગ્રાઉન્ડ સર્વર (Port 11434) ચાલુ કરશે.
+   * `dolphin-llama3` મોડેલ ડાઉનલોડ અને વેરિફાય કરશે.
+   * `.env` માં `LLM_PROVIDER=ollama` અને `OLLAMA_MODEL=dolphin-llama3` આપમેળે ગોઠવી દેશે.
+   * લાઇવ ચકાસણી માટે `"hello i m helper ai"` પ્રોમ્પ્ટ રન કરશે.
+   * `http://localhost:8000` પર વેબ ડેશબોર્ડ આપોઆપ ખોલી આપશે.
+3. ઓછા રેમ વાળા કમ્પ્યુટર માટે **Llama 3.2 3B** કે **Qwen 2.5 Coder 1.5B** જેવા હળવા મોડેલો પણ સેટિંગ્સમાંથી ૧-ક્લિકમાં પસંદ કરી શકાય છે!
+
+### 🔒 અન્ય ઑફલાઇન મોડેલો (Ollama):
+તમે કમાન્ડ પ્રોમ્પ્ટમાં `ollama pull llama3.2:3b` લખીને અન્ય મોડેલ પણ ડાઉનલોડ કરી શકો છો અને Settings માંથી પસંદ કરી શકો છો. ૧૦૦% પ્રાઈવેટ અને ફ્રી!
 
 ---
 

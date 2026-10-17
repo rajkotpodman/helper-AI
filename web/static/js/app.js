@@ -191,6 +191,10 @@ function initElements() {
   elements.btnMemoryPill = document.getElementById('btn-memory-pill');
   elements.btnMetricsPill = document.getElementById('btn-metrics-pill');
   elements.btnSettingsPill = document.getElementById('btn-settings-pill');
+  elements.btnDolphinPill = document.getElementById('btn-dolphin-pill');
+  elements.dolphinStatusText = document.getElementById('dolphin-status-text');
+  elements.btnTriggerOllamaSetup = document.getElementById('btn-trigger-ollama-setup');
+  elements.ollamaSetupFeedback = document.getElementById('ollama-setup-feedback');
   
   // Modals
   elements.modalSettings = document.getElementById('modal-settings');
@@ -274,11 +278,13 @@ document.addEventListener('DOMContentLoaded', () => {
   setupActions();
   fetchSystemStatus();
   fetchMemoryStats();
+  checkOllamaStatus();
   
   // Periodic telemetry refresh & execution watchdog (recovers from socket drops)
   setInterval(() => {
     fetchSystemStatus();
     fetchMemoryStats();
+    checkOllamaStatus();
     checkGoalWatchdog();
   }, 2500);
 });
@@ -982,6 +988,79 @@ function setupModals() {
       if (elements.inputCustomModel) elements.inputCustomModel.value = target.dataset.model || '';
     });
   });
+
+  // Ollama Model 1-Click Preset Chips
+  document.querySelectorAll('.btn-ollama-chip').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const target = e.currentTarget;
+      if (elements.inputOllamaModel) elements.inputOllamaModel.value = target.dataset.model || 'dolphin-llama3';
+    });
+  });
+
+  // Dolphin Pill Click -> Open settings with Ollama focus
+  elements.btnDolphinPill?.addEventListener('click', () => {
+    if (elements.selectProvider) elements.selectProvider.value = 'ollama';
+    updateProviderKeyVisibility();
+    elements.modalSettings?.classList.remove('hidden');
+    checkOllamaStatus();
+  });
+
+  // Auto-Install & Pull Dolphin Setup Trigger
+  elements.btnTriggerOllamaSetup?.addEventListener('click', async () => {
+    const btn = elements.btnTriggerOllamaSetup;
+    const fb = elements.ollamaSetupFeedback;
+    if (btn) {
+      btn.disabled = true;
+      btn.classList.add('opacity-75');
+      btn.innerHTML = '<span>⚡</span> <span>Setting up Ollama & Dolphin-2.9-Llama3...</span>';
+    }
+    if (fb) {
+      fb.classList.remove('hidden');
+      fb.innerHTML = '<span class="text-cyan-400">Contacting bootstrapper, verifying background daemon & pulling model...</span>';
+    }
+    try {
+      const res = await fetch('/api/setup/ollama-dolphin', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        if (fb) fb.innerHTML = '<span class="text-emerald-400 font-bold">✓ Dolphin-2.9-Llama3 is installed, configured, and prompt verified!</span>';
+        if (elements.inputOllamaModel) elements.inputOllamaModel.value = 'dolphin-llama3';
+        checkOllamaStatus();
+      } else {
+        if (fb) fb.innerHTML = `<span class="text-amber-400">Notice: ${data.error || 'Setup initiated'}</span>`;
+      }
+    } catch (e) {
+      if (fb) fb.innerHTML = `<span class="text-red-400">Setup error: ${e.message}</span>`;
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.classList.remove('opacity-75');
+        btn.innerHTML = '<span>⚡</span> <span>Auto-Install Ollama & Pull Dolphin-2.9-Llama3 (Zero-Touch)</span>';
+      }
+    }
+  });
+}
+
+async function checkOllamaStatus() {
+  try {
+    const res = await fetch('/api/ollama/status');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (elements.dolphinStatusText) {
+      if (data.dolphin_ready) {
+        elements.dolphinStatusText.textContent = 'Ready (8B Uncensored)';
+        elements.dolphinStatusText.className = 'font-semibold text-emerald-400';
+      } else if (data.running) {
+        elements.dolphinStatusText.textContent = 'Pulling / Standby';
+        elements.dolphinStatusText.className = 'font-semibold text-cyan-400';
+      } else if (data.installed) {
+        elements.dolphinStatusText.textContent = 'Installed (Port closed)';
+        elements.dolphinStatusText.className = 'font-semibold text-amber-400';
+      } else {
+        elements.dolphinStatusText.textContent = 'Auto-Install Ready';
+        elements.dolphinStatusText.className = 'font-semibold text-blue-400';
+      }
+    }
+  } catch (e) {}
 }
 
 async function runConnectionsCheck() {
@@ -1051,7 +1130,7 @@ function loadSettingsIntoModal() {
   if (elements.inputCustomModel) elements.inputCustomModel.value = localStorage.getItem('helper_custom_model') || 'anthropic/claude-3.5-sonnet';
   if (elements.inputOpenaiKey) elements.inputOpenaiKey.value = localStorage.getItem('helper_openai_key') || '';
   if (elements.inputGroqKey) elements.inputGroqKey.value = localStorage.getItem('helper_groq_key') || '';
-  if (elements.inputOllamaModel) elements.inputOllamaModel.value = localStorage.getItem('helper_ollama_model') || 'qwen2.5:1.5b';
+  if (elements.inputOllamaModel) elements.inputOllamaModel.value = localStorage.getItem('helper_ollama_model') || 'dolphin-llama3';
   updateProviderKeyVisibility();
 }
 

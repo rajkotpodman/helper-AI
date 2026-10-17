@@ -1,331 +1,621 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Helper-AI • Autonomous PC & Internet Agent</title>
+  <meta name="theme-color" content="#090D16">
+  <link rel="manifest" href="/static/manifest.json">
+  <title>Helper-AI • Autonomous PC Control & Internet Agent</title>
+  
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cyberDark: '#090D16',
+            cyberSurface: '#0D131F',
+            cyberCard: 'rgba(17, 24, 39, 0.72)',
+            cyberBorder: 'rgba(255, 255, 255, 0.08)',
+            electricBlue: '#3B82F6',
+            cyanGlow: '#06B6D4',
+            emeraldLive: '#10B981',
+            amberWarn: '#F59E0B'
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/static/css/styles.css">
 </head>
-<body>
-  <div class="container">
-    <!-- Header -->
-    <header>
-      <div class="logo-group">
-        <div class="logo-icon">⚡</div>
+<body class="text-slate-100 flex flex-col justify-between min-h-screen">
+
+  <!-- Top Ambient Glow Aura -->
+  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-blue-600/10 rounded-full blur-[130px] pointer-events-none -z-10"></div>
+
+  <div class="max-w-[1140px] w-full mx-auto px-4 sm:px-6 py-6 flex-1 flex flex-col">
+    
+    <!-- A. Top Navigation Header -->
+    <header class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-white/[0.08] mb-8">
+      
+      <!-- Brand Identity (Left) -->
+      <div class="flex items-center gap-3.5">
+        <div class="brand-logo-box">
+          <i data-lucide="zap" class="w-6 h-6 text-white stroke-[2.2]"></i>
+        </div>
         <div>
-          <h1>Helper<span>-AI</span></h1>
-          <p style="font-size: 0.8rem; color: var(--text-muted);">Autonomous PC Control & Internet Agent</p>
+          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+            Helper <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">- AI</span>
+          </h1>
+          <p class="text-xs font-medium text-slate-400">Autonomous PC Control & Internet Agent</p>
         </div>
       </div>
-      <div class="header-actions">
-        <div class="status-badge">
-          <div class="status-dot" id="system-dot"></div>
-          <span id="system-status">System Ready</span>
+
+      <!-- Status & Utility Pills (Right / Center-Right) -->
+      <div class="flex items-center flex-wrap gap-2.5">
+        
+        <!-- PC Control Online Status -->
+        <div class="nav-pill" title="Live Agent Daemon Status">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span id="system-status-text" class="text-emerald-400 font-semibold">PC Control Online</span>
         </div>
-        <button class="btn-icon" id="btn-open-browser" title="Open Project Chrome Browser on your screen to log in or inspect" style="color: #60a5fa; border-color: rgba(96,165,250,0.3);">
-          🌐 <span>Project Browser</span>
+
+        <!-- Dolphin-2.9-Llama3 AI Engine Status Pill -->
+        <button id="btn-dolphin-pill" class="nav-pill border-cyan-500/30 hover:border-cyan-400" title="Dolphin-2.9-Llama3 Compulsory Model Status & 1-Click Auto Setup">
+          <span class="text-cyan-400">🐬</span>
+          <span>Dolphin AI: <strong id="dolphin-status-text" class="font-semibold text-cyan-400">Checking...</strong></span>
         </button>
-        <button class="btn-icon" id="btn-open-memory" title="View & Download Markdown Memory Log (agent_memory.md)">
-          🧠 <span>Memory (<span id="memory-size-badge">0 MB</span>)</span>
+
+        <!-- Project Browser Button -->
+        <button id="btn-project-browser" class="nav-pill" title="Open Desktop Chrome Browser Session">
+          <i data-lucide="globe" class="w-4 h-4 text-cyan-400"></i>
+          <span>Project Browser</span>
         </button>
-        <button class="btn-icon" id="btn-open-metrics">
-          📊 <span>Metrics</span>
+
+        <!-- Connections Diagnostic Pill -->
+        <button id="btn-connections-pill" class="nav-pill" title="Check All Connections (Double-Pass Diagnostic)">
+          <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
+          <span>Connections (<strong id="connections-badge" class="font-semibold text-emerald-400">Double Check</strong>)</span>
         </button>
-        <button class="btn-icon" id="btn-open-settings">
-          ⚙️ <span>Settings</span>
+
+        <!-- Memory Telemetry Badge -->
+        <button id="btn-memory-pill" class="nav-pill" title="View & Download agent_memory.md">
+          <i data-lucide="brain" class="w-4 h-4 text-pink-400"></i>
+          <span>Memory (<strong id="memory-size-badge" class="font-semibold text-white">0.02 MB</strong>)</span>
         </button>
-        <div class="lang-selector-container">
-          <button class="btn-icon" id="btn-lang-toggle" title="Universal Google Translate (Select Any Language)">
-            🌐 <span id="current-lang-label">English</span> <span style="font-size: 0.65rem; opacity: 0.7;">▼</span>
+
+        <!-- Metrics Button -->
+        <button id="btn-metrics-pill" class="nav-pill" title="Telemetry & Tool Usage Metrics">
+          <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i>
+          <span>Metrics</span>
+        </button>
+
+        <!-- Settings Button -->
+        <button id="btn-settings-pill" class="nav-pill" title="Configure AI Model Providers & Keys">
+          <i data-lucide="settings" class="w-4 h-4 text-blue-400"></i>
+          <span>Settings</span>
+        </button>
+
+        <!-- Language Selector Dropdown -->
+        <div class="relative inline-block text-left" id="lang-selector-group">
+          <button id="btn-lang-dropdown" class="nav-pill" title="Select Any Language (Google Translate)">
+            <i data-lucide="languages" class="w-4 h-4 text-indigo-400"></i>
+            <span id="active-lang-label" class="font-medium text-white">English</span>
+            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
           </button>
-          <div class="lang-dropdown" id="lang-dropdown" style="display: none;">
-            <div class="lang-dropdown-header">
-              <span>🌐 Google Translate</span>
-              <span class="lang-count-badge">130+ Languages</span>
+          
+          <div id="lang-dropdown-menu" class="hidden absolute right-0 mt-2 w-72 glass-panel border border-white/10 shadow-2xl z-50 flex-col overflow-hidden">
+            <div class="p-2.5 border-b border-white/10 bg-slate-900/60 flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <i data-lucide="globe" class="w-3.5 h-3.5 text-cyan-400"></i> Google Translate
+              </span>
+              <span id="lang-count-badge" class="text-[10px] bg-blue-500/20 text-blue-300 font-semibold px-2 py-0.5 rounded-full">133+ Languages</span>
             </div>
-            <div class="lang-search-wrapper">
-              <input type="text" id="lang-search-input" placeholder="Search language (e.g. Gujarati, Hindi, Spanish)...">
+            <div class="p-2 border-b border-white/10 bg-slate-950/70">
+              <input type="text" id="lang-search-box" placeholder="Search language (Gujarati, Hindi...)" 
+                class="w-full bg-slate-900/90 text-xs px-2.5 py-1.5 rounded-lg border border-white/10 focus:border-cyan-500 focus:outline-none text-white">
             </div>
-            <div class="lang-list" id="lang-list">
-              <!-- Dynamically populated with all Google Translate languages -->
+            <div class="max-h-60 overflow-y-auto divide-y divide-white/5 py-1" id="lang-items-container">
+              <!-- Dynamically populated -->
             </div>
           </div>
         </div>
+
       </div>
     </header>
 
-    <!-- Main Goal Input Card -->
-    <main>
-      <section class="card" id="goal-card">
-        <div class="prompt-box">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label style="font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
-              🎯 What goal would you like Helper to achieve?
-            </label>
-            <button class="btn-icon" id="btn-voice" title="Speak your goal (Voice-to-Text)" style="padding: 0.3rem 0.6rem; font-size: 0.85rem;">
-              🎙️ <span>Voice Input</span>
-            </button>
-          </div>
+    <!-- B. Central Goal Execution Card (<main>) -->
+    <main class="space-y-6">
+      <section class="glass-panel p-6 sm:p-7 relative overflow-hidden" id="goal-container">
+        
+        <!-- Ambient top inner highlight line -->
+        <div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent"></div>
 
-          <textarea id="goal-input" placeholder="Example: give me the list of my google blogs, or research AI models and write a report to my Desktop..."></textarea>
-          
-          <div class="quick-prompts">
-            <span style="font-size: 0.8rem; color: var(--text-muted); align-self: center;">Quick Ideas:</span>
-            <div class="chip" onclick="setGoal('give me the list of my google blogs')">🌐 List My Google Blogs</div>
-            <div class="chip" onclick="setGoal('Check my PC health, CPU, RAM and disk usage')">💻 PC Health Diagnostic</div>
-            <div class="chip" onclick="setGoal('Search the web for latest AI news and save summary to Desktop/ai_news.txt')">🔍 Web Research Report</div>
-            <div class="chip" onclick="setGoal('List the largest files in my Downloads folder')">📂 Inspect Downloads</div>
-            <div class="chip" onclick="setGoal('Open PowerShell, test git version and write system info to Desktop/sysinfo.txt')">📝 System Info to Desktop</div>
+        <!-- Card Header -->
+        <div class="flex items-center justify-between gap-4 mb-4">
+          <label for="goal-input" class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            <span>🎯</span>
+            <span id="label-goal-title">What goal would you like Helper to achieve?</span>
+          </label>
+
+          <!-- Voice Input Pill Button -->
+          <button id="btn-voice-input" class="nav-pill hover:border-red-500/50 hover:text-red-400" title="Speak your goal (Voice-to-Text)">
+            <i data-lucide="mic" class="w-4 h-4 text-red-400" id="mic-icon"></i>
+            <span id="voice-btn-label">Voice Input</span>
+          </button>
+        </div>
+
+        <!-- Main Prompt Textarea -->
+        <div class="relative">
+          <textarea id="goal-input" 
+            placeholder="Example: List my Google blogs, or write a report on desktop by researching AI models..."
+            class="prompt-textarea"
+            rows="3"></textarea>
+          <div class="absolute right-3 bottom-3 text-[11px] text-slate-500 font-mono pointer-events-none hidden sm:block">
+            Press <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-white/10">Ctrl + Enter</kbd> to run
           </div>
         </div>
 
-        <div class="action-bar">
-          <div class="controls-left">
-            <span>🛡️ Safe Mode: <strong id="safe-mode-label">Off (Full Autonomous)</strong></span>
-            <span>🤖 Provider: <strong id="current-provider-label">Gemini</strong></span>
+        <!-- Quick Ideas Pill Bar -->
+        <div class="mt-4 flex flex-wrap items-center gap-2 pt-1">
+          <span class="text-xs font-semibold text-slate-400 flex items-center gap-1 mr-1">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
+            <span id="label-quick-ideas">Quick Ideas:</span>
+          </span>
+
+          <button class="idea-chip" data-prompt="give me the list of my google blogs">
+            <span>🌐</span> <span>List My Google Blogs</span>
+          </button>
+          <button class="idea-chip" data-prompt="Check my PC health, CPU, RAM and disk usage">
+            <span>💻</span> <span>PC Health Diagnostic</span>
+          </button>
+          <button class="idea-chip" data-prompt="Search the web for top 5 AI agent frameworks and write summary to Desktop">
+            <span>🔍</span> <span>Web Research Report</span>
+          </button>
+          <button class="idea-chip" data-prompt="List the largest files in my Downloads folder">
+            <span>📁</span> <span>Inspect Downloads</span>
+          </button>
+          <button class="idea-chip" data-prompt="Open PowerShell, test git version and write system info to Desktop/sysinfo.txt">
+            <span>📄</span> <span>System Info to Desktop</span>
+          </button>
+        </div>
+
+        <!-- Card Action Footer -->
+        <div class="mt-6 pt-5 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-4">
+          
+          <!-- Left Status Badges -->
+          <div class="flex items-center flex-wrap gap-3 text-xs">
+            
+            <!-- Safe Mode Badge -->
+            <button id="btn-toggle-safemode" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-white/10 hover:border-slate-600 transition" title="Click to toggle Safe Mode">
+              <span id="safe-mode-icon">🛡️</span>
+              <span class="text-slate-400">Safe Mode:</span>
+              <strong id="safe-mode-state-text" class="text-slate-200">Off (Full Autonomous)</strong>
+            </button>
+
+            <!-- Provider Badge -->
+            <button id="btn-quick-provider" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-white/10 hover:border-blue-500/40 transition" title="Active Model Engine">
+              <span>🤖</span>
+              <span class="text-slate-400">Provider:</span>
+              <strong id="provider-state-text" class="text-blue-400 font-semibold uppercase">GEMINI</strong>
+            </button>
+
           </div>
-          <div class="controls-right">
-            <button class="btn-danger" id="btn-cancel">⏹ Stop Agent</button>
-            <button class="btn-primary" id="btn-run">
-              <span>🚀 Execute Goal</span>
+
+          <!-- Right Action CTA Buttons -->
+          <div class="flex items-center gap-3">
+            <button id="btn-stop-agent" class="hidden px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-sm border border-red-500/30 transition">
+              <i data-lucide="square" class="w-4 h-4 inline mr-1 fill-red-400"></i> Stop Agent
+            </button>
+
+            <button id="btn-execute-goal" class="btn-execute">
+              <i data-lucide="rocket" class="w-4 h-4"></i>
+              <span id="label-execute-btn">Execute Goal</span>
             </button>
           </div>
+
         </div>
       </section>
 
-      <!-- Agent Live Execution Progress -->
-      <section class="card execution-section" id="execution-section">
-        <div class="execution-header">
-          <div class="execution-title">
-            <div class="pulse-indicator"></div>
-            <span id="execution-status-text">Helper is working autonomously on your goal...</span>
+      <!-- C. Live Execution & Output Drawer (Expandable Below Goal Card) -->
+      <section id="execution-drawer" class="hidden glass-panel p-6 animate-drawer-in space-y-6">
+        
+        <!-- Drawer Header with Step Stepper -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
+          <div class="flex items-center gap-2.5">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+            </span>
+            <span id="execution-status-label" class="font-bold text-sm sm:text-base text-cyan-300">
+              Helper is executing autonomously...
+            </span>
           </div>
-          <span style="font-size: 0.85rem; color: var(--text-muted);" id="step-counter">Step 0</span>
-        </div>
 
-        <!-- Step Timeline -->
-        <div class="timeline" id="timeline"></div>
-
-        <!-- Completion Box -->
-        <div class="completion-box" id="completion-box" style="display: none;">
-          <h3>🎉 Mission Accomplished!</h3>
-          <p id="completion-message" style="margin-bottom: 1rem; line-height: 1.5;"></p>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn-icon" id="btn-export-md" style="font-size: 0.85rem;">
-              📥 <span>Download Markdown Report</span>
-            </button>
-            <button class="btn-icon" id="btn-export-json" style="font-size: 0.85rem;">
-              📄 <span>Download JSON History</span>
-            </button>
+          <div class="text-xs font-mono font-semibold text-slate-400 px-3 py-1 rounded-full bg-slate-900 border border-white/10 w-fit">
+            <span id="step-counter-label">Step 1 of 50</span>
           </div>
         </div>
+
+        <!-- 4-Phase Stepper Pipeline -->
+        <div class="stepper-container px-2 py-1">
+          <div class="step-node active" id="step-node-1">
+            <div class="step-circle"><i data-lucide="search" class="w-4 h-4"></i></div>
+            <span class="step-label">Researching</span>
+          </div>
+          <div class="stepper-line" id="step-line-1"></div>
+
+          <div class="step-node" id="step-node-2">
+            <div class="step-circle"><i data-lucide="cpu" class="w-4 h-4"></i></div>
+            <span class="step-label">Planning</span>
+          </div>
+          <div class="stepper-line" id="step-line-2"></div>
+
+          <div class="step-node" id="step-node-3">
+            <div class="step-circle"><i data-lucide="terminal" class="w-4 h-4"></i></div>
+            <span class="step-label">Executing</span>
+          </div>
+          <div class="stepper-line" id="step-line-3"></div>
+
+          <div class="step-node" id="step-node-4">
+            <div class="step-circle"><i data-lucide="check-circle" class="w-4 h-4"></i></div>
+            <span class="step-label">Verifying</span>
+          </div>
+        </div>
+
+        <!-- Live Terminal Stream Box -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+            <span class="flex items-center gap-1.5 font-mono">
+              <i data-lucide="terminal" class="w-3.5 h-3.5 text-cyan-400"></i> Real-time Execution Feed
+            </span>
+            <button id="btn-copy-terminal" class="hover:text-white transition flex items-center gap-1">
+              <i data-lucide="copy" class="w-3 h-3"></i> Copy Output
+            </button>
+          </div>
+
+          <div class="terminal-box" id="terminal-stream">
+            <div class="terminal-line text-slate-500">
+              <span class="terminal-time">[System]</span> Initializing autonomous agent environment...
+            </div>
+          </div>
+        </div>
+
+        <!-- Final Comprehensive Result Card -->
+        <div id="result-container" class="hidden p-5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 space-y-4">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-emerald-400 font-bold text-base">
+              <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+              <span id="result-heading">Mission Accomplished!</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="btn-speak-result" class="idea-chip hover:border-emerald-400" title="Read Aloud via Edge-TTS Voice">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5 text-emerald-400"></i> Speak
+              </button>
+              <button id="btn-export-markdown" class="idea-chip hover:border-blue-400" title="Download Markdown Report">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-400"></i> Export MD
+              </button>
+              <button id="btn-export-json" class="idea-chip hover:border-indigo-400" title="Download Full JSON History">
+                <i data-lucide="code" class="w-3.5 h-3.5 text-indigo-400"></i> Export JSON
+              </button>
+            </div>
+          </div>
+
+          <div id="result-body-text" class="text-sm text-slate-200 leading-relaxed font-sans whitespace-pre-wrap bg-slate-950/60 p-4 rounded-lg border border-white/5 font-mono text-xs max-h-72 overflow-y-auto">
+            Execution result will appear here.
+          </div>
+        </div>
+
       </section>
     </main>
 
-    <!-- Human-in-the-Loop Permission Modal (1-Click Authorization) -->
-    <div class="modal-overlay" id="permission-modal" style="display: none;">
-      <div class="modal" style="border: 2px solid #f59e0b; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2);">
-        <div class="modal-header">
-          <h2 style="font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem; color: #f59e0b;">
-            🛡️ <span>Authorization Request</span>
-          </h2>
-          <span id="permission-timer-badge" style="font-size: 0.8rem; background: rgba(245, 158, 11, 0.15); color: #f59e0b; padding: 0.2rem 0.5rem; border-radius: 4px;">Pending User</span>
-        </div>
-        <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 0.5rem;">
-          Helper-AI has paused execution to request your approval for this action:
-        </p>
-        <div id="permission-description" style="font-size: 1rem; font-weight: 600; margin: 1rem 0; padding: 0.75rem; background: var(--bg-primary); border-radius: 8px; border-left: 4px solid #f59e0b;">
-          Loading...
-        </div>
-        <div id="permission-details-box" style="font-family: var(--code-font); font-size: 0.8rem; background: var(--bg-secondary); padding: 0.75rem; border-radius: 6px; max-height: 150px; overflow-y: auto; margin-bottom: 1.25rem; color: var(--text-secondary);">
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-          <button class="btn-danger" id="btn-deny-permission" style="padding: 0.6rem 1.2rem; font-size: 0.9rem;">
-            ✕ Deny Action
-          </button>
-          <button class="btn-primary" id="btn-approve-permission" style="background: #10b981; border-color: #10b981; padding: 0.6rem 1.4rem; font-size: 0.95rem; font-weight: 600;">
-            ✓ One-Click Approve
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 20 MB Memory Limit Alert Modal -->
-    <div class="modal-overlay" id="memory-alert-modal" style="display: none;">
-      <div class="modal" style="border: 2px solid #ef4444; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.25);">
-        <div class="modal-header">
-          <h2 style="font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem; color: #ef4444;">
-            ⚠️ <span>20 MB Memory Limit Reached!</span>
-          </h2>
-          <button class="btn-icon" id="btn-close-memory-alert" style="padding: 0.2rem 0.5rem;">✕</button>
-        </div>
-        <p style="font-size: 0.95rem; line-height: 1.5; margin: 1rem 0; color: var(--text-primary);">
-          Your AI agent memory file (<code>agent_memory.md</code>) has reached <strong>20 MB</strong>!
-          Please <strong>copy and store/backup</strong> this file now before starting a fresh cycle.
-        </p>
-        <div style="background: var(--bg-primary); padding: 0.75rem; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
-          💡 <strong>What happened:</strong> An automatic backup archive was saved. The memory file is being cleared to start a brand new 20 MB memory log.
-        </div>
-        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
-          <button class="btn-primary" id="btn-download-memory-alert" style="background: #3b82f6; border-color: #3b82f6;">
-            📥 Download agent_memory.md
-          </button>
-          <button class="btn-icon" id="btn-dismiss-memory-alert">
-            Understood
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Memory Management Modal -->
-    <div class="modal-overlay" id="memory-modal" style="display: none;">
-      <div class="modal" style="max-width: 600px;">
-        <div class="modal-header">
-          <h2 style="font-size: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
-            🧠 <span>AI Agent Markdown Memory (agent_memory.md)</span>
-          </h2>
-          <button class="btn-icon" id="btn-close-memory" style="padding: 0.2rem 0.5rem;">✕</button>
-        </div>
-        <p style="font-size: 0.9rem; color: var(--text-muted); margin: 0.5rem 0 1rem 0;">
-          Helper-AI automatically records all prompts and final replies to <code>agent_memory.md</code>.
-        </p>
-        <div style="background: var(--bg-primary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
-            <span>Saved Interactions:</span>
-            <strong id="memory-stat-prompts" style="color: #10b981;">0 recorded prompts</strong>
-          </div>
-          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
-            <span>Current Size:</span>
-            <strong id="memory-stat-size">0.0 MB / 20.0 MB</strong>
-          </div>
-          <div style="background: var(--bg-secondary); border-radius: 4px; height: 8px; overflow: hidden; margin-bottom: 0.5rem;">
-            <div id="memory-progress-bar" style="background: #3b82f6; height: 100%; width: 1%;"></div>
-          </div>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">
-            When size reaches 20 MB, the system prompts you to copy & store the file, then automatically starts a new 20 MB log.
-          </span>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-          <button class="btn-danger" id="btn-reset-memory" style="font-size: 0.85rem; padding: 0.4rem 0.8rem;">
-            🗑️ Clear & Reset File Now
-          </button>
-          <div style="display: flex; gap: 0.5rem;">
-            <button class="btn-icon" id="btn-close-memory-btn">Close</button>
-            <a class="btn-primary" id="btn-download-memory" href="/api/memory/download" download="agent_memory.md" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
-              📥 <span>Download File</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Metrics Modal -->
-    <div class="modal-overlay" id="metrics-modal">
-      <div class="modal">
-        <div class="modal-header">
-          <h2 style="font-size: 1.25rem;">📊 Operational Telemetry</h2>
-          <button class="btn-icon" id="btn-close-metrics" style="padding: 0.2rem 0.5rem;">✕</button>
-        </div>
-        <div id="metrics-content" style="font-family: var(--code-font); font-size: 0.85rem; background: var(--bg-primary); padding: 1rem; border-radius: 8px; max-height: 350px; overflow-y: auto;">
-          Loading metrics...
-        </div>
-      </div>
-    </div>
-
-    <!-- Settings Modal -->
-    <div class="modal-overlay" id="settings-modal">
-      <div class="modal">
-        <div class="modal-header">
-          <h2 style="font-size: 1.25rem;">⚙️ Helper-AI Settings</h2>
-          <button class="btn-icon" id="btn-close-settings" style="padding: 0.2rem 0.5rem;">✕</button>
-        </div>
-
-        <div class="form-group">
-          <label>AI Model Provider</label>
-          <select id="setting-provider">
-            <option value="gemini">Google Gemini (Recommended & Fast)</option>
-            <option value="deepseek">DeepSeek (V3 / R1 - Intelligent & Cost-Effective)</option>
-            <option value="custom">🌍 Universal / Custom AI (Use ANY AI in the World)</option>
-            <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
-            <option value="groq">Groq (Ultra-fast Llama 3.3)</option>
-            <option value="ollama">Ollama (100% Offline & Free)</option>
-            <option value="rule_engine">Smart Rule Engine (No API Key Required)</option>
-          </select>
-        </div>
-
-        <div class="form-group" id="group-gemini">
-          <label>Gemini API Key</label>
-          <input type="password" id="setting-gemini-key" placeholder="AIzaSy...">
-        </div>
-
-        <div class="form-group" id="group-deepseek" style="display: none;">
-          <label>DeepSeek API Key</label>
-          <input type="password" id="setting-deepseek-key" placeholder="sk-...">
-        </div>
-
-        <div class="form-group" id="group-custom" style="display: none;">
-          <label>AI Name / Provider</label>
-          <input type="text" id="setting-custom-name" placeholder="e.g. OpenRouter / Claude / Mistral / Grok">
-          <label style="margin-top: 0.5rem;">API Endpoint / Base URL</label>
-          <input type="text" id="setting-custom-url" placeholder="e.g. https://openrouter.ai/api/v1">
-          <label style="margin-top: 0.5rem;">API Key / Bearer Token</label>
-          <input type="password" id="setting-custom-key" placeholder="sk-... (or leave empty if local)">
-          <label style="margin-top: 0.5rem;">Model Name / ID</label>
-          <input type="text" id="setting-custom-model" placeholder="e.g. anthropic/claude-3.5-sonnet">
-        </div>
-
-        <div class="form-group" id="group-openai" style="display: none;">
-          <label>OpenAI API Key</label>
-          <input type="password" id="setting-openai-key" placeholder="sk-...">
-        </div>
-
-        <div class="form-group" id="group-groq" style="display: none;">
-          <label>Groq API Key</label>
-          <input type="password" id="setting-groq-key" placeholder="gsk_...">
-        </div>
-
-        <div class="form-group" id="group-ollama" style="display: none;">
-          <label>Ollama Endpoint URL</label>
-          <input type="text" id="setting-ollama-url" value="http://localhost:11434">
-          <label style="margin-top: 0.5rem;">Ollama Model (e.g. qwen2.5:1.5b)</label>
-          <input type="text" id="setting-ollama-model" value="qwen2.5:1.5b" placeholder="qwen2.5:1.5b">
-          <div id="ollama-detected-models" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;"></div>
-        </div>
-
-        <div class="form-group">
-          <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
-            <input type="checkbox" id="setting-safe-mode" style="width: auto;">
-            Enable Safe Mode (blocks risky PowerShell commands)
-          </label>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
-          <button class="btn-icon" id="btn-cancel-settings">Cancel</button>
-          <button class="btn-primary" id="btn-save-settings">Save Settings</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <footer>
-      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+    <!-- D. Persistent Minimal Footer -->
+    <footer class="mt-auto py-8 text-center border-t border-white/[0.06] text-xs text-slate-400 space-y-4">
+      <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
         <button class="pro-btn btn-buy-pro" onclick="window.open('https://wa.me/919898048483', '_blank')">⚡ BUY NOW PRO (APPOINTMENT)</button>
         <button class="pro-btn btn-donate" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScJ7WjuxEXqdoSlUtxN7NQ8UeKpbEAeA9iIO-IXOmBmYzlLHQ/viewform?usp=sharing&ouid=116676179363878319046', '_blank')">🪙 DONATION SYSTEM</button>
         <button class="pro-btn btn-store" onclick="window.open('https://wa.me/c/919898048483', '_blank')">🛒 OFFICIAL DIGITAL STORE</button>
       </div>
       <div>Helper-AI • Autonomous PC & Internet Agent • Built for seamless autonomous productivity.</div>
     </footer>
+
   </div>
 
-  <!-- Floating Side Space Dock for Pro & Store Actions (Bottom Right) -->
-  <aside class="pro-buttons-side-container" aria-label="Official Links">
-    <button class="pro-btn btn-buy-pro" onclick="window.open('https://wa.me/919898048483', '_blank')">⚡ BUY NOW PRO (APPOINTMENT)</button>
-    <button class="pro-btn btn-donate" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScJ7WjuxEXqdoSlUtxN7NQ8UeKpbEAeA9iIO-IXOmBmYzlLHQ/viewform?usp=sharing&ouid=116676179363878319046', '_blank')">🪙 DONATION SYSTEM</button>
-    <button class="pro-btn btn-store" onclick="window.open('https://wa.me/c/919898048483', '_blank')">🛒 OFFICIAL DIGITAL STORE</button>
-  </aside>
+  <!-- ================= MODALS ================= -->
+
+  <!-- 1. Settings Modal -->
+  <div id="modal-settings" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="settings" class="w-5 h-5 text-blue-400"></i> Helper-AI Settings
+        </h3>
+        <button id="btn-close-settings-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">AI Model Provider</label>
+          <select id="modal-select-provider" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white">
+            <option value="ollama">🐬 Ollama: Dolphin-2.9-Llama3 (Compulsory 100% Offline & Uncensored)</option>
+            <option value="gemini">Google Gemini (Cloud Fast)</option>
+            <option value="deepseek">DeepSeek (V3 / R1 - Intelligent & Cost-Effective)</option>
+            <option value="custom">🌍 Universal / Custom AI (Use ANY AI in the World)</option>
+            <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+            <option value="groq">Groq (Ultra-fast Llama 3.3)</option>
+            <option value="rule_engine">Smart Rule Engine (No API Key Required)</option>
+          </select>
+        </div>
+
+        <div id="group-gemini-key">
+          <label class="block font-semibold text-slate-300 mb-1">Gemini API Key</label>
+          <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+        </div>
+
+        <div id="group-deepseek-key" class="hidden">
+          <label class="block font-semibold text-slate-300 mb-1">DeepSeek API Key</label>
+          <input type="password" id="input-deepseek-key" placeholder="sk-..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+        </div>
+
+        <!-- Universal / Custom AI (Any AI in the World) -->
+        <div id="group-custom-ai" class="hidden space-y-3 p-3 bg-slate-900/60 rounded-xl border border-blue-500/20">
+          <div class="flex items-center justify-between pb-1 border-b border-white/5">
+            <span class="font-bold text-blue-400 flex items-center gap-1.5">
+              <i data-lucide="globe" class="w-3.5 h-3.5"></i> Connect ANY AI in the World
+            </span>
+            <span class="text-[10px] text-slate-400">OpenAI, Anthropic & Generic REST</span>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">AI Name / Provider</label>
+            <input type="text" id="input-custom-name" placeholder="e.g. OpenRouter / Claude / Mistral / Grok / Local vLLM" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">API Endpoint / Base URL</label>
+            <input type="text" id="input-custom-url" placeholder="e.g. https://openrouter.ai/api/v1 or https://api.anthropic.com/v1" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">API Key / Bearer Token <span class="text-slate-400 font-normal">(Leave blank if local)</span></label>
+            <input type="password" id="input-custom-key" placeholder="sk-..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Model Name / ID</label>
+            <input type="text" id="input-custom-model" placeholder="e.g. anthropic/claude-3.5-sonnet, mistral-large-latest, grok-2" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-400 mb-1 text-[11px]">1-Click Quick Presets:</label>
+            <div class="flex flex-wrap gap-1.5" id="custom-presets-container">
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="OpenRouter" data-url="https://openrouter.ai/api/v1" data-model="anthropic/claude-3.5-sonnet">🟣 OpenRouter</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Anthropic Claude" data-url="https://api.anthropic.com/v1" data-model="claude-3-5-sonnet-20241022">🟠 Claude</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Mistral AI" data-url="https://api.mistral.ai/v1" data-model="mistral-large-latest">🔴 Mistral</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="xAI Grok" data-url="https://api.x.ai/v1" data-model="grok-beta">⚡ Grok</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Local LM Studio" data-url="http://localhost:1234/v1" data-model="default">🖥️ LM Studio</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Local vLLM" data-url="http://localhost:8000/v1" data-model="default">🚀 Local vLLM</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Perplexity" data-url="https://api.perplexity.ai" data-model="llama-3.1-sonar-large-128k-online">🌐 Perplexity</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="group-openai-key" class="hidden">
+          <label class="block font-semibold text-slate-300 mb-1">OpenAI API Key</label>
+          <input type="password" id="input-openai-key" placeholder="sk-..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+        </div>
+
+        <div id="group-groq-key" class="hidden">
+          <label class="block font-semibold text-slate-300 mb-1">Groq API Key</label>
+          <input type="password" id="input-groq-key" placeholder="gsk_..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+        </div>
+
+        <div id="group-ollama-config" class="hidden space-y-3 p-3 bg-slate-900/60 rounded-xl border border-cyan-500/20">
+          <div class="flex items-center justify-between pb-1 border-b border-white/5">
+            <span class="font-bold text-cyan-400 flex items-center gap-1.5">
+              <span>🐬</span> Ollama Local AI Engine
+            </span>
+            <span id="ollama-engine-status-tag" class="text-[10px] bg-cyan-500/20 text-cyan-300 font-semibold px-2 py-0.5 rounded-full">Port 11434</span>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Ollama Model</label>
+            <input type="text" id="input-ollama-model" placeholder="dolphin-llama3" value="dolphin-llama3" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-400 mb-1 text-[11px]">Quick Model Presets:</label>
+            <div class="flex flex-wrap gap-1.5" id="ollama-presets-container">
+              <button type="button" class="btn-ollama-chip px-2.5 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-[10px] font-bold border border-cyan-500/30 cursor-pointer" data-model="dolphin-llama3">🐬 Dolphin-2.9-Llama3 (Compulsory)</button>
+              <button type="button" class="btn-ollama-chip px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-model="llama3.2:3b">🦙 Llama 3.2 3B</button>
+              <button type="button" class="btn-ollama-chip px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-model="qwen2.5-coder:1.5b">💻 Qwen 2.5 Coder 1.5B</button>
+              <button type="button" class="btn-ollama-chip px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-model="qwen2.5:1.5b">⚡ Qwen 2.5 1.5B</button>
+            </div>
+          </div>
+
+          <div class="pt-1">
+            <button type="button" id="btn-trigger-ollama-setup" class="w-full py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 transition">
+              <span>⚡</span> <span>Auto-Install Ollama & Pull Dolphin-2.9-Llama3 (Zero-Touch)</span>
+            </button>
+            <p id="ollama-setup-feedback" class="text-[10px] text-slate-400 text-center mt-1 hidden"></p>
+          </div>
+        </div>
+
+        <div class="pt-2">
+          <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+            <input type="checkbox" id="modal-checkbox-safemode" class="rounded bg-slate-900 border-white/20 text-blue-600 focus:ring-0">
+            <span>Enable Safe Mode (Requires 1-click authorization for risky actions)</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-5 mt-4 border-t border-white/10">
+        <button id="btn-cancel-settings-modal" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold">Cancel</button>
+        <button id="btn-save-settings-modal" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Memory Modal (agent_memory.md) -->
+  <div id="modal-memory" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="brain" class="w-5 h-5 text-pink-400"></i> AI Agent Memory Log
+        </h3>
+        <button id="btn-close-memory-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <p class="text-xs text-slate-400 mb-4">
+        Helper-AI automatically records every user goal and final outcome to <code>agent_memory.md</code> (Max limit 20 MB).
+      </p>
+
+      <div class="p-3.5 rounded-xl bg-slate-950/70 border border-white/5 space-y-3 mb-4 text-xs">
+        <div class="flex justify-between text-slate-300">
+          <span>Recorded Goals:</span>
+          <strong id="modal-memory-prompts" class="text-emerald-400">0 prompts</strong>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>Current File Size:</span>
+          <strong id="modal-memory-size" class="text-blue-400">0.02 MB / 20.0 MB</strong>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+          <div id="modal-memory-progress" class="bg-blue-500 h-2 rounded-full transition-all" style="width: 2%"></div>
+        </div>
+      </div>
+
+      <!-- Reverse-Engineered Application Knowledge Store -->
+      <div class="mt-4 pt-4 border-t border-white/10">
+        <div class="flex items-center justify-between mb-2">
+          <h4 class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+            <i data-lucide="cpu" class="w-4 h-4 text-cyan-400"></i> Reverse-Engineered App Profiles (100% Fast-Path)
+          </h4>
+          <span id="re-status-badge" class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono">REA 6.5.0 Active</span>
+        </div>
+        <p class="text-[11px] text-slate-400 mb-3">
+          AI stores UI Automation maps & keyboard shortcuts so future tasks on these apps run with 100% accuracy and 0 latency.
+        </p>
+
+        <!-- Quick Analyze Box -->
+        <div class="flex gap-2 mb-3">
+          <input id="input-re-target" type="text" placeholder="Target app, process, or URL (e.g. Notepad, calc, code.exe)" class="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+          <button id="btn-trigger-re" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1">
+            <i data-lucide="scan" class="w-3.5 h-3.5"></i> Analyze
+          </button>
+        </div>
+
+        <!-- App Profiles List -->
+        <div id="app-memory-cards-container" class="max-h-48 overflow-y-auto space-y-2 pr-1 text-xs">
+          <div class="text-slate-500 text-center py-2">Loading remembered applications...</div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-4 border-t border-white/10 mt-4">
+        <button id="btn-reset-memory-modal" class="px-3.5 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-xs border border-red-500/30">
+          Clear & Reset Log
+        </button>
+        <div class="flex items-center gap-2">
+          <button id="btn-close-memory-btn" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs">Close</button>
+          <a href="/api/memory/download" download="agent_memory.md" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Download File
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2.5 Connections Diagnostic Modal (Double-Pass Health & Speed) -->
+  <div id="modal-connections" class="modal-backdrop hidden">
+    <div class="modal-dialog max-w-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i> Double-Pass Connection Diagnostics
+        </h3>
+        <button id="btn-close-connections-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3 mb-4">
+        <div>
+          <div class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Stability Score</div>
+          <div class="text-2xl font-extrabold text-white" id="conn-stability-score">100.0%</div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-slate-400" id="conn-duration-text">Pass 1: ~1000ms | Pass 2: ~900ms</div>
+          <button id="btn-rerun-conn-check" class="mt-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold transition">
+            ⚡ Re-Check Twice
+          </button>
+        </div>
+      </div>
+
+      <div class="terminal-box text-xs max-h-80 overflow-y-auto" id="connections-report-display">
+        Running connection diagnostics across all subsystems...
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Metrics Modal -->
+  <div id="modal-metrics" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="bar-chart-3" class="w-5 h-5 text-amber-400"></i> Operational Telemetry
+        </h3>
+        <button id="btn-close-metrics-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="terminal-box text-xs max-h-72" id="metrics-json-display">
+        Loading metrics telemetry...
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Permission Authorization Modal (Human-in-the-Loop) -->
+  <div id="modal-permission" class="modal-backdrop hidden">
+    <div class="modal-dialog border-2 border-amber-500/40">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-amber-400 flex items-center gap-2">
+          <i data-lucide="shield-alert" class="w-5 h-5"></i> Authorization Request
+        </h3>
+        <span class="text-xs bg-amber-500/15 text-amber-300 px-2.5 py-0.5 rounded-full font-semibold">1-Click Approval</span>
+      </div>
+
+      <p class="text-xs text-slate-300 mb-3" id="permission-modal-desc">
+        Helper-AI has paused to request your explicit approval for this action:
+      </p>
+
+      <div class="terminal-box text-xs max-h-36 mb-4 text-slate-300" id="permission-modal-details">
+        Action details loading...
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button id="btn-deny-permission" class="px-4 py-2 rounded-lg bg-red-600/20 text-red-300 hover:bg-red-600/30 font-semibold text-xs border border-red-500/30">
+          ✕ Deny Action
+        </button>
+        <button id="btn-approve-permission" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20">
+          ✓ One-Click Approve
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Hidden Google Translate Element Engine -->
   <div id="google_translate_element" style="display:none;"></div>
@@ -338,6 +628,15 @@
     }
   </script>
   <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+  <!-- Floating Side Space Dock for Pro & Store Actions (Bottom Right) -->
+  <aside class="pro-buttons-side-container fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 flex flex-col sm:flex-row items-end sm:items-center gap-2 p-1.5 sm:p-2 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl" aria-label="Official Links">
+    <button class="pro-btn btn-buy-pro" onclick="window.open('https://wa.me/919898048483', '_blank')">⚡ BUY NOW PRO (APPOINTMENT)</button>
+    <button class="pro-btn btn-donate" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScJ7WjuxEXqdoSlUtxN7NQ8UeKpbEAeA9iIO-IXOmBmYzlLHQ/viewform?usp=sharing&ouid=116676179363878319046', '_blank')">🪙 DONATION SYSTEM</button>
+    <button class="pro-btn btn-store" onclick="window.open('https://wa.me/c/919898048483', '_blank')">🛒 OFFICIAL DIGITAL STORE</button>
+  </aside>
+
+  <!-- Application Logic -->
   <script src="/static/js/app.js"></script>
 </body>
 </html>
