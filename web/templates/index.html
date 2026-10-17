@@ -352,6 +352,7 @@
           <select id="modal-select-provider" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white">
             <option value="gemini">Google Gemini (Recommended & Fast)</option>
             <option value="deepseek">DeepSeek (V3 / R1 - Intelligent & Cost-Effective)</option>
+            <option value="custom">🌍 Universal / Custom AI (Use ANY AI in the World)</option>
             <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
             <option value="groq">Groq (Ultra-fast Llama 3.3)</option>
             <option value="ollama">Ollama (100% Offline & Free)</option>
@@ -367,6 +368,49 @@
         <div id="group-deepseek-key" class="hidden">
           <label class="block font-semibold text-slate-300 mb-1">DeepSeek API Key</label>
           <input type="password" id="input-deepseek-key" placeholder="sk-..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+        </div>
+
+        <!-- Universal / Custom AI (Any AI in the World) -->
+        <div id="group-custom-ai" class="hidden space-y-3 p-3 bg-slate-900/60 rounded-xl border border-blue-500/20">
+          <div class="flex items-center justify-between pb-1 border-b border-white/5">
+            <span class="font-bold text-blue-400 flex items-center gap-1.5">
+              <i data-lucide="globe" class="w-3.5 h-3.5"></i> Connect ANY AI in the World
+            </span>
+            <span class="text-[10px] text-slate-400">OpenAI, Anthropic & Generic REST</span>
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">AI Name / Provider</label>
+            <input type="text" id="input-custom-name" placeholder="e.g. OpenRouter / Claude / Mistral / Grok / Local vLLM" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">API Endpoint / Base URL</label>
+            <input type="text" id="input-custom-url" placeholder="e.g. https://openrouter.ai/api/v1 or https://api.anthropic.com/v1" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">API Key / Bearer Token <span class="text-slate-400 font-normal">(Leave blank if local)</span></label>
+            <input type="password" id="input-custom-key" placeholder="sk-..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Model Name / ID</label>
+            <input type="text" id="input-custom-model" placeholder="e.g. anthropic/claude-3.5-sonnet, mistral-large-latest, grok-2" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          </div>
+
+          <div>
+            <label class="block font-semibold text-slate-400 mb-1 text-[11px]">1-Click Quick Presets:</label>
+            <div class="flex flex-wrap gap-1.5" id="custom-presets-container">
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="OpenRouter" data-url="https://openrouter.ai/api/v1" data-model="anthropic/claude-3.5-sonnet">🟣 OpenRouter</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Anthropic Claude" data-url="https://api.anthropic.com/v1" data-model="claude-3-5-sonnet-20241022">🟠 Claude</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Mistral AI" data-url="https://api.mistral.ai/v1" data-model="mistral-large-latest">🔴 Mistral</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="xAI Grok" data-url="https://api.x.ai/v1" data-model="grok-beta">⚡ Grok</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Local LM Studio" data-url="http://localhost:1234/v1" data-model="default">🖥️ LM Studio</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Local vLLM" data-url="http://localhost:8000/v1" data-model="default">🚀 Local vLLM</button>
+              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Perplexity" data-url="https://api.perplexity.ai" data-model="llama-3.1-sonar-large-128k-online">🌐 Perplexity</button>
+            </div>
+          </div>
         </div>
 
         <div id="group-openai-key" class="hidden">

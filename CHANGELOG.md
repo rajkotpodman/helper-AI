@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.0] - 2026-10-17
+
+### 🌍 Universal / Custom AI Integration (Use ANY AI in the World)
+- **Universal Provider Engine (`core/llm.py`):**
+  - Added native Universal AI (`custom` / `universal` / `any`) integration allowing users to connect **ANY** AI provider or model in the world.
+  - Multi-protocol support: OpenAI-compatible REST endpoints (OpenRouter, Mistral, xAI Grok, Together AI, Perplexity, local LM Studio, vLLM, Jan) and Anthropic Claude REST format.
+  - Dynamic parameter resolution: `CUSTOM_LLM_NAME`, `CUSTOM_LLM_URL`, `CUSTOM_LLM_KEY`, and `CUSTOM_LLM_MODEL`.
+  - Resilient execution via dual-mode client: OpenAI SDK with seamless direct HTTP fallback.
+  - Active connection diagnostics in `test_connection(provider="custom")` probing `/models` and lightweight completion payloads.
+  - Added Custom AI to autonomous candidate failover loop.
+- **Connection Diagnostics (`core/connection_checker.py`):**
+  - Added `custom_ai` health check to concurrent double-pass diagnostic suite.
+- **Web UI & Settings Management (`web/templates/index.html`, `web/static/js/app.js`, `app.py`, `server.py`):**
+  - Added `🌍 Universal / Custom AI (Use ANY AI in the World)` option in Provider dropdowns.
+  - Added custom fields for AI Name, Endpoint URL, API Key / Token, and Model Name/ID.
+  - Added 1-Click Quick Preset Chips: **🟣 OpenRouter, 🟠 Anthropic Claude, 🔴 Mistral AI, ⚡ xAI Grok, 🖥️ LM Studio, 🚀 Local vLLM, and 🌐 Perplexity**.
+  - Real-time settings synchronization to `.env` and `localStorage`.
+- **Environment & Docker Deployment:**
+  - Configured `CUSTOM_LLM_NAME`, `CUSTOM_LLM_URL`, `CUSTOM_LLM_KEY`, and `CUSTOM_LLM_MODEL` in `.env.example`, `.env`, `docker-compose.yml`, and `docker-compose.dev.yml`.
+- **Test Suite:**
+  - Added unit and integration tests in `tests/test_custom_universal_provider.py` (6/6 passed).
+
+---
+
 ## [2.1.0] - 2026-10-17
 
 ### 🧠 DeepSeek LLM Provider Integration (V3 & R1)

@@ -213,22 +213,32 @@ Helper-AI works with **any AI provider** you prefer:
 | Mode / Provider | Internet Needed? | Cost | How to Use |
 | :--- | :---: | :---: | :--- |
 | **Smart Rule Engine** *(Built-in)* | ❌ No | **100% Free** | Default out-of-the-box mode! No API keys or credit card needed. |
+| **🌍 Universal / Any AI in the World** | 🌐 Depends | User's Choice | Connect **ANY** model in the world (OpenRouter, Claude, Mistral, Grok, LM Studio, vLLM, Perplexity, etc.) by just entering Name, URL, API Key & Model! |
 | **DeepSeek (V3 / R1)** | ✅ Yes | **Extremely Low Cost** | Get key from [DeepSeek Platform](https://platform.deepseek.com/), set `DEEPSEEK_API_KEY` in `.env`. Supports `deepseek-chat` (V3) and `deepseek-reasoner` (R1). |
 | **Google Gemini** | ✅ Yes | **Free Tier Available** | Get a free key at [Google AI Studio](https://aistudio.google.com/), add `GEMINI_API_KEY` in `.env`. |
 | **Ollama Local AI** | ❌ No | **100% Free** | Install [Ollama](https://ollama.com/), run `ollama pull qwen2.5:1.5b`. Works 100% private on your machine. |
 | **OpenAI (GPT-4o)** | ✅ Yes | Paid API | Add `OPENAI_API_KEY` in `.env`. |
 | **Groq (Ultra-Fast)** | ✅ Yes | Free Tier Available | Add `GROQ_API_KEY` in `.env`. |
 
-### How to configure your AI key (Optional):
-1. Rename or copy `.env.example` to `.env`.
-2. Open `.env` in Notepad and set:
-   ```ini
-   LLM_PROVIDER=deepseek
-   DEEPSEEK_API_KEY=your_actual_key_here
-   DEEPSEEK_MODEL=deepseek-chat
-   ```
-   *(Or choose `LLM_PROVIDER=gemini` with `GEMINI_API_KEY`)*
-3. Save the file. That's it!
+### How to Use ANY AI in the World (Universal AI Mode):
+You can bring your own AI from any company or local server:
+1. Open the Web Dashboard at `http://localhost:8000` and click **⚙️ Settings**.
+2. Select **🌍 Universal / Custom AI (Use ANY AI in the World)**.
+3. Fill in or click a 1-click preset chip (OpenRouter, Claude, Mistral, Grok, LM Studio, Local vLLM, Perplexity):
+   * **AI Name / Provider:** e.g. `OpenRouter`
+   * **API Endpoint / Base URL:** e.g. `https://openrouter.ai/api/v1`
+   * **API Key:** e.g. `sk-or-...` (or leave empty for local LM Studio / vLLM)
+   * **Model Name / ID:** e.g. `anthropic/claude-3.5-sonnet`
+4. Click **Save Settings**!
+
+Or set it directly in `.env`:
+```ini
+LLM_PROVIDER=custom
+CUSTOM_LLM_NAME=OpenRouter
+CUSTOM_LLM_URL=https://openrouter.ai/api/v1
+CUSTOM_LLM_KEY=sk-your-key-here
+CUSTOM_LLM_MODEL=anthropic/claude-3.5-sonnet
+```
 
 ---
 

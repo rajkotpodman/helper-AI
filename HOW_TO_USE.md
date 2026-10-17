@@ -297,9 +297,20 @@ When Helper-AI encounters a software application:
 
 ---
 
-## 8. Running with AI Models (DeepSeek, Gemini, OpenAI, Groq, or 100% Free Offline)
+## 8. Running with ANY AI in the World (Universal AI, DeepSeek, Gemini, Claude, Grok, Mistral, Ollama)
 
-Helper-AI comes with a built-in **Smart Rule Engine** that works immediately without any API keys or credit cards.
+Helper-AI provides **100% universal flexibility**: you can connect **ANY AI model in the world** by simply entering its Name, Base URL, API Key, and Model ID, or use free built-in models!
+
+### 🌍 Universal AI Mode (Use ANY AI in the World!):
+Whether you use **OpenRouter, Anthropic Claude, Mistral AI, xAI Grok, Together AI, Perplexity, or local servers like LM Studio and vLLM**, Helper-AI connects to them seamlessly:
+1. Open the Web Dashboard at `http://localhost:8000` and click **⚙️ Settings**.
+2. Select **🌍 Universal / Custom AI (Use ANY AI in the World)**.
+3. Choose a **1-Click Quick Preset** or enter your custom details:
+   * **AI Name / Provider:** e.g. `OpenRouter` or `Claude` or `Mistral`
+   * **API Endpoint / Base URL:** e.g. `https://openrouter.ai/api/v1` or `https://api.anthropic.com/v1` or `http://localhost:1234/v1`
+   * **API Key / Bearer Token:** Your API secret key (leave blank for local models)
+   * **Model Name / ID:** e.g. `anthropic/claude-3.5-sonnet`, `mistral-large-latest`, `grok-beta`
+4. Click **Save Settings**! That's it—Helper-AI will now run using your chosen AI model.
 
 ### 🌟 Using DeepSeek (V3 / R1) - Recommended for High Intelligence & Low Cost:
 DeepSeek provides world-class reasoning and tool execution at a fraction of the cost:
@@ -470,9 +481,20 @@ Helper-AI puts your safety first:
 
 ---
 
-## ૭. DeepSeek અને અન્ય AI મોડેલ્સ વાપરવાની રીત (૧૦૦% ફ્રી તથા લો-કોસ્ટ વિકલ્પો)
+## ૭. વિશ્વના કોઈપણ AI નો ઉપયોગ કરો (Universal AI, DeepSeek, Claude, Mistral, ઑફલાઇન ફ્રી)
 
-Helper-AI માં ડિફોલ્ટ **Smart Rule Engine** આવે છે જેને કોઈ ઈન્ટરનેટ કે પેઇડ કીની જરૂર નથી.
+Helper-AI ની સૌથી મોટી વિશેષતા એ છે કે તમે **દુનિયાનું કોઈપણ AI મોડેલ** ફક્ત તેનું નામ, API Key અને URL નાખીને જોડી શકો છો!
+
+### 🌍 Universal AI મોડ (દુનિયાના કોઈપણ AI સાથે કામ કરો):
+તમે **OpenRouter, Anthropic Claude, Mistral AI, xAI Grok, Perplexity કે તમારા કમ્પ્યુટર પર ચાલતા LM Studio / vLLM** કોઈપણ AI નો ઉપયોગ કરી શકો છો:
+1. વેબ ડેશબોર્ડમાં **Settings (સેટિંગ્સ)** ખોલો.
+2. ડ્રોપડાઉનમાંથી **🌍 Universal / Custom AI (Use ANY AI in the World)** પસંદ કરો.
+3. ૧-ક્લિક પ્રીસેટ પર ક્લિક કરો અથવા વિગતો ભરો:
+   * **AI નું નામ:** દા.ત. `OpenRouter` અથવા `Claude`
+   * **API Endpoint URL:** દા.ત. `https://openrouter.ai/api/v1` અથવા `https://api.anthropic.com/v1`
+   * **API Key:** તમારી કી દાખલ કરો (લોકલ સર્વર માટે ખાલી રાખો)
+   * **Model Name:** દા.ત. `anthropic/claude-3.5-sonnet`
+4. **Save Settings** પર ક્લિક કરો. હવે Helper-AI તમે પસંદ કરેલા AI સાથે કામ કરશે!
 
 ### 🌟 DeepSeek (V3 / R1) નો ઉપયોગ:
 DeepSeek એ અત્યંત હોંશિયાર અને ખૂબ જ ઓછા ખર્ચે (Low Cost) કામ કરતું શ્રેષ્ઠ AI મોડેલ છે:

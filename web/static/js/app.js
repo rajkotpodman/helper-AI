@@ -202,6 +202,10 @@ function initElements() {
   elements.inputDeepseekKey = document.getElementById('input-deepseek-key');
   elements.inputOpenaiKey = document.getElementById('input-openai-key');
   elements.inputGroqKey = document.getElementById('input-groq-key');
+  elements.inputCustomName = document.getElementById('input-custom-name');
+  elements.inputCustomUrl = document.getElementById('input-custom-url');
+  elements.inputCustomKey = document.getElementById('input-custom-key');
+  elements.inputCustomModel = document.getElementById('input-custom-model');
   elements.inputOllamaModel = document.getElementById('input-ollama-model');
   elements.checkboxSafeMode = document.getElementById('modal-checkbox-safemode');
   
@@ -968,6 +972,16 @@ function setupModals() {
   elements.btnConnectionsPill?.addEventListener('click', runConnectionsCheck);
   elements.btnRerunConnCheck?.addEventListener('click', runConnectionsCheck);
   elements.btnCloseConnections?.addEventListener('click', () => elements.modalConnections?.classList.add('hidden'));
+
+  // Universal Custom AI 1-Click Preset Chips
+  document.querySelectorAll('.btn-preset-chip').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const target = e.currentTarget;
+      if (elements.inputCustomName) elements.inputCustomName.value = target.dataset.name || '';
+      if (elements.inputCustomUrl) elements.inputCustomUrl.value = target.dataset.url || '';
+      if (elements.inputCustomModel) elements.inputCustomModel.value = target.dataset.model || '';
+    });
+  });
 }
 
 async function runConnectionsCheck() {
@@ -1020,6 +1034,7 @@ function updateProviderKeyVisibility() {
   const p = elements.selectProvider?.value;
   document.getElementById('group-gemini-key')?.classList.toggle('hidden', p !== 'gemini');
   document.getElementById('group-deepseek-key')?.classList.toggle('hidden', p !== 'deepseek');
+  document.getElementById('group-custom-ai')?.classList.toggle('hidden', p !== 'custom');
   document.getElementById('group-openai-key')?.classList.toggle('hidden', p !== 'openai');
   document.getElementById('group-groq-key')?.classList.toggle('hidden', p !== 'groq');
   document.getElementById('group-ollama-config')?.classList.toggle('hidden', p !== 'ollama');
@@ -1030,6 +1045,10 @@ function loadSettingsIntoModal() {
   if (elements.checkboxSafeMode) elements.checkboxSafeMode.checked = state.safeMode;
   if (elements.inputGeminiKey) elements.inputGeminiKey.value = localStorage.getItem('helper_gemini_key') || '';
   if (elements.inputDeepseekKey) elements.inputDeepseekKey.value = localStorage.getItem('helper_deepseek_key') || '';
+  if (elements.inputCustomName) elements.inputCustomName.value = localStorage.getItem('helper_custom_name') || 'OpenRouter';
+  if (elements.inputCustomUrl) elements.inputCustomUrl.value = localStorage.getItem('helper_custom_url') || 'https://openrouter.ai/api/v1';
+  if (elements.inputCustomKey) elements.inputCustomKey.value = localStorage.getItem('helper_custom_key') || '';
+  if (elements.inputCustomModel) elements.inputCustomModel.value = localStorage.getItem('helper_custom_model') || 'anthropic/claude-3.5-sonnet';
   if (elements.inputOpenaiKey) elements.inputOpenaiKey.value = localStorage.getItem('helper_openai_key') || '';
   if (elements.inputGroqKey) elements.inputGroqKey.value = localStorage.getItem('helper_groq_key') || '';
   if (elements.inputOllamaModel) elements.inputOllamaModel.value = localStorage.getItem('helper_ollama_model') || 'qwen2.5:1.5b';
@@ -1042,6 +1061,10 @@ function saveSettingsFromModal() {
   
   if (elements.inputGeminiKey) localStorage.setItem('helper_gemini_key', elements.inputGeminiKey.value);
   if (elements.inputDeepseekKey) localStorage.setItem('helper_deepseek_key', elements.inputDeepseekKey.value);
+  if (elements.inputCustomName) localStorage.setItem('helper_custom_name', elements.inputCustomName.value);
+  if (elements.inputCustomUrl) localStorage.setItem('helper_custom_url', elements.inputCustomUrl.value);
+  if (elements.inputCustomKey) localStorage.setItem('helper_custom_key', elements.inputCustomKey.value);
+  if (elements.inputCustomModel) localStorage.setItem('helper_custom_model', elements.inputCustomModel.value);
   if (elements.inputOpenaiKey) localStorage.setItem('helper_openai_key', elements.inputOpenaiKey.value);
   if (elements.inputGroqKey) localStorage.setItem('helper_groq_key', elements.inputGroqKey.value);
   if (elements.inputOllamaModel) localStorage.setItem('helper_ollama_model', elements.inputOllamaModel.value);
@@ -1054,6 +1077,10 @@ function saveSettingsFromModal() {
       provider: state.provider,
       gemini_key: elements.inputGeminiKey?.value || null,
       deepseek_key: elements.inputDeepseekKey?.value || null,
+      custom_name: elements.inputCustomName?.value || null,
+      custom_url: elements.inputCustomUrl?.value || null,
+      custom_key: elements.inputCustomKey?.value || null,
+      custom_model: elements.inputCustomModel?.value || null,
       openai_key: elements.inputOpenaiKey?.value || null,
       groq_key: elements.inputGroqKey?.value || null,
       ollama_model: elements.inputOllamaModel?.value || null,

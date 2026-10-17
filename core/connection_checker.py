@@ -191,6 +191,7 @@ class ConnectionChecker:
             "groq_api": lambda: self.check_llm("groq"),
             "openai_api": lambda: self.check_llm("openai"),
             "ollama": lambda: self.check_llm("ollama"),
+            "custom_ai": lambda: self.check_llm("custom"),
             "chrome_browser": self.check_chrome,
             "mcp_servers": self.check_mcp,
             "websocket_server": self.check_websocket_backend

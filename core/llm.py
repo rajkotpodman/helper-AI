@@ -170,6 +170,18 @@ Do NOT include markdown formatting like ```json or any text outside the JSON obj
 class LLMClient:
     def __init__(self, provider: str = None, api_key: str = None, model: str = None, base_url: str = None):
         self.provider = (provider or os.getenv("LLM_PROVIDER", "gemini")).lower().strip().strip("'").strip('"')
+        self.custom_name = os.getenv("CUSTOM_LLM_NAME") or "Universal AI"
+
+        if not base_url:
+            if self.provider in ["custom", "universal", "any"]:
+                self.base_url = os.getenv("CUSTOM_LLM_URL") or os.getenv("UNIVERSAL_LLM_URL") or ""
+            elif self.provider == "deepseek":
+                self.base_url = os.getenv("DEEPSEEK_BASE_URL") or "https://api.deepseek.com"
+            else:
+                self.base_url = None
+        else:
+            self.base_url = base_url
+
         if not api_key:
             if self.provider == "groq":
                 raw_key = os.getenv("GROQ_API_KEY") or ""
@@ -179,13 +191,14 @@ class LLMClient:
                 raw_key = os.getenv("OPENAI_API_KEY") or ""
             elif self.provider == "deepseek":
                 raw_key = os.getenv("DEEPSEEK_API_KEY") or ""
+            elif self.provider in ["custom", "universal", "any"]:
+                raw_key = os.getenv("CUSTOM_LLM_KEY") or os.getenv("UNIVERSAL_LLM_KEY") or ""
             else:
-                raw_key = os.getenv("DEEPSEEK_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
+                raw_key = os.getenv("CUSTOM_LLM_KEY") or os.getenv("DEEPSEEK_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
         else:
             raw_key = api_key
         self.api_key = raw_key.strip().strip("'").strip('"')
         self.model = model
-        self.base_url = base_url
 
         # Shared connection pool session for high-speed API execution
         self._session = requests.Session()
@@ -211,6 +224,8 @@ class LLMClient:
                 self.model = os.getenv("GROQ_MODEL") or "qwen/qwen3.8-27b"
             elif self.provider == "deepseek":
                 self.model = os.getenv("DEEPSEEK_MODEL") or "deepseek-chat"
+            elif self.provider in ["custom", "universal", "any"]:
+                self.model = os.getenv("CUSTOM_LLM_MODEL") or os.getenv("UNIVERSAL_LLM_MODEL") or "default"
             elif self.provider == "ollama":
                 self.model = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
             else:
@@ -343,12 +358,95 @@ class LLMClient:
                 lat = round((time.perf_counter() - start_t) * 1000, 1)
                 return {"provider": "deepseek", "status": "error", "latency_ms": lat, "message": str(e)}
 
+        elif target_provider in ["custom", "universal", "any"]:
+            custom_url = (self.base_url or os.getenv("CUSTOM_LLM_URL") or os.getenv("UNIVERSAL_LLM_URL") or "").strip().rstrip("/")
+            custom_key = self.api_key if self.provider in ["custom", "universal"] else (os.getenv("CUSTOM_LLM_KEY") or os.getenv("UNIVERSAL_LLM_KEY") or "")
+            custom_name = os.getenv("CUSTOM_LLM_NAME") or "Universal AI"
+            custom_model = self.model or os.getenv("CUSTOM_LLM_MODEL") or "default"
+
+            if not custom_url:
+                return {
+                    "provider": "custom",
+                    "status": "unconfigured",
+                    "latency_ms": 0,
+                    "message": "Custom AI API URL is not set. Please provide endpoint URL in Settings."
+                }
+
+            headers = {"Content-Type": "application/json"}
+            if custom_key:
+                if "anthropic.com" in custom_url:
+                    headers["x-api-key"] = custom_key
+                    headers["anthropic-version"] = "2023-06-01"
+                else:
+                    headers["Authorization"] = f"Bearer {custom_key}"
+
+            try:
+                # 1. Probe /models
+                probe_url = custom_url if custom_url.endswith("/models") else f"{custom_url}/models"
+                resp = self._session.get(probe_url, headers=headers, timeout=4.0)
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                if resp.status_code in (200, 204):
+                    return {
+                        "provider": "custom",
+                        "status": "connected",
+                        "name": custom_name,
+                        "model": custom_model,
+                        "latency_ms": lat,
+                        "message": f"{custom_name} connected successfully ({lat}ms)"
+                    }
+                elif resp.status_code in (404, 405):
+                    # Fallback probe with 1-token test payload to completions/messages endpoint
+                    post_endpoint = custom_url
+                    if not (post_endpoint.endswith("/chat/completions") or post_endpoint.endswith("/messages")):
+                        post_endpoint = f"{custom_url}/messages" if "anthropic.com" in custom_url else f"{custom_url}/chat/completions"
+
+                    test_payload = {
+                        "model": custom_model,
+                        "messages": [{"role": "user", "content": "ping"}],
+                        "max_tokens": 1
+                    }
+                    post_resp = self._session.post(post_endpoint, json=test_payload, headers=headers, timeout=5.0)
+                    lat = round((time.perf_counter() - start_t) * 1000, 1)
+                    if post_resp.status_code in (200, 201):
+                        return {
+                            "provider": "custom",
+                            "status": "connected",
+                            "name": custom_name,
+                            "model": custom_model,
+                            "latency_ms": lat,
+                            "message": f"{custom_name} connected successfully ({lat}ms)"
+                        }
+                    return {
+                        "provider": "custom",
+                        "status": "error",
+                        "latency_ms": lat,
+                        "message": f"HTTP {post_resp.status_code}: {post_resp.text[:120]}"
+                    }
+                else:
+                    return {
+                        "provider": "custom",
+                        "status": "error",
+                        "latency_ms": lat,
+                        "message": f"HTTP {resp.status_code}: {resp.text[:120]}"
+                    }
+            except Exception as e:
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                return {"provider": "custom", "status": "error", "latency_ms": lat, "message": str(e)}
+
         return {"provider": target_provider, "status": "ready", "latency_ms": 0, "message": "Provider ready (rule_engine / offline)"}
 
     def generate_step(self, goal: str, trajectory_summary: str, tool_schemas: str, os_info: Dict[str, Any]) -> Dict[str, Any]:
         """Calls the configured provider to get the next agent decision."""
         # Check if fallback to rule engine is warranted
-        has_any_key = bool(self.api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("DEEPSEEK_API_KEY"))
+        has_any_key = bool(
+            self.api_key or
+            os.getenv("GEMINI_API_KEY") or
+            os.getenv("GROQ_API_KEY") or
+            os.getenv("OPENAI_API_KEY") or
+            os.getenv("DEEPSEEK_API_KEY") or
+            os.getenv("CUSTOM_LLM_URL") or
+            os.getenv("CUSTOM_LLM_KEY")
+        )
         if self.provider == "rule_engine" or (not has_any_key and self.provider not in ["ollama"]):
             return self._rule_engine_step(goal, trajectory_summary)
 
@@ -454,9 +552,11 @@ class LLMClient:
 
         # Attempt primary provider first, then seamlessly try alternative configured providers
         candidate_providers = [self.provider]
-        for alt_prov in ["deepseek", "groq", "gemini", "openai", "ollama"]:
+        for alt_prov in ["custom", "deepseek", "groq", "gemini", "openai", "ollama"]:
             if alt_prov not in candidate_providers:
-                if alt_prov == "deepseek" and os.getenv("DEEPSEEK_API_KEY"):
+                if alt_prov == "custom" and (os.getenv("CUSTOM_LLM_URL") or os.getenv("CUSTOM_LLM_KEY")):
+                    candidate_providers.append(alt_prov)
+                elif alt_prov == "deepseek" and os.getenv("DEEPSEEK_API_KEY"):
                     candidate_providers.append(alt_prov)
                 elif alt_prov == "groq" and os.getenv("GROQ_API_KEY"):
                     candidate_providers.append(alt_prov)
@@ -470,7 +570,19 @@ class LLMClient:
         last_err = None
         for prov in candidate_providers:
             try:
-                if prov == "deepseek":
+                if prov in ["custom", "universal", "any"]:
+                    custom_url = (self.base_url or os.getenv("CUSTOM_LLM_URL") or os.getenv("UNIVERSAL_LLM_URL") or "").strip().rstrip("/")
+                    custom_key = (self.api_key if self.provider in ["custom", "universal"] else os.getenv("CUSTOM_LLM_KEY") or os.getenv("UNIVERSAL_LLM_KEY") or "").strip().strip("'").strip('"')
+                    if not custom_url and not custom_key:
+                        continue
+                    prev_prov, prev_key, prev_url = self.provider, self.api_key, self.base_url
+                    self.provider, self.api_key, self.base_url = "custom", custom_key, custom_url
+                    self.model = self.model if prev_prov in ["custom", "universal"] and self.model else (os.getenv("CUSTOM_LLM_MODEL") or "default")
+                    step = self._call_custom_ai(sys_prompt, user_content)
+                    if prev_prov not in ["custom", "universal"]:
+                        step["thought"] = f"(Failover to {os.getenv('CUSTOM_LLM_NAME', 'Custom AI')}) " + step.get("thought", "")
+                    return step
+                elif prov == "deepseek":
                     deepseek_key = (self.api_key if self.provider == "deepseek" else os.getenv("DEEPSEEK_API_KEY") or "").strip().strip("'").strip('"')
                     if not deepseek_key:
                         continue
@@ -639,6 +751,97 @@ class LLMClient:
                     raise RuntimeError(f"DeepSeek HTTP {resp.status_code}: {resp.text[:200]}")
             except Exception as http_err:
                 raise RuntimeError(f"DeepSeek call failed: {e} | HTTP fallback error: {http_err}") from e
+
+    def _call_custom_ai(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+        """
+        Executes an inference step against ANY AI provider in the world.
+        Supports OpenAI-compatible endpoints (OpenRouter, Mistral, Grok, LM Studio, vLLM, Perplexity, etc.),
+        Anthropic Claude endpoints, and generic JSON endpoints.
+        """
+        base_url = (self.base_url or os.getenv("CUSTOM_LLM_URL") or os.getenv("UNIVERSAL_LLM_URL") or "").strip().rstrip("/")
+        if not base_url:
+            raise ValueError("Custom AI Base URL is required. Please configure it in Settings or CUSTOM_LLM_URL.")
+
+        api_key = self.api_key or os.getenv("CUSTOM_LLM_KEY") or os.getenv("UNIVERSAL_LLM_KEY") or ""
+        target_model = self.model or os.getenv("CUSTOM_LLM_MODEL") or "default"
+        custom_name = os.getenv("CUSTOM_LLM_NAME", "Custom AI")
+
+        # 1. Anthropic Claude format
+        if "anthropic.com" in base_url or ("claude" in target_model.lower() and "anthropic" in base_url):
+            endpoint = base_url if base_url.endswith("/messages") else f"{base_url}/messages"
+            headers = {
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "Content-Type": "application/json"
+            }
+            body = {
+                "model": target_model,
+                "system": system_prompt,
+                "messages": [{"role": "user", "content": user_prompt}],
+                "max_tokens": 4096,
+                "temperature": 0.2
+            }
+            resp = self._session.post(endpoint, json=body, headers=headers, timeout=75)
+            if resp.status_code == 200:
+                data = resp.json()
+                raw_text = ""
+                for part in data.get("content", []):
+                    if part.get("type") == "text":
+                        raw_text += part.get("text", "")
+                return self._parse_json_response(raw_text)
+            else:
+                raise RuntimeError(f"{custom_name} Anthropic API Error {resp.status_code}: {resp.text[:250]}")
+
+        # 2. OpenAI-compatible / Standard Chat Completions (OpenRouter, Mistral, Grok, LM Studio, vLLM, Perplexity, etc.)
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key or "sk-dummy-key", base_url=base_url)
+            kwargs = {
+                "model": target_model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "temperature": 0.2
+            }
+            try:
+                resp = client.chat.completions.create(**kwargs, response_format={"type": "json_object"})
+                raw_text = resp.choices[0].message.content or ""
+                return self._parse_json_response(raw_text)
+            except Exception:
+                resp = client.chat.completions.create(**kwargs)
+                raw_text = resp.choices[0].message.content or ""
+                return self._parse_json_response(raw_text)
+        except Exception as e_sdk:
+            # 3. Direct HTTP fallback via requests session
+            endpoint = base_url if (base_url.endswith("/chat/completions") or base_url.endswith("/completions")) else f"{base_url}/chat/completions"
+            headers = {"Content-Type": "application/json"}
+            if api_key:
+                headers["Authorization"] = f"Bearer {api_key}"
+
+            body = {
+                "model": target_model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "temperature": 0.2
+            }
+            resp = self._session.post(endpoint, json=body, headers=headers, timeout=75)
+            if resp.status_code in (200, 201):
+                data = resp.json()
+                choices = data.get("choices", [])
+                if choices:
+                    raw_text = choices[0].get("message", {}).get("content", "") or choices[0].get("text", "")
+                    return self._parse_json_response(raw_text)
+                elif "response" in data:
+                    return self._parse_json_response(data["response"])
+                elif "content" in data:
+                    return self._parse_json_response(str(data["content"]))
+                else:
+                    return self._parse_json_response(json.dumps(data))
+            else:
+                raise RuntimeError(f"{custom_name} Error {resp.status_code}: {resp.text[:250]}")
 
     def _call_groq(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
         from openai import OpenAI
