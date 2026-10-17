@@ -54,6 +54,7 @@ class SettingsRequest(BaseModel):
     gemini_key: Optional[str] = None
     openai_key: Optional[str] = None
     groq_key: Optional[str] = None
+    deepseek_key: Optional[str] = None
     ollama_url: Optional[str] = None
     ollama_model: Optional[str] = None
     safe_mode: bool = False
@@ -125,7 +126,8 @@ async def get_status():
         "ollama_model": os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b"),
         "has_gemini_key": bool(os.getenv("GEMINI_API_KEY")),
         "has_openai_key": bool(os.getenv("OPENAI_API_KEY")),
-        "has_groq_key": bool(os.getenv("GROQ_API_KEY"))
+        "has_groq_key": bool(os.getenv("GROQ_API_KEY")),
+        "has_deepseek_key": bool(os.getenv("DEEPSEEK_API_KEY"))
     }
 
 @app.get("/api/connections/check")
@@ -320,6 +322,9 @@ async def update_settings(req: SettingsRequest):
     if req.groq_key is not None:
         os.environ["GROQ_API_KEY"] = req.groq_key
         set_key(str(env_file), "GROQ_API_KEY", req.groq_key)
+    if req.deepseek_key is not None:
+        os.environ["DEEPSEEK_API_KEY"] = req.deepseek_key
+        set_key(str(env_file), "DEEPSEEK_API_KEY", req.deepseek_key)
     if req.ollama_url:
         os.environ["OLLAMA_BASE_URL"] = req.ollama_url
         set_key(str(env_file), "OLLAMA_BASE_URL", req.ollama_url)

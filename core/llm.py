@@ -177,8 +177,10 @@ class LLMClient:
                 raw_key = os.getenv("GEMINI_API_KEY") or ""
             elif self.provider == "openai":
                 raw_key = os.getenv("OPENAI_API_KEY") or ""
+            elif self.provider == "deepseek":
+                raw_key = os.getenv("DEEPSEEK_API_KEY") or ""
             else:
-                raw_key = os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
+                raw_key = os.getenv("DEEPSEEK_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
         else:
             raw_key = api_key
         self.api_key = raw_key.strip().strip("'").strip('"')
@@ -207,6 +209,8 @@ class LLMClient:
                 self.model = os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
             elif self.provider == "groq":
                 self.model = os.getenv("GROQ_MODEL") or "qwen/qwen3.8-27b"
+            elif self.provider == "deepseek":
+                self.model = os.getenv("DEEPSEEK_MODEL") or "deepseek-chat"
             elif self.provider == "ollama":
                 self.model = os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b")
             else:
@@ -317,12 +321,34 @@ class LLMClient:
                 lat = round((time.perf_counter() - start_t) * 1000, 1)
                 return {"provider": "openai", "status": "error", "latency_ms": lat, "message": str(e)}
 
+        elif target_provider == "deepseek":
+            deepseek_key = self.api_key if self.provider == "deepseek" else (os.getenv("DEEPSEEK_API_KEY") or "")
+            if not deepseek_key:
+                return {"provider": "deepseek", "status": "unconfigured", "latency_ms": 0, "message": "DEEPSEEK_API_KEY is not set."}
+            base_url = (self.base_url or os.getenv("DEEPSEEK_BASE_URL") or "https://api.deepseek.com").rstrip("/")
+            try:
+                url = f"{base_url}/models"
+                resp = self._session.get(url, headers={"Authorization": f"Bearer {deepseek_key}"}, timeout=4.0)
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                if resp.status_code == 200:
+                    return {
+                        "provider": "deepseek",
+                        "status": "connected",
+                        "latency_ms": lat,
+                        "model": self.model or "deepseek-chat",
+                        "message": f"DeepSeek API connected successfully ({lat}ms)"
+                    }
+                return {"provider": "deepseek", "status": "error", "latency_ms": lat, "message": f"HTTP {resp.status_code}: {resp.text[:100]}"}
+            except Exception as e:
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                return {"provider": "deepseek", "status": "error", "latency_ms": lat, "message": str(e)}
+
         return {"provider": target_provider, "status": "ready", "latency_ms": 0, "message": "Provider ready (rule_engine / offline)"}
 
     def generate_step(self, goal: str, trajectory_summary: str, tool_schemas: str, os_info: Dict[str, Any]) -> Dict[str, Any]:
         """Calls the configured provider to get the next agent decision."""
         # Check if fallback to rule engine is warranted
-        has_any_key = bool(self.api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("OPENAI_API_KEY"))
+        has_any_key = bool(self.api_key or os.getenv("GEMINI_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("DEEPSEEK_API_KEY"))
         if self.provider == "rule_engine" or (not has_any_key and self.provider not in ["ollama"]):
             return self._rule_engine_step(goal, trajectory_summary)
 
@@ -428,9 +454,11 @@ class LLMClient:
 
         # Attempt primary provider first, then seamlessly try alternative configured providers
         candidate_providers = [self.provider]
-        for alt_prov in ["groq", "gemini", "openai", "ollama"]:
+        for alt_prov in ["deepseek", "groq", "gemini", "openai", "ollama"]:
             if alt_prov not in candidate_providers:
-                if alt_prov == "groq" and os.getenv("GROQ_API_KEY"):
+                if alt_prov == "deepseek" and os.getenv("DEEPSEEK_API_KEY"):
+                    candidate_providers.append(alt_prov)
+                elif alt_prov == "groq" and os.getenv("GROQ_API_KEY"):
                     candidate_providers.append(alt_prov)
                 elif alt_prov == "gemini" and os.getenv("GEMINI_API_KEY"):
                     candidate_providers.append(alt_prov)
@@ -442,7 +470,18 @@ class LLMClient:
         last_err = None
         for prov in candidate_providers:
             try:
-                if prov == "gemini":
+                if prov == "deepseek":
+                    deepseek_key = (self.api_key if self.provider == "deepseek" else os.getenv("DEEPSEEK_API_KEY") or "").strip().strip("'").strip('"')
+                    if not deepseek_key:
+                        continue
+                    prev_prov, prev_key = self.provider, self.api_key
+                    self.provider, self.api_key = "deepseek", deepseek_key
+                    self.model = self.model if prev_prov == "deepseek" and self.model else (os.getenv("DEEPSEEK_MODEL") or "deepseek-chat")
+                    step = self._call_deepseek(sys_prompt, user_content)
+                    if prev_prov != "deepseek":
+                        step["thought"] = f"(Failover to DeepSeek) " + step.get("thought", "")
+                    return step
+                elif prov == "gemini":
                     gemini_key = (self.api_key if self.provider == "gemini" else os.getenv("GEMINI_API_KEY") or "").strip().strip("'").strip('"')
                     if not gemini_key:
                         continue
@@ -548,6 +587,58 @@ class LLMClient:
         )
         raw_text = resp.choices[0].message.content
         return self._parse_json_response(raw_text)
+
+    def _call_deepseek(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+        """Calls DeepSeek API (deepseek-chat or deepseek-reasoner) using OpenAI-compatible client with HTTP fallback."""
+        base_url = (self.base_url or os.getenv("DEEPSEEK_BASE_URL") or "https://api.deepseek.com").rstrip("/")
+        target_model = self.model or os.getenv("DEEPSEEK_MODEL") or "deepseek-chat"
+
+        # 1. Try using OpenAI SDK client
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=self.api_key, base_url=base_url)
+            kwargs: Dict[str, Any] = {
+                "model": target_model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "temperature": 0.2
+            }
+            if "reasoner" not in target_model.lower():
+                kwargs["response_format"] = {"type": "json_object"}
+
+            resp = client.chat.completions.create(**kwargs)
+            raw_text = resp.choices[0].message.content or ""
+            return self._parse_json_response(raw_text)
+        except Exception as e:
+            # 2. Resilient direct HTTP fallback
+            try:
+                endpoint = f"{base_url}/chat/completions"
+                headers = {
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json"
+                }
+                body: Dict[str, Any] = {
+                    "model": target_model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "temperature": 0.2
+                }
+                if "reasoner" not in target_model.lower():
+                    body["response_format"] = {"type": "json_object"}
+
+                resp = self._session.post(endpoint, json=body, headers=headers, timeout=60)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    raw_text = data.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    return self._parse_json_response(raw_text)
+                else:
+                    raise RuntimeError(f"DeepSeek HTTP {resp.status_code}: {resp.text[:200]}")
+            except Exception as http_err:
+                raise RuntimeError(f"DeepSeek call failed: {e} | HTTP fallback error: {http_err}") from e
 
     def _call_groq(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
         from openai import OpenAI

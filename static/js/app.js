@@ -24,6 +24,7 @@ const btnCancelSettings = document.getElementById('btn-cancel-settings');
 const btnSaveSettings = document.getElementById('btn-save-settings');
 const settingProvider = document.getElementById('setting-provider');
 const settingGeminiKey = document.getElementById('setting-gemini-key');
+const settingDeepseekKey = document.getElementById('setting-deepseek-key');
 const settingOpenaiKey = document.getElementById('setting-openai-key');
 const settingGroqKey = document.getElementById('setting-groq-key');
 const settingOllamaUrl = document.getElementById('setting-ollama-url');
@@ -33,6 +34,7 @@ const settingSafeMode = document.getElementById('setting-safe-mode');
 
 // Groups
 const groupGemini = document.getElementById('group-gemini');
+const groupDeepseek = document.getElementById('group-deepseek');
 const groupOpenai = document.getElementById('group-openai');
 const groupGroq = document.getElementById('group-groq');
 const groupOllama = document.getElementById('group-ollama');
@@ -149,6 +151,7 @@ function setupEventListeners() {
 function updateProviderFormVisibility() {
   const p = settingProvider.value;
   groupGemini.style.display = p === 'gemini' ? 'block' : 'none';
+  if (groupDeepseek) groupDeepseek.style.display = p === 'deepseek' ? 'block' : 'none';
   groupOpenai.style.display = p === 'openai' ? 'block' : 'none';
   groupGroq.style.display = p === 'groq' ? 'block' : 'none';
   groupOllama.style.display = p === 'ollama' ? 'block' : 'none';
@@ -480,6 +483,7 @@ async function handleSaveSettings() {
   const payload = {
     provider: settingProvider.value,
     gemini_key: settingGeminiKey.value || null,
+    deepseek_key: settingDeepseekKey ? (settingDeepseekKey.value || null) : null,
     openai_key: settingOpenaiKey.value || null,
     groq_key: settingGroqKey.value || null,
     ollama_url: settingOllamaUrl.value || null,

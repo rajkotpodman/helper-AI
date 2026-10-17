@@ -297,10 +297,29 @@ When Helper-AI encounters a software application:
 
 ---
 
-## 8. Running 100% Free & Offline (No Paid Keys Needed)
+## 8. Running with AI Models (DeepSeek, Gemini, OpenAI, Groq, or 100% Free Offline)
 
 Helper-AI comes with a built-in **Smart Rule Engine** that works immediately without any API keys or credit cards.
-If you want to use local AI models offline:
+
+### 🌟 Using DeepSeek (V3 / R1) - Recommended for High Intelligence & Low Cost:
+DeepSeek provides world-class reasoning and tool execution at a fraction of the cost:
+1. Get an API key from **[DeepSeek Platform](https://platform.deepseek.com/)**.
+2. In Helper-AI web dashboard, click **⚙️ Settings**, select **DeepSeek (V3 / R1)**, paste your API key, and click **Save Settings**!
+3. Or set it in your `.env` file:
+   ```ini
+   LLM_PROVIDER=deepseek
+   DEEPSEEK_API_KEY=sk-your-deepseek-key
+   DEEPSEEK_MODEL=deepseek-chat
+   ```
+   *(For advanced mathematical and complex logic goals, you can also use `DEEPSEEK_MODEL=deepseek-reasoner`)*
+
+### 🚀 Using Other Cloud Providers:
+* **Google Gemini:** Get a free key at [Google AI Studio](https://aistudio.google.com/) and enter it in Settings or `.env`.
+* **Groq:** Ultra-fast sub-second responses with Llama 3.3.
+* **OpenAI:** GPT-4o / GPT-4o-mini support.
+
+### 🔒 100% Free & Offline Mode (Ollama):
+If you want to use local AI models offline without internet:
 1. Download and install **[Ollama](https://ollama.com/)**.
 2. Open Command Prompt and type:
    ```bash
@@ -451,10 +470,24 @@ Helper-AI puts your safety first:
 
 ---
 
-## ૭. API Key વગર ૧૦૦% ફ્રી અને ઑફલાઇન ચલાવવાની રીત
+## ૭. DeepSeek અને અન્ય AI મોડેલ્સ વાપરવાની રીત (૧૦૦% ફ્રી તથા લો-કોસ્ટ વિકલ્પો)
 
 Helper-AI માં ડિફોલ્ટ **Smart Rule Engine** આવે છે જેને કોઈ ઈન્ટરનેટ કે પેઇડ કીની જરૂર નથી.
-જો તમારે ઑફલાઇન મોડેલ વાપરવું હોય:
+
+### 🌟 DeepSeek (V3 / R1) નો ઉપયોગ:
+DeepSeek એ અત્યંત હોંશિયાર અને ખૂબ જ ઓછા ખર્ચે (Low Cost) કામ કરતું શ્રેષ્ઠ AI મોડેલ છે:
+1. **[DeepSeek Platform](https://platform.deepseek.com/)** પરથી API Key મેળવો.
+2. વેબ ડેશબોર્ડમાં **Settings (સેટિંગ્સ)** ખોલો, **DeepSeek (V3 / R1)** પસંદ કરો, તમારી API Key દાખલ કરો અને **Save Settings** પર ક્લિક કરો.
+3. અથવા તમારી `.env` ફાઈલમાં ઉમેરો:
+   ```ini
+   LLM_PROVIDER=deepseek
+   DEEPSEEK_API_KEY=તમારી_deepseek_કી
+   DEEPSEEK_MODEL=deepseek-chat
+   ```
+   *(અઘરા લોજિકલ અને ગણતરી વાળા ટાસ્ક માટે તમે `deepseek-reasoner` પણ વાપરી શકો છો)*
+
+### 🔒 ૧૦૦% ફ્રી અને ઑફલાઇન રીત (Ollama):
+જો તમારે ઈન્ટરનેટ વગર સંપૂર્ણ ઑફલાઇન મોડેલ વાપરવું હોય:
 1. **[Ollama](https://ollama.com/)** ઇન્સ્ટોલ કરો.
 2. કમાન્ડ પ્રોમ્પ્ટમાં લખો: `ollama pull qwen2.5:1.5b`.
 3. વેબ ડેશબોર્ડના Settings માં જઈને **Ollama** પસંદ કરો. ૧૦૦% પ્રાઈવેટ અને ફ્રી!

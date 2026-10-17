@@ -213,6 +213,7 @@ Helper-AI works with **any AI provider** you prefer:
 | Mode / Provider | Internet Needed? | Cost | How to Use |
 | :--- | :---: | :---: | :--- |
 | **Smart Rule Engine** *(Built-in)* | ❌ No | **100% Free** | Default out-of-the-box mode! No API keys or credit card needed. |
+| **DeepSeek (V3 / R1)** | ✅ Yes | **Extremely Low Cost** | Get key from [DeepSeek Platform](https://platform.deepseek.com/), set `DEEPSEEK_API_KEY` in `.env`. Supports `deepseek-chat` (V3) and `deepseek-reasoner` (R1). |
 | **Google Gemini** | ✅ Yes | **Free Tier Available** | Get a free key at [Google AI Studio](https://aistudio.google.com/), add `GEMINI_API_KEY` in `.env`. |
 | **Ollama Local AI** | ❌ No | **100% Free** | Install [Ollama](https://ollama.com/), run `ollama pull qwen2.5:1.5b`. Works 100% private on your machine. |
 | **OpenAI (GPT-4o)** | ✅ Yes | Paid API | Add `OPENAI_API_KEY` in `.env`. |
@@ -222,9 +223,11 @@ Helper-AI works with **any AI provider** you prefer:
 1. Rename or copy `.env.example` to `.env`.
 2. Open `.env` in Notepad and set:
    ```ini
-   LLM_PROVIDER=gemini
-   GEMINI_API_KEY=your_actual_key_here
+   LLM_PROVIDER=deepseek
+   DEEPSEEK_API_KEY=your_actual_key_here
+   DEEPSEEK_MODEL=deepseek-chat
    ```
+   *(Or choose `LLM_PROVIDER=gemini` with `GEMINI_API_KEY`)*
 3. Save the file. That's it!
 
 ---

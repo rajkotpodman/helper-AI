@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.0] - 2026-10-17
+
+### 🧠 DeepSeek LLM Provider Integration (V3 & R1)
+- **DeepSeek First-Class Provider in `core/llm.py` (`LLMClient`):**
+  - Added native DeepSeek provider support with OpenAI-compatible API base URL (`https://api.deepseek.com`).
+  - Default model: `deepseek-chat` (DeepSeek-V3) with full support for `deepseek-reasoner` (DeepSeek-R1).
+  - Robust structured JSON output generation via `_call_deepseek` with dual-mode OpenAI SDK and direct HTTP connection-pool fallback.
+  - Active connection diagnostics and latency tracking in `test_connection(provider="deepseek")`.
+  - Added DeepSeek to autonomous candidate failover loop.
+- **Connection Diagnostics (`core/connection_checker.py`):**
+  - Integrated `deepseek_api` and `openai_api` diagnostics into concurrent double-pass health checks.
+- **Web Dashboard & Settings API (`app.py`, `server.py`):**
+  - Updated `SettingsRequest` and `SettingsUpdateRequest` schemas with `deepseek_key`.
+  - Enhanced `/api/settings` to persist `DEEPSEEK_API_KEY` directly to `.env`.
+  - Added `has_deepseek_key` status indicator to `/api/status`.
+- **UI Enhancements (`web/templates/index.html`, `web/static/js/app.js`, `static/`):**
+  - Added `DeepSeek (V3 / R1 - Intelligent & Cost-Effective)` option in AI Model Provider dropdowns.
+  - Added dedicated DeepSeek API Key input fields with reactive visibility toggles and localStorage synchronization.
+- **Environment & Docker Deployment:**
+  - Configured `DEEPSEEK_API_KEY`, `DEEPSEEK_MODEL`, and `DEEPSEEK_BASE_URL` in `.env.example`, `.env`, `docker-compose.yml`, and `docker-compose.dev.yml`.
+- **Test Suite:**
+  - Added unit and integration test suite `tests/test_deepseek_provider.py` covering provider initialization, custom model routing, connection testing, JSON generation, and API settings persistence.
+
+---
+
 ## [2.0.0] - 2026-10-17
 
 ### 🧩 REA (Reverse Engineer Anything) & Persistent App Knowledge Memory
