@@ -63,7 +63,7 @@ jobs:
           }
 
       - name: Upload Windows Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: helper-ai-windows-artifacts
           path: |
@@ -145,7 +145,7 @@ jobs:
           mv "deb_pkg/helper-ai_${VERSION}_amd64.deb" dist/
 
       - name: Upload Linux Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: helper-ai-linux-artifacts
           path: |
@@ -180,7 +180,7 @@ jobs:
           python3 packaging/build_standalone.py
 
       - name: Upload macOS Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: helper-ai-macos-artifacts
           path: |
@@ -221,7 +221,7 @@ jobs:
             -x "*.git*" "dist/*" "build/*" "*__pycache__*" "*.venv*"
 
       - name: Upload Android & Source Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: helper-ai-android-and-source-artifacts
           path: |
