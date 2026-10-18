@@ -27,5 +27,5 @@ httpx>=0.27.0
 
 # Reverse Engineering & MCP Integrations
 pefile>=2024.8.26
-mcp>=1.0.0
+mcp>=2.3.0
 
