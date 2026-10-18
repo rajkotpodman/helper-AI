@@ -641,14 +641,10 @@ class LLMClient:
         target_model = self.model or "gemini-flash-latest"
         gemini_candidates = [
             target_model,
-            "gemini-3.8-flash",
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
-            "gemini-1.5-pro",
             "gemini-flash-latest",
-            "gemini-2.5-flash",
             "gemini-flash-lite-latest",
-            "gemini-2.5-flash-lite",
+            "gemini-3.8-flash",
+            "gemini-2.5-flash",
             "gemini-3-flash-preview"
         ]
         # Deduplicate
@@ -1024,7 +1020,7 @@ class LLMClient:
             "stream": False,
             "format": "json"
         }
-        resp = requests.post(url, json=payload, timeout=90)
+        resp = requests.post(url, json=payload, timeout=180)
         resp.raise_for_status()
         data = resp.json()
         raw_text = data.get("message", {}).get("content", "")

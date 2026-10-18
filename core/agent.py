@@ -11,6 +11,8 @@ from core.audit import audit_logger
 from core.metrics import metrics
 from core.permissions import PermissionManager
 from core.memory_recorder import MarkdownMemoryRecorder
+from core.persistent_memory import PersistentMemoryManager
+from core.evaluator import GroundTruthEvaluator, EvaluationResult
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("HelperAgent")
@@ -36,6 +38,8 @@ class HelperAgent:
         self.memory_recorder = memory_recorder or MarkdownMemoryRecorder()
         self.max_steps = max_steps
         self.safe_mode = safe_mode
+        self.persistent_memory = PersistentMemoryManager.get_instance()
+        self.evaluator = GroundTruthEvaluator.get_instance()
         self._is_running = False
         self._should_cancel = False
 
@@ -49,7 +53,8 @@ class HelperAgent:
     async def run(
         self,
         goal: str,
-        on_event: Optional[Callable[[str, Dict[str, Any]], None]] = None
+        on_event: Optional[Callable[[str, Dict[str, Any]], None]] = None,
+        image_data: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Runs the autonomous goal execution loop.
@@ -112,18 +117,44 @@ class HelperAgent:
                         count += 1
             return count
 
+        pending_event_tasks = []
+
         def emit(event_type: str, data: Dict[str, Any]):
             if on_event:
                 try:
                     if asyncio.iscoroutinefunction(on_event):
-                        asyncio.create_task(on_event(event_type, data))
+                        t = asyncio.create_task(on_event(event_type, data))
+                        pending_event_tasks.append(t)
                     else:
-                        on_event(event_type, data)
+                        res = on_event(event_type, data)
+                        if asyncio.iscoroutine(res):
+                            t = asyncio.create_task(res)
+                            pending_event_tasks.append(t)
                 except Exception as e:
                     logger.warning(f"Error in event listener: {e}")
 
+        async def flush_events():
+            if pending_event_tasks:
+                tasks_to_wait = [t for t in pending_event_tasks if not t.done()]
+                if tasks_to_wait:
+                    await asyncio.gather(*tasks_to_wait, return_exceptions=True)
+                pending_event_tasks.clear()
+            await asyncio.sleep(0.01)
+
         emit("started", {"goal": goal, "system_info": memory.system_info})
         tool_schemas_json = self.tools.get_concise_schema_text()
+
+        # Multi-Session Persistent Memory Recall (Mem0 & SQLite Store)
+        try:
+            persisted_context = self.persistent_memory.format_memory_for_prompt(goal)
+            if persisted_context:
+                memory.pin_fact(persisted_context)
+                emit("status_update", {
+                    "step": 0,
+                    "message": "🧠 Multi-Session Persistent Memory Loaded: Recalled known repositories, past published posts, and reflexion lessons."
+                })
+        except Exception as e:
+            logger.warning(f"Could not load persistent multi-session memory: {e}")
 
         # Check if goal targets a remembered application profile
         try:
@@ -145,6 +176,70 @@ class HelperAgent:
                 })
         except Exception as e:
             logger.warning(f"Could not query proactive app memory: {e}")
+
+        # 0. Check if a screenshot/image was pasted (Print Screen / Ctrl+V)
+        if image_data:
+            try:
+                from core.vision_engine import vision_engine
+                emit("status_update", {
+                    "step": 0,
+                    "message": "📸 Pasted Screenshot detected. Ingesting and performing Multimodal Vision Analysis..."
+                })
+                vision_result = await asyncio.to_thread(
+                    vision_engine.analyze_image_with_ai,
+                    base64_data=image_data,
+                    goal=goal,
+                    provider=getattr(self.llm_client, "provider", "gemini")
+                )
+                if vision_result.get("success"):
+                    analysis_text = vision_result.get("analysis", "")
+                    meta = vision_result.get("metadata", {})
+                    emit("image_analyzed", {
+                        "file_path": vision_result.get("file_path"),
+                        "analysis": analysis_text,
+                        "metadata": meta
+                    })
+                    memory.add_step(
+                        f"Multimodal Vision Inspection: Analyzed pasted screenshot ({meta.get('width')}x{meta.get('height')})",
+                        "analyze_screenshot",
+                        {"file_path": vision_result.get("file_path")},
+                        analysis_text,
+                        True
+                    )
+                    emit("thought", {
+                        "step": 1,
+                        "thought": f"I have inspected the pasted screenshot ({meta.get('width')}x{meta.get('height')}, {meta.get('theme')}). Here is the visual diagnostic and reply.",
+                        "action": "analyze_screenshot",
+                        "action_args": {"file_path": vision_result.get("file_path")}
+                    })
+                    emit("action_result", {
+                        "step": 1,
+                        "tool": "analyze_screenshot",
+                        "success": True,
+                        "output": analysis_text
+                    })
+
+                    # If the user's goal was asking to analyze or explain the image, complete immediately
+                    is_pure_analysis = any(k in lower_goal for k in [
+                        "analyze", "explain", "diagnose", "what is this", "what is on", "reply",
+                        "tell me about", "check this screenshot", "read this", "describe", "image"
+                    ]) or len(clean_goal) <= 20 or "pasted" in lower_goal
+                    if is_pure_analysis:
+                        metrics.record_goal_complete(success=True)
+                        emit("completed", {
+                            "success": True,
+                            "message": analysis_text,
+                            "total_steps": 1
+                        })
+                        await flush_events()
+                        return {
+                            "success": True,
+                            "message": analysis_text,
+                            "total_steps": 1,
+                            "vision_analysis": vision_result
+                        }
+            except Exception as e:
+                logger.error(f"Vision analysis failed during agent run: {e}", exc_info=True)
 
         final_message = ""
         success = False
@@ -464,8 +559,22 @@ class HelperAgent:
             tool_result = await asyncio.to_thread(self.tools.execute, action, action_args)
             duration_ms = (time.time() - t_start) * 1000
 
-            action_success = tool_result.get("success", False)
-            output_str = str(tool_result.get("output", ""))
+            # 4.1 Reflexion Ground-Truth Environmental Verification
+            eval_res = self.evaluator.evaluate(action, action_args, tool_result, memory)
+            action_success = eval_res.is_verified
+            raw_output = str(tool_result.get("output", ""))
+
+            if not eval_res.is_verified:
+                diag_msg = (
+                    f"❌ GROUND-TRUTH REJECTED: {eval_res.failure_reason}\n"
+                    f"• Evidence: {eval_res.ground_truth_evidence}\n"
+                    f"• Solution: {eval_res.suggested_fix}"
+                )
+                output_str = f"{raw_output}\n\n{diag_msg}".strip()
+            else:
+                output_str = raw_output
+                if eval_res.ground_truth_evidence:
+                    output_str += f"\n[Ground-Truth Verified: {eval_res.ground_truth_evidence}]"
 
             # Audit log and metrics recording
             audit_logger.log_event(
@@ -475,7 +584,7 @@ class HelperAgent:
                 success=action_success,
                 duration_ms=duration_ms,
                 output_snippet=output_str,
-                error=tool_result.get("error")
+                error=tool_result.get("error") if not eval_res.is_verified else None
             )
             metrics.record_tool_call(action, action_success, duration_ms)
 
@@ -581,11 +690,15 @@ class HelperAgent:
                         await asyncio.sleep(2.0)
                         continue
                     else:
-                        success = True
-                        final_message = f"Successfully published all {posts_done or 1} requested post(s) to {b_act.split('_')[1].title()}!\n\n{output_str}"
-                        metrics.record_goal_complete(success=True)
+                        if posts_done >= (target_posts or 1):
+                            success = True
+                            final_message = f"✅ Successfully verified and published all {posts_done} requested post(s) to {b_act.split('_')[1].title()}!\n\n{output_str}"
+                        else:
+                            success = False
+                            final_message = f"⚠️ Goal incomplete: Only {posts_done} of {target_posts} post(s) were published. Reason: {output_str}"
+                        metrics.record_goal_complete(success=success)
                         emit("completed", {
-                            "success": True,
+                            "success": success,
                             "message": final_message,
                             "total_steps": step_idx
                         })
@@ -734,6 +847,7 @@ class HelperAgent:
             except Exception as e:
                 logger.warning(f"Error recording interaction to memory file: {e}")
 
+        await flush_events()
         self._is_running = False
         return {
             "success": success,
@@ -866,8 +980,11 @@ class HelperAgent:
         })
 
         res = self.tools.execute(action_name, action_args)
-        success = res.get("success", False)
+        eval_res = self.evaluator.evaluate(action_name, action_args, res, memory)
+        success = eval_res.is_verified
         out_msg = res.get("output", "")
+        if not success:
+            out_msg = f"{out_msg}\n❌ GROUND-TRUTH REJECTED: {eval_res.failure_reason}\n• Fix: {eval_res.suggested_fix}".strip()
 
         # Fallback to Blogger if LinkedIn is unauthenticated
         if not success and target_platform == "linkedin" and any(k in out_msg.lower() for k in ["sign-in", "login", "not found"]):
@@ -875,12 +992,14 @@ class HelperAgent:
                 "step": step_idx,
                 "message": "LinkedIn session requires sign-in. Autonomously publishing to active Google Blogger platform..."
             })
-            blog_res = self.tools.execute("browser_automation", {
+            blog_args = {
                 "action": "publish_blog_post",
                 "title": f"Open-Source GitHub Portfolio: {len(repos)} Projects",
                 "text": master_post
-            })
-            if blog_res.get("success"):
+            }
+            blog_res = self.tools.execute("browser_automation", blog_args)
+            blog_eval = self.evaluator.evaluate("browser_automation", blog_args, blog_res, memory)
+            if blog_eval.is_verified:
                 out_msg += f"\n\n[Blogger Backup]: {blog_res.get('output', '')}"
                 success = True
 
@@ -905,9 +1024,9 @@ class HelperAgent:
         if success:
             summary_parts.append(f"✅ Successfully published showcase post live!\n{out_msg}")
         else:
-            summary_parts.append(f"ℹ️ {out_msg}")
+            summary_parts.append(f"❌ Publishing Incomplete: {out_msg}")
 
         return {
-            "success": True,
+            "success": success,
             "message": "\n\n".join(summary_parts)
         }

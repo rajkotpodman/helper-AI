@@ -1,0 +1,497 @@
+/* =====================================================================
+   Helper-AI: Ultra-Sleek Cyber Dark Design System & Glassmorphism Theme
+   ===================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+:root {
+  --bg-base: #090D16;
+  --bg-surface: #0D131F;
+  --bg-card: rgba(17, 24, 39, 0.72);
+  --bg-card-hover: rgba(23, 32, 51, 0.82);
+  --bg-input: #0A0F1D;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(59, 130, 246, 0.35);
+  --border-focus: rgba(6, 182, 212, 0.6);
+  --text-main: #FFFFFF;
+  --text-secondary: #E2E8F0;
+  --text-muted: #94A3B8;
+  --electric-blue: #3B82F6;
+  --cyan-glow: #06B6D4;
+  --emerald-live: #10B981;
+  --amber-warn: #F59E0B;
+  --crimson-stop: #EF4444;
+  --glass-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6), 0 0 25px rgba(59, 130, 246, 0.06);
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-base);
+  background-image: 
+    radial-gradient(at 5% 5%, rgba(59, 130, 246, 0.12) 0px, transparent 45%),
+    radial-gradient(at 95% 95%, rgba(6, 182, 212, 0.09) 0px, transparent 45%),
+    radial-gradient(at 50% 20%, rgba(30, 58, 138, 0.15) 0px, transparent 55%),
+    radial-gradient(at 50% 80%, rgba(13, 19, 31, 0.8) 0px, transparent 100%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(9, 13, 22, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.5);
+}
+
+/* Glassmorphism Containers */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--glass-shadow);
+  border-radius: 16px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.glass-panel:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Logo Box & Glow */
+.brand-logo-box {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, #2563EB, #06B6D4);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 20px rgba(37, 99, 235, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.brand-logo-box:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 26px rgba(6, 182, 212, 0.6);
+}
+
+/* Interactive Pill Badges and Buttons */
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(18, 24, 38, 0.85);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.825rem;
+  font-weight: 500;
+  padding: 0.42rem 0.85rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.nav-pill:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.nav-pill:active {
+  transform: translateY(0);
+}
+
+.nav-pill.active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #60A5FA;
+}
+
+/* Prompt Textarea */
+.prompt-textarea {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  color: #FFFFFF;
+  font-family: inherit;
+  font-size: 0.975rem;
+  line-height: 1.6;
+  resize: none;
+  min-height: 110px;
+  outline: none;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.prompt-textarea:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18), 0 0 25px rgba(6, 182, 212, 0.1);
+  background: #080D1A;
+}
+
+.prompt-textarea::placeholder {
+  color: #64748B;
+  font-size: 0.925rem;
+}
+
+/* Quick Ideas Chips */
+.idea-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(18, 24, 38, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.38rem 0.8rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.idea-chip:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(6, 182, 212, 0.45);
+  color: #38BDF8;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(6, 182, 212, 0.12);
+}
+
+.idea-chip:active {
+  transform: scale(0.97);
+}
+
+/* Execute Button Glow */
+.btn-execute {
+  background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  transition: all 0.22s ease-in-out;
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.45), 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.btn-execute:hover {
+  background: linear-gradient(135deg, #1D4ED8 0%, #4338CA 100%);
+  box-shadow: 0 0 32px rgba(59, 130, 246, 0.65), 0 6px 18px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn-execute:active {
+  transform: translateY(0);
+}
+
+.btn-execute:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Stepper Pipeline Indicators */
+.stepper-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+}
+
+.step-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(18, 24, 38, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.step-node.active .step-circle {
+  border-color: #38BDF8;
+  background: rgba(6, 182, 212, 0.15);
+  color: #38BDF8;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
+  animation: pulse-ring 2s infinite;
+}
+
+.step-node.completed .step-circle {
+  border-color: #10B981;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
+}
+
+.step-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.step-node.active .step-label {
+  color: #38BDF8;
+}
+
+.step-node.completed .step-label {
+  color: #10B981;
+}
+
+.stepper-line {
+  flex: 1;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0 0.5rem;
+  margin-bottom: 1.2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.stepper-line.active {
+  background: linear-gradient(90deg, #10B981, #38BDF8);
+}
+
+/* Terminal Console Box */
+.terminal-box {
+  background: #060911;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.825rem;
+  padding: 1rem 1.25rem;
+  max-height: 260px;
+  overflow-y: auto;
+  color: #CBD5E1;
+  line-height: 1.55;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+.terminal-line {
+  margin-bottom: 0.35rem;
+  display: flex;
+  gap: 0.6rem;
+  word-break: break-word;
+}
+
+.terminal-time {
+  color: #64748B;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.terminal-prefix {
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.prefix-info { color: #38BDF8; }
+.prefix-action { color: #A78BFA; }
+.prefix-success { color: #34D399; }
+.prefix-warn { color: #FBBF24; }
+.prefix-error { color: #F87171; }
+
+/* Micro Animations */
+@keyframes pulse-ring {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-drawer-in {
+  animation: fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Modal Overlay & Card */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 7, 14, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.modal-dialog {
+  background: #0D131F;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(59, 130, 246, 0.12);
+  width: 100%;
+  max-width: 540px;
+  padding: 1.5rem;
+  animation: fadeInScale 0.2s ease-out;
+}
+
+/* Hide intrusive Google Translate iframe top banner */
+.goog-te-banner-frame.skiptranslate,
+.goog-te-banner-frame {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+body {
+  top: 0px !important;
+  position: static !important;
+}
+
+.goog-tooltip,
+.goog-tooltip:hover,
+#goog-gt-tt,
+.goog-te-balloon-frame {
+  display: none !important;
+}
+
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* =====================================================================
+   Pro Action Buttons (Side space at bottom)
+   ===================================================================== */
+.pro-buttons-side-container {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.15);
+  animation: fadeInPro 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+@keyframes fadeInPro {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.pro-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans, 'Plus Jakarta Sans', sans-serif);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  outline: none;
+  text-decoration: none;
+}
+
+.pro-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.pro-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* 1. Buy Pro - Amber / Gold Glow */
+.pro-btn.btn-buy-pro {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.22), rgba(217, 119, 6, 0.38));
+  color: #FDE68A;
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+}
+.pro-btn.btn-buy-pro:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.4), rgba(217, 119, 6, 0.6));
+  border-color: #F59E0B;
+  box-shadow: 0 0 22px rgba(245, 158, 11, 0.5);
+  color: #FFFFFF;
+}
+
+/* 2. Donation - Emerald Glow */
+.pro-btn.btn-donate {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.22), rgba(5, 150, 105, 0.38));
+  color: #A7F3D0;
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 0 14px rgba(16, 185, 129, 0.25);
+}
+.pro-btn.btn-donate:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(5, 150, 105, 0.6));
+  border-color: #10B981;
+  box-shadow: 0 0 22px rgba(16, 185, 129, 0.5);
+  color: #FFFFFF;
+}
+
+/* 3. Official Store - Cyan / Electric Blue Glow */
+.pro-btn.btn-store {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.22), rgba(59, 130, 246, 0.38));
+  color: #BAE6FD;
+  border-color: rgba(6, 182, 212, 0.5);
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.25);
+}
+.pro-btn.btn-store:hover {
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.4), rgba(59, 130, 246, 0.6));
+  border-color: #06B6D4;
+  box-shadow: 0 0 22px rgba(6, 182, 212, 0.5);
+  color: #FFFFFF;
+}
+

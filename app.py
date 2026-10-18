@@ -22,7 +22,19 @@ from core.audit import audit_logger
 from core.permissions import PermissionManager
 from core.memory_recorder import MarkdownMemoryRecorder
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="Helper-AI Dashboard")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+GLOBAL_TOOLS = ToolRegistry()
 
 # Global agent manager state
 permission_manager = PermissionManager()
@@ -44,6 +56,11 @@ class GoalRequest(BaseModel):
     engine: Optional[str] = "native"
     safe_mode: bool = False
     max_steps: int = 50
+    image_data: Optional[str] = None
+
+class VisionAnalyzeRequest(BaseModel):
+    image_data: str
+    prompt: Optional[str] = ""
 
 class PermissionRespondRequest(BaseModel):
     request_id: str
@@ -121,13 +138,12 @@ async def websocket_endpoint(websocket: WebSocket):
 
 @app.get("/api/status")
 async def get_status():
-    tools = ToolRegistry()
     return {
         "is_running": current_goal_info["is_running"],
         "goal": current_goal_info["goal"],
-        "tools_count": len(tools.get_all_tools()),
+        "tools_count": len(GLOBAL_TOOLS.get_all_tools()),
         "provider": os.getenv("LLM_PROVIDER", "gemini"),
-        "ollama_model": os.getenv("OLLAMA_MODEL", "qwen2.5:1.5b"),
+        "ollama_model": os.getenv("OLLAMA_MODEL", "dolphin-llama3"),
         "has_gemini_key": bool(os.getenv("GEMINI_API_KEY")),
         "has_openai_key": bool(os.getenv("OPENAI_API_KEY")),
         "has_groq_key": bool(os.getenv("GROQ_API_KEY")),
@@ -161,8 +177,7 @@ async def get_ollama_models():
 
 @app.get("/api/tools")
 async def get_tools():
-    tools = ToolRegistry()
-    return {"tools": tools.get_schemas()}
+    return {"tools": GLOBAL_TOOLS.get_schemas()}
 
 @app.get("/api/metrics")
 async def get_metrics():
@@ -288,7 +303,7 @@ async def start_goal(req: GoalRequest):
                 if ev_type in ("action_result", "thought", "step_start"):
                     current_goal_info["history"].append(data)
 
-            result = await active_agent.run(goal_str, on_event=on_event)
+            result = await active_agent.run(goal_str, on_event=on_event, image_data=req.image_data)
             await broadcast_event("finished", result or {"success": True, "message": "Goal finished."})
         except Exception as e:
             logger.error(f"Exception during agent run: {e}", exc_info=True)
@@ -298,6 +313,11 @@ async def start_goal(req: GoalRequest):
 
     active_task = asyncio.create_task(run_worker())
     return {"success": True, "message": "Agent execution initiated."}
+
+@app.post("/api/vision/analyze")
+async def analyze_vision_endpoint(req: VisionAnalyzeRequest):
+    from core.vision_engine import vision_engine
+    return vision_engine.analyze_image_with_ai(base64_data=req.image_data, goal=req.prompt or "")
 
 
 @app.post("/api/cancel")
@@ -310,6 +330,22 @@ async def cancel_goal():
         await broadcast_event("cancelled", {"message": "User stopped execution."})
         return {"success": True, "message": "Agent cancel signal sent."}
     return {"success": False, "message": "No active agent running."}
+
+@app.get("/api/settings")
+async def get_settings():
+    return {
+        "provider": os.getenv("LLM_PROVIDER", "gemini").strip("'\""),
+        "gemini_key": os.getenv("GEMINI_API_KEY", "").strip("'\""),
+        "groq_key": os.getenv("GROQ_API_KEY", "").strip("'\""),
+        "openai_key": os.getenv("OPENAI_API_KEY", "").strip("'\""),
+        "deepseek_key": os.getenv("DEEPSEEK_API_KEY", "").strip("'\""),
+        "custom_name": os.getenv("CUSTOM_LLM_NAME", "OpenRouter").strip("'\""),
+        "custom_url": os.getenv("CUSTOM_LLM_URL", "https://openrouter.ai/api/v1").strip("'\""),
+        "custom_key": os.getenv("CUSTOM_LLM_KEY", "").strip("'\""),
+        "custom_model": os.getenv("CUSTOM_LLM_MODEL", "anthropic/claude-3.5-sonnet").strip("'\""),
+        "ollama_model": os.getenv("OLLAMA_MODEL", "dolphin-llama3").strip("'\""),
+        "safe_mode": os.getenv("SAFE_MODE", "false").strip("'\"").lower() == "true"
+    }
 
 @app.post("/api/settings")
 async def update_settings(req: SettingsRequest):
@@ -414,16 +450,19 @@ async def api_translate(req: TranslateRequest):
 @app.get("/api/system-status")
 async def get_system_status():
     import psutil, platform
-    try:
-        cpu = psutil.cpu_percent(interval=None)
-        mem = psutil.virtual_memory()
-        disk = psutil.disk_usage(str(Path.cwd().anchor))
-    except Exception:
-        cpu = 0.0
-        mem = type("Obj", (), {"percent": 0.0, "used": 0, "total": 0})()
-        disk = type("Obj", (), {"percent": 0.0, "free": 0})()
+    def _read_stats():
+        try:
+            cpu = psutil.cpu_percent(interval=None)
+            mem = psutil.virtual_memory()
+            disk = psutil.disk_usage(str(Path.cwd().anchor))
+        except Exception:
+            cpu = 0.0
+            mem = type("Obj", (), {"percent": 0.0, "used": 0, "total": 0})()
+            disk = type("Obj", (), {"percent": 0.0, "free": 0})()
+        return cpu, mem, disk
 
-    tools = ToolRegistry()
+    cpu, mem, disk = await asyncio.to_thread(_read_stats)
+
     return {
         "status": "online",
         "is_running": current_goal_info["is_running"],
@@ -434,10 +473,10 @@ async def get_system_status():
         "disk_free_gb": round(getattr(disk, "free", 0) / (1024 ** 3), 1),
         "platform": platform.platform(),
         "python_version": platform.python_version(),
-        "tools_registered": len(tools.get_all_tools()),
+        "tools_registered": len(GLOBAL_TOOLS.get_all_tools()),
         "memory_file_size_mb": memory_recorder.get_size_mb(),
         "memory_entries": memory_recorder.get_entry_count(),
-        "provider": os.getenv("LLM_PROVIDER", "ollama"),
+        "provider": os.getenv("LLM_PROVIDER", "gemini"),
         "ollama_model": os.getenv("OLLAMA_MODEL", "dolphin-llama3"),
         "safe_mode": os.getenv("SAFE_MODE", "false").lower() == "true"
     }
@@ -445,18 +484,20 @@ async def get_system_status():
 @app.get("/api/ollama/status")
 async def get_ollama_status():
     from core.auto_setup_ollama import OllamaAutoSetup
-    installed = OllamaAutoSetup.is_ollama_installed()
-    running = OllamaAutoSetup.ensure_server_running() if installed else False
-    models = OllamaAutoSetup.get_installed_models() if running else []
-    dolphin_ready = any("dolphin" in m.lower() for m in models)
-    return {
-        "installed": installed,
-        "running": running,
-        "models": models,
-        "dolphin_ready": dolphin_ready,
-        "active_model": os.getenv("OLLAMA_MODEL", "dolphin-llama3"),
-        "provider": os.getenv("LLM_PROVIDER", "ollama")
-    }
+    def _check():
+        installed = OllamaAutoSetup.is_ollama_installed()
+        running = OllamaAutoSetup.is_server_running() if installed else False
+        models = OllamaAutoSetup.get_installed_models() if running else []
+        dolphin_ready = any("dolphin" in m.lower() for m in models)
+        return {
+            "installed": installed,
+            "running": running,
+            "models": models,
+            "dolphin_ready": dolphin_ready,
+            "active_model": os.getenv("OLLAMA_MODEL", "dolphin-llama3"),
+            "provider": os.getenv("LLM_PROVIDER", "gemini")
+        }
+    return await asyncio.to_thread(_check)
 
 @app.post("/api/setup/ollama-dolphin")
 async def setup_ollama_dolphin():
@@ -513,6 +554,40 @@ async def get_rea_status():
         "version": bridge.get_version(),
         "tools_count": len(bridge.list_mcp_tools())
     }
+
+class LiveKitTokenRequest(BaseModel):
+    room: Optional[str] = None
+    identity: Optional[str] = None
+    name: Optional[str] = None
+
+class LiveKitToolRequest(BaseModel):
+    tool: str
+    arguments: Optional[Dict[str, Any]] = None
+
+@app.get("/api/livekit/status")
+async def get_livekit_status():
+    from core.livekit_bridge import livekit_bridge
+    return livekit_bridge.get_status()
+
+@app.post("/api/livekit/token")
+async def get_livekit_token(req: LiveKitTokenRequest):
+    from core.livekit_bridge import livekit_bridge
+    return livekit_bridge.generate_token(room_name=req.room, identity=req.identity, name=req.name)
+
+@app.post("/api/livekit/session/start")
+async def start_livekit_session(req: LiveKitTokenRequest):
+    from core.livekit_bridge import livekit_bridge
+    return livekit_bridge.start_session(room_name=req.room)
+
+@app.post("/api/livekit/session/stop")
+async def stop_livekit_session():
+    from core.livekit_bridge import livekit_bridge
+    return livekit_bridge.stop_session()
+
+@app.post("/api/livekit/execute-tool")
+async def execute_livekit_tool(req: LiveKitToolRequest):
+    from core.livekit_bridge import livekit_bridge
+    return await livekit_bridge.execute_tool_from_voice(req.tool, req.arguments or {})
 
 # Mount screenshots directory
 screenshots_dir = Path(__file__).parent / "screenshots"

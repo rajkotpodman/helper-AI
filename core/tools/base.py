@@ -26,3 +26,7 @@ class BaseTool(ABC):
             "description": self.description,
             "parameters": self.parameters,
         }
+
+    def get_schema(self) -> Dict[str, Any]:
+        """Returns the schema representation of this tool."""
+        return self.to_schema()

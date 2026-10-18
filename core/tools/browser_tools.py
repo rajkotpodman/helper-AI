@@ -363,18 +363,63 @@ class BrowserAutomationTool(BaseTool):
 
     def _publish_facebook_post(self, content: str) -> Dict[str, Any]:
         """
-        Autonomously creates, writes, and publishes a Facebook post.
-        Navigates to Facebook, opens post composer, types the text, and submits the post.
+        Autonomously creates, writes, and publishes a Facebook post with strict ground-truth verification.
+        Saves local post copy to Desktop/Facebook_Posts, verifies Facebook authentication,
+        and strictly verifies whether the post was successfully committed before claiming success.
         """
         import time
+        from pathlib import Path
+        import datetime
         from selenium.webdriver.common.by import By
         from selenium.webdriver.common.keys import Keys
         from selenium.webdriver.common.action_chains import ActionChains
 
+        # Step 0: Safe local backup so user's generated deep content is NEVER lost
+        saved_file_path = None
+        try:
+            fb_dir = Path.home() / "Desktop" / "Facebook_Posts"
+            fb_dir.mkdir(parents=True, exist_ok=True)
+            ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            first_line = content.splitlines()[0] if content.splitlines() else "post"
+            slug = "".join([c if c.isalnum() else "_" for c in first_line[:30]]).strip("_") or "fb_post"
+            out_file = fb_dir / f"FB_{slug}_{ts}.txt"
+            out_file.write_text(content, encoding="utf-8")
+            saved_file_path = str(out_file)
+        except Exception as e:
+            logger.warning(f"Could not write backup post file: {e}")
+
         browser = ProjectBrowser.get_instance()
         driver = browser.get_driver()
 
-        # Step 0: Check if an active Create Post dialog is ALREADY open and usable
+        # Step 0.5: Check for Facebook Authentication / Login requirement
+        current_url = (driver.current_url or "").lower()
+        if "facebook.com" not in current_url:
+            browser.navigate("https://www.facebook.com/")
+            time.sleep(2.5)
+            current_url = (driver.current_url or "").lower()
+
+        page_src = (driver.page_source or "").lower()
+        is_login_page = (
+            "login" in current_url or 
+            any(k in page_src for k in ["log in to facebook", "log into facebook", "sign in to facebook", "forgot password", "create new account", "email or phone", "mobile number or email"]) or
+            bool(driver.find_elements(By.XPATH, "//input[@name='email' or @id='email' or @name='pass']"))
+        )
+        if is_login_page:
+            browser.bring_to_front()
+            return {
+                "success": False,
+                "error": "FACEBOOK_LOGIN_REQUIRED",
+                "saved_to": saved_file_path,
+                "output": (
+                    "❌ GOAL NOT ACHIEVED — FACEBOOK LOGIN REQUIRED:\n"
+                    "• Exact Problem: The Project Chrome browser is NOT logged into Facebook (Login screen detected).\n"
+                    "• Action Taken: Project Chrome Browser has been brought to the foreground for you.\n"
+                    "• Concrete Solution: Please sign in to your Facebook account once in the Chrome browser window. After logging in, your session remains permanently active.\n"
+                    f"• Safe Backup: Your Gujarati post has been safely generated and saved to: '{saved_file_path}'."
+                )
+            }
+
+        # Step 1: Check if an active Create Post dialog is ALREADY open and usable
         target_dlg = None
         for dlg in driver.find_elements(By.XPATH, "//*[@role='dialog']"):
             try:
@@ -384,19 +429,13 @@ class BrowserAutomationTool(BaseTool):
             except Exception:
                 pass
 
-        # Step 1: If no composer dialog is already open, navigate to clean Facebook feed
         if not target_dlg:
-            current_url = (driver.current_url or "").rstrip("/")
-            # Always ensure we are at the top of the main root feed
-            if current_url not in ["https://www.facebook.com", "http://www.facebook.com"]:
-                browser.navigate("https://www.facebook.com/")
-                time.sleep(2.5)
-            else:
-                try:
-                    driver.execute_script("window.scrollTo(0, 0);")
-                except Exception:
-                    pass
-                time.sleep(1.0)
+            # Clean feed scroll
+            try:
+                driver.execute_script("window.scrollTo(0, 0);")
+            except Exception:
+                pass
+            time.sleep(1.0)
 
             # Dismiss any floating backdrop/modals or 'Not now' prompts if present
             try:
@@ -409,7 +448,7 @@ class BrowserAutomationTool(BaseTool):
             except Exception:
                 pass
 
-            # Step 2: Locate and click "What's on your mind?" composer trigger button using pointer events
+            # Step 2: Locate and click "What's on your mind?" composer trigger button
             opened = False
             for attempt in range(4):
                 btns = driver.find_elements(By.XPATH, "//*[@role='button'] | //div[contains(@class, 'x1i10hfl')] | //div[@contenteditable='true'] | //span[contains(text(), 'mind') or contains(text(), 'મન') or contains(text(), 'मन')]")
@@ -422,7 +461,6 @@ class BrowserAutomationTool(BaseTool):
                                 "what's on your mind", "share a thought", "create a post",
                                 "write something", "તમારા મનમાં શું છે", "પોસ્ટ બનાવો", "पोस्ट बनाएँ", "मन में क्या है"
                             ]):
-                                # Dispatch full pointer event sequence for React 18
                                 driver.execute_script("""
                                     const el = arguments[0];
                                     el.scrollIntoView({block: 'center'});
@@ -460,22 +498,6 @@ class BrowserAutomationTool(BaseTool):
                 if target_dlg:
                     break
 
-            # Fallback: If clicking the feed trigger didn't open dialog, navigate directly to Facebook's dedicated create URL
-            if not target_dlg:
-                browser.navigate("https://www.facebook.com/post/create")
-                time.sleep(2.5)
-                for _ in range(8):
-                    for dlg in driver.find_elements(By.XPATH, "//*[@role='dialog']"):
-                        try:
-                            if dlg.is_displayed() and dlg.find_elements(By.XPATH, ".//*[@role='textbox' or @contenteditable='true']"):
-                                target_dlg = dlg
-                                break
-                        except Exception:
-                            pass
-                    if target_dlg:
-                        break
-                    time.sleep(0.5)
-
         # Step 3: Locate the composer textbox inside the active dialog or page
         textbox = None
         if target_dlg:
@@ -492,7 +514,6 @@ class BrowserAutomationTool(BaseTool):
                     break
                 time.sleep(0.5)
 
-        # If target_dlg didn't have it, check page-level composer textbox (excluding comments)
         if not textbox:
             for tb in driver.find_elements(By.XPATH, "//*[@role='textbox' and @contenteditable='true']"):
                 try:
@@ -506,35 +527,19 @@ class BrowserAutomationTool(BaseTool):
                     continue
 
         if not textbox:
-            # Fallback: Navigate to Facebook Sharer composer URL
-            import urllib.parse
-            encoded_quote = urllib.parse.quote(content)
-            sharer_url = f"https://www.facebook.com/sharer/sharer.php?quote={encoded_quote}"
-            try:
-                browser.navigate(sharer_url)
-                time.sleep(2.5)
-                # Check for sharer submit button
-                for sb in driver.find_elements(By.XPATH, "//button[@type='submit'] | //*[@role='button']"):
-                    if sb.is_displayed():
-                        stxt = (sb.text or "").lower()
-                        saria = (sb.get_attribute("aria-label") or "").lower()
-                        if any(k in stxt or k in saria for k in ["post to facebook", "post", "share", "પોસ્ટ", "पोस्ट"]):
-                            driver.execute_script("arguments[0].click();", sb)
-                            time.sleep(2.0)
-                            return {
-                                "success": True,
-                                "output": f"Successfully published post to Facebook via Sharer interface! Content: '{content[:80]}...'",
-                                "content": content
-                            }
-            except Exception as se:
-                logger.warning(f"Facebook Sharer fallback failed: {se}")
-
             return {
                 "success": False,
-                "output": "Could not open Facebook 'Create post' composer. Please ensure you are logged into Facebook in the Project Browser."
+                "error": "FACEBOOK_COMPOSER_NOT_FOUND",
+                "saved_to": saved_file_path,
+                "output": (
+                    "❌ GOAL NOT ACHIEVED — FACEBOOK COMPOSER NOT FOUND:\n"
+                    "• Exact Problem: Could not open or find the Facebook 'Create post' textbox on screen.\n"
+                    "• Solution: Please make sure your Facebook feed is open and not blocked by account restrictions.\n"
+                    f"• Safe Backup: Post safely saved to: '{saved_file_path}'."
+                )
             }
 
-        # Step 4: Clear any existing draft text and focus textbox
+        # Step 4: Focus and insert content
         try:
             textbox.click()
             time.sleep(0.2)
@@ -542,7 +547,6 @@ class BrowserAutomationTool(BaseTool):
         except Exception:
             pass
 
-        # Step 5: Insert content using DataTransfer ClipboardEvent (fast, lossless multi-line & Gujarati Unicode)
         pasted = False
         try:
             driver.execute_script("""
@@ -561,25 +565,9 @@ class BrowserAutomationTool(BaseTool):
             time.sleep(0.8)
             pasted = len((textbox.text or "").strip()) > 5 or " " in (textbox.text or "")
         except Exception as e:
-            logger.debug(f"DataTransfer paste exception: {e}")
             pasted = False
 
         if not pasted:
-            # Fallback 1: execCommand insertText
-            try:
-                driver.execute_script("""
-                    const el = arguments[0];
-                    const text = arguments[1];
-                    el.focus();
-                    document.execCommand('insertText', false, text);
-                """, textbox, content)
-                time.sleep(0.8)
-                pasted = len((textbox.text or "").strip()) > 5
-            except Exception:
-                pass
-
-        if not pasted:
-            # Fallback 2: pyperclip + ActionChains
             try:
                 import pyperclip
                 pyperclip.copy(content)
@@ -591,7 +579,6 @@ class BrowserAutomationTool(BaseTool):
                 pass
 
         if not pasted:
-            # Fallback 3: direct send_keys
             try:
                 textbox.send_keys(content)
                 time.sleep(0.8)
@@ -609,7 +596,7 @@ class BrowserAutomationTool(BaseTool):
             pass
         time.sleep(1.0)
 
-        # Step 6: Locate Post button
+        # Step 5: Locate Post button
         post_btn = None
         search_root = target_dlg if target_dlg else driver
         for _ in range(16):  # Poll up to 8 seconds for aria-disabled to lift
@@ -630,55 +617,58 @@ class BrowserAutomationTool(BaseTool):
                 break
             time.sleep(0.5)
 
-        # Step 7: Click Post button via pointer event dispatcher and Ctrl+Enter
-        if post_btn:
-            try:
-                driver.execute_script("""
-                    const el = arguments[0];
-                    const rect = el.getBoundingClientRect();
-                    const x = rect.left + rect.width / 2;
-                    const y = rect.top + rect.height / 2;
-                    ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach(evt => {
-                        el.dispatchEvent(new MouseEvent(evt, {
-                            bubbles: true,
-                            cancelable: true,
-                            view: window,
-                            clientX: x,
-                            clientY: y
-                        }));
-                    });
-                """, post_btn)
-            except Exception:
-                try:
-                    post_btn.click()
-                except Exception:
-                    driver.execute_script("arguments[0].click();", post_btn)
-        else:
-            # Universal keyboard submission shortcut in Facebook composer: Ctrl + Enter
-            try:
-                ActionChains(driver).move_to_element(textbox).key_down(Keys.CONTROL).send_keys(Keys.RETURN).key_up(Keys.CONTROL).perform()
-            except Exception:
-                pass
+        if not post_btn:
+            return {
+                "success": False,
+                "error": "POST_BUTTON_DISABLED_OR_NOT_FOUND",
+                "saved_to": saved_file_path,
+                "output": (
+                    "❌ GOAL NOT ACHIEVED — POST BUTTON NOT ACTIVE:\n"
+                    "• Exact Problem: The Facebook 'Post' button remained disabled or was not found.\n"
+                    "• Solution: Check if Facebook requires an audience selection (Public/Friends) or has a content restriction.\n"
+                    f"• Safe Backup: Post safely saved to '{saved_file_path}'."
+                )
+            }
 
-        # Step 8: Wait for dialog to close
+        # Step 6: Click Post button via pointer event dispatcher
+        try:
+            driver.execute_script("""
+                const el = arguments[0];
+                const rect = el.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                ['pointerdown', 'mousedown', 'pointerup', 'mouseup', 'click'].forEach(evt => {
+                    el.dispatchEvent(new MouseEvent(evt, {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window,
+                        clientX: x,
+                        clientY: y
+                    }));
+                });
+            """, post_btn)
+        except Exception:
+            try:
+                post_btn.click()
+            except Exception:
+                driver.execute_script("arguments[0].click();", post_btn)
+
+        # Step 7: Ground-truth verification — wait for composer dialog to close
         dialog_closed = False
         start_wait = time.time()
-        while time.time() - start_wait < 30:
-            time.sleep(1.0)
-            sec_btns = driver.find_elements(By.XPATH, "//*[@role='dialog']//*[@role='button' or self::button]")
-            for sb in sec_btns:
-                try:
-                    if sb.is_displayed() and sb != post_btn:
-                        stxt = (sb.text or "").strip().lower()
-                        saria = (sb.get_attribute("aria-label") or "").strip().lower()
-                        if any(k in stxt or k in saria for k in ["post", "share", "next", "done", "continue", "પોસ્ટ", "पोस्ट"]):
-                            if sb.get_attribute("aria-disabled") != "true":
-                                driver.execute_script("arguments[0].click();", sb)
-                                time.sleep(1.5)
-                                break
-                except Exception:
-                    pass
+        error_detected = None
 
+        while time.time() - start_wait < 25:
+            time.sleep(1.0)
+            # Check for error banners
+            for err_el in driver.find_elements(By.XPATH, "//*[@role='alert'] | //div[contains(text(), 'Something went wrong') or contains(text(), 'temporarily blocked') or contains(text(), 'community standards')]"):
+                if err_el.is_displayed():
+                    error_detected = err_el.text
+                    break
+            if error_detected:
+                break
+
+            # Check if modal closed
             if target_dlg:
                 try:
                     if not target_dlg.is_displayed():
@@ -691,31 +681,40 @@ class BrowserAutomationTool(BaseTool):
                 dialog_closed = True
                 break
 
-            elapsed = time.time() - start_wait
-            if (7.0 < elapsed < 8.5) or (15.0 < elapsed < 16.5):
-                try:
-                    if post_btn and post_btn.is_displayed() and post_btn.get_attribute("aria-disabled") != "true":
-                        driver.execute_script("arguments[0].click();", post_btn)
-                    elif textbox and textbox.is_displayed():
-                        ActionChains(driver).move_to_element(textbox).key_down(Keys.CONTROL).send_keys(Keys.RETURN).key_up(Keys.CONTROL).perform()
-                except Exception:
-                    pass
+        if error_detected:
+            return {
+                "success": False,
+                "error": "FACEBOOK_REJECTED_POST",
+                "saved_to": saved_file_path,
+                "output": f"❌ GOAL NOT ACHIEVED — FACEBOOK REJECTED POST: '{error_detected}'. Saved locally to '{saved_file_path}'."
+            }
 
-        # Step 9: Always navigate cleanly to Facebook home feed so consecutive posts have a fresh state
-        time.sleep(2.5)
+        if not dialog_closed:
+            return {
+                "success": False,
+                "error": "POST_CONFIRMATION_TIMEOUT",
+                "saved_to": saved_file_path,
+                "output": (
+                    "⚠️ GOAL NOT ACHIEVED — POST DIALOG DID NOT CLOSE:\n"
+                    "• The post submit was clicked, but the dialog stayed open (network lag or confirmation prompt).\n"
+                    f"• Safe Backup: Generated post is saved at '{saved_file_path}'."
+                )
+            }
+
+        # Step 8: Reset feed cleanly
         try:
             browser.navigate("https://www.facebook.com/")
-            time.sleep(2.5)
+            time.sleep(2.0)
             driver.execute_script("window.scrollTo(0, 0);")
-        except Exception as ne:
-            logger.debug(f"Feed reset after post: {ne}")
+        except Exception:
+            pass
 
         return {
             "success": True,
-            "output": f"Successfully created and published post to Facebook: '{content[:80]}...'! The post is officially live on your timeline/feed.",
+            "output": f"✅ VERIFIED LIVE: Post successfully submitted and confirmed live on Facebook feed!\nSaved backup: '{saved_file_path}'",
             "content": content,
-            "dialog_closed": dialog_closed,
-            "page": browser.get_page_summary()
+            "saved_to": saved_file_path,
+            "dialog_closed": True
         }
 
     def _publish_linkedin_post(self, raw_content: str) -> Dict[str, Any]:
@@ -982,9 +981,47 @@ class BrowserAutomationTool(BaseTool):
             browser.navigate(target_url)
             time.sleep(2.0)
 
+        # Step 0: Save local backup immediately to Desktop/Blogger_Posts
+        import datetime
+        from pathlib import Path
+        desktop = Path.home() / "Desktop" / "Blogger_Posts"
+        desktop.mkdir(parents=True, exist_ok=True)
+        ts = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_title = "".join(c for c in title if c.isalnum() or c in (" ", "_", "-")).strip()[:40] or "post"
+        saved_file_path = str(desktop / f"blog_{safe_title}_{ts}.md")
+        try:
+            with open(saved_file_path, "w", encoding="utf-8") as f:
+                f.write(f"# {title}\n\n*Created on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*\n\n---\n\n{content}")
+        except Exception as e:
+            logger.warning(f"Could not save local blogger post backup: {e}")
+
+        # Check for Google Sign-In requirement
+        page_src = (driver.page_source or "").lower()
+        curr_url = (driver.current_url or "").lower()
+        if "accounts.google.com" in curr_url or any(term in page_src for term in ["sign in with google", "choose an account", "create your blog"]):
+            browser.bring_to_front()
+            return {
+                "success": False,
+                "error": "BLOGGER_AUTH_REQUIRED",
+                "saved_to": saved_file_path,
+                "output": (
+                    "⚠️ GOAL NOT ACHIEVED — GOOGLE SIGN-IN REQUIRED FOR BLOGGER:\n"
+                    "• The Project Browser is currently on Google's Sign-In or landing page.\n"
+                    "• Action required: Please sign into your Google account once in the Project Browser window.\n"
+                    f"• Safe Backup: Generated post content has been safely saved to disk at: '{saved_file_path}'"
+                )
+            }
+
         # 2. Click NEW POST to open fresh blank post editor
-        browser.click("NEW POST")
+        res_new = browser.click("NEW POST")
         time.sleep(2.0)
+        if not res_new.get("success"):
+            return {
+                "success": False,
+                "error": "NEW_POST_BUTTON_NOT_FOUND",
+                "saved_to": saved_file_path,
+                "output": f"Could not find or click 'NEW POST' on Blogger. Page may not be logged in or loaded. Saved to '{saved_file_path}'."
+            }
 
         # 3. Enter Title
         browser.type_text("Title", title)
@@ -996,23 +1033,31 @@ class BrowserAutomationTool(BaseTool):
 
         # 5. Click Publish (which auto-confirms in ProjectBrowser.click)
         res_pub = browser.click("Publish")
-        time.sleep(2.0)
+        time.sleep(2.5)
 
-        # Also archive a local copy to Desktop/posts for user inspection
-        try:
-            from pathlib import Path
-            desktop_dir = Path.home() / "Desktop"
-            if desktop_dir.exists():
-                safe_title = "".join(c for c in title if c.isalnum() or c in (" ", "_", "-")).rstrip()[:40]
-                post_file = desktop_dir / f"blog_post_{safe_title}.md"
-                post_file.write_text(f"# {title}\n\n*Published on Google Blogger*\n\n---\n\n{content}", encoding="utf-8")
-        except Exception:
-            pass
+        # 6. Verify that editor was dismissed or post list is shown
+        post_published = False
+        if res_pub.get("success"):
+            for _ in range(6):
+                time.sleep(1.0)
+                curr = driver.current_url or ""
+                if "/post/edit/" not in curr:
+                    post_published = True
+                    break
+
+        if not post_published:
+            return {
+                "success": False,
+                "error": "BLOGGER_PUBLISH_NOT_CONFIRMED",
+                "saved_to": saved_file_path,
+                "output": f"Clicked 'Publish' on Blogger, but the post editor remained active. Post saved locally to '{saved_file_path}'."
+            }
 
         return {
             "success": True,
-            "output": f"Successfully created and published blog post titled '{title}' on Google Blogger! The post is now live.",
+            "output": f"✅ VERIFIED LIVE: Successfully created and published blog post titled '{title}' on Google Blogger!\nSaved backup: '{saved_file_path}'",
             "title": title,
+            "saved_to": saved_file_path,
             "page": browser.get_page_summary()
         }
 

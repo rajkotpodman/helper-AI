@@ -85,6 +85,12 @@
           <span>Dolphin AI: <strong id="dolphin-status-text" class="font-semibold text-cyan-400">Checking...</strong></span>
         </button>
 
+        <!-- LiveKit WebRTC Voice & Vision Pill -->
+        <button id="btn-livekit-pill" class="nav-pill border-purple-500/30 hover:border-purple-400" title="LiveKit WebRTC Real-Time Voice & Screen Vision">
+          <i data-lucide="mic" class="w-4 h-4 text-purple-400"></i>
+          <span>LiveKit: <strong id="livekit-status-badge" class="font-semibold text-purple-400">Voice Ready</strong></span>
+        </button>
+
         <!-- Project Browser Button -->
         <button id="btn-project-browser" class="nav-pill" title="Open Desktop Chrome Browser Session">
           <i data-lucide="globe" class="w-4 h-4 text-cyan-400"></i>
@@ -157,22 +163,55 @@
             <span id="label-goal-title">What goal would you like Helper to achieve?</span>
           </label>
 
-          <!-- Voice Input Pill Button -->
-          <button id="btn-voice-input" class="nav-pill hover:border-red-500/50 hover:text-red-400" title="Speak your goal (Voice-to-Text)">
-            <i data-lucide="mic" class="w-4 h-4 text-red-400" id="mic-icon"></i>
-            <span id="voice-btn-label">Voice Input</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <!-- Hidden file input for screenshots -->
+            <input type="file" id="input-file-screenshot" accept="image/*" class="hidden">
+            
+            <!-- Paste Image Hint / Click Button -->
+            <button id="btn-paste-screenshot-hint" type="button" class="nav-pill hover:border-cyan-500/50 hover:text-cyan-400 text-xs" title="Paste screenshot (Ctrl+V) or click to browse image">
+              <i data-lucide="image" class="w-3.5 h-3.5 text-cyan-400"></i>
+              <span>Paste Screenshot (Ctrl+V)</span>
+            </button>
+
+            <!-- Voice Input Pill Button -->
+            <button id="btn-voice-input" class="nav-pill hover:border-red-500/50 hover:text-red-400" title="Speak your goal (Voice-to-Text)">
+              <i data-lucide="mic" class="w-4 h-4 text-red-400" id="mic-icon"></i>
+              <span id="voice-btn-label">Voice Input</span>
+            </button>
+          </div>
         </div>
 
         <!-- Main Prompt Textarea -->
         <div class="relative">
           <textarea id="goal-input" 
-            placeholder="Example: List my Google blogs, or write a report on desktop by researching AI models..."
+            placeholder="Example: List my Google blogs, or paste screenshot (Ctrl+V) to analyze screen errors and diagnose issues..."
             class="prompt-textarea"
             rows="3"></textarea>
           <div class="absolute right-3 bottom-3 text-[11px] text-slate-500 font-mono pointer-events-none hidden sm:block">
             Press <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-white/10">Ctrl + Enter</kbd> to run
           </div>
+        </div>
+
+        <!-- Attached Screenshot / Image Container (Hidden by default, shown on Ctrl+V or file drop) -->
+        <div id="attached-image-container" class="hidden mt-3 p-3 bg-slate-900/95 rounded-xl border border-cyan-500/30 flex items-center justify-between gap-4 transition-all shadow-lg shadow-cyan-500/5">
+          <div class="flex items-center gap-3">
+            <div class="relative w-14 h-14 rounded-lg overflow-hidden border border-cyan-500/30 bg-slate-950 flex-shrink-0 group">
+              <img id="attached-image-preview" src="" alt="Pasted Screenshot" class="w-full h-full object-cover">
+            </div>
+            <div>
+              <div class="text-xs font-bold text-white flex items-center gap-1.5">
+                <i data-lucide="image" class="w-3.5 h-3.5 text-cyan-400"></i>
+                <span id="attached-image-title">Pasted Screenshot Attached</span>
+                <span id="attached-image-size" class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono">142 KB</span>
+              </div>
+              <p class="text-[11px] text-slate-400 mt-0.5">
+                📸 Ready for Multimodal Vision. Helper-AI will inspect and explain what's on screen.
+              </p>
+            </div>
+          </div>
+          <button id="btn-remove-attached-image" type="button" class="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs transition" title="Remove screenshot">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
         </div>
 
         <!-- Quick Ideas Pill Bar -->
@@ -614,6 +653,95 @@
           ✓ One-Click Approve
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- 5. LiveKit Voice & Vision Studio Modal -->
+  <div id="modal-livekit" class="modal-backdrop hidden">
+    <div class="modal-dialog max-w-2xl border border-purple-500/30 shadow-2xl shadow-purple-500/10">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="mic" class="w-5 h-5 text-purple-400"></i> LiveKit WebRTC Voice & Vision Studio
+        </h3>
+        <button id="btn-close-livekit-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <!-- Live Voice Orb Visualizer -->
+      <div class="flex flex-col items-center justify-center p-6 bg-gradient-to-b from-purple-950/20 to-slate-900/60 rounded-2xl border border-purple-500/20 mb-4 relative overflow-hidden">
+        <div id="livekit-orb" class="w-20 h-20 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-400 shadow-lg shadow-purple-500/50 flex items-center justify-center transition-all duration-300">
+          <i data-lucide="radio" class="w-9 h-9 text-white animate-pulse"></i>
+        </div>
+        <div class="mt-4 text-center">
+          <div class="text-sm font-bold text-white" id="livekit-session-state">Standby • Ready to Connect</div>
+          <div class="text-xs text-purple-300 font-mono mt-0.5" id="livekit-room-display">Room: helper-ai-room</div>
+        </div>
+
+        <!-- Latency & Tool Bridging Badge -->
+        <div class="flex items-center gap-3 mt-3 text-[11px] text-slate-300">
+          <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 font-mono">
+            ⚡ WebRTC Full-Duplex
+          </span>
+          <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-mono" id="livekit-tools-badge">
+            37 PC Tools Bridged
+          </span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-3 mb-4">
+        <button id="btn-livekit-connect" class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-purple-500/20 transition">
+          <i data-lucide="phone-call" class="w-4 h-4"></i>
+          <span id="btn-livekit-connect-text">Start Live Voice Session</span>
+        </button>
+
+        <button id="btn-livekit-screen-share" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-2 border border-white/10 transition">
+          <i data-lucide="monitor" class="w-4 h-4 text-cyan-400"></i>
+          <span>Share Desktop Screen</span>
+        </button>
+
+        <button id="btn-livekit-test-tool" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-2 border border-white/10 transition" title="Voice simulates 'Check PC health'">
+          <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
+          <span>Test PC Tool via Voice</span>
+        </button>
+      </div>
+
+      <!-- Live Voice Transcripts Feed -->
+      <div class="mb-3">
+        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
+          <span>Live Conversation Transcripts</span>
+          <span class="text-purple-400 font-normal">Sub-second TTS</span>
+        </div>
+        <div id="livekit-transcripts" class="terminal-box text-xs max-h-40 overflow-y-auto space-y-2 p-3 bg-slate-950/80 border border-white/10 rounded-xl">
+          <div class="text-slate-500 italic">No voice conversation yet. Click 'Start Live Voice Session' or speak.</div>
+        </div>
+      </div>
+
+      <!-- LiveKit Configuration Accordion -->
+      <details class="bg-slate-900/60 rounded-xl border border-white/5 p-3 text-xs">
+        <summary class="font-semibold text-slate-300 cursor-pointer flex items-center justify-between">
+          <span>⚙️ LiveKit Connection Credentials</span>
+          <span class="text-[10px] text-purple-400">Configure Cloud or Local Server</span>
+        </summary>
+        <div class="mt-3 space-y-2.5 pt-2 border-t border-white/5">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">LiveKit WebRTC Server URL</label>
+            <input type="text" id="input-livekit-url" placeholder="wss://your-project.livekit.cloud" value="wss://helper-ai-local.livekit.cloud" class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">LiveKit API Key</label>
+              <input type="text" id="input-livekit-key" placeholder="API..." class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
+            </div>
+            <div>
+              <label class="block text-[11px] text-slate-400 mb-1">LiveKit API Secret</label>
+              <input type="password" id="input-livekit-secret" placeholder="Secret..." class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
+            </div>
+          </div>
+          <button id="btn-save-livekit-settings" class="mt-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-semibold">
+            Save LiveKit Credentials
+          </button>
+        </div>
+      </details>
     </div>
   </div>
 

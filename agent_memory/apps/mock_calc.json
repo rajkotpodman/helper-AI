@@ -1,0 +1,18 @@
+{
+  "app_name": "Mock Calculator",
+  "app_slug": "mock_calc",
+  "process_name": "calc.exe",
+  "verified_hotkeys": {
+    "clear": "Esc",
+    "calculate": "Enter"
+  },
+  "controls": {
+    "equals": "btn_equals",
+    "clear": "btn_clear"
+  },
+  "last_updated": "2026-10-18T11:59:43.186733",
+  "fast_path": {
+    "keyboard_shortcuts": {},
+    "ui_controls": []
+  }
+}

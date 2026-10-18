@@ -157,9 +157,12 @@ class ReadFileTool(BaseTool):
         "required": ["file_path"]
     }
 
-    def execute(self, file_path: str, max_lines: int = 500) -> Dict[str, Any]:
+    def execute(self, file_path: str = None, path: str = None, max_lines: int = 500, **kwargs) -> Dict[str, Any]:
         try:
-            target = resolve_user_path(file_path)
+            target_str = file_path or path or kwargs.get("filepath")
+            if not target_str:
+                return {"success": False, "output": "Missing required parameter 'file_path' or 'path'."}
+            target = resolve_user_path(target_str)
             if not target.exists():
                 return {"success": False, "output": f"File does not exist: {target}"}
             if target.is_dir():
@@ -172,7 +175,8 @@ class ReadFileTool(BaseTool):
             return {
                 "success": True,
                 "output": content if content else "(File is empty)",
-                "path": str(target)
+                "path": str(target),
+                "content": content
             }
         except Exception as e:
             return {"success": False, "output": f"Error reading file: {str(e)}", "error": str(e)}
@@ -201,9 +205,12 @@ class WriteFileTool(BaseTool):
         "required": ["file_path", "content"]
     }
 
-    def execute(self, file_path: str, content: str, append: bool = False) -> Dict[str, Any]:
+    def execute(self, file_path: str = None, content: str = "", append: bool = False, path: str = None, **kwargs) -> Dict[str, Any]:
         try:
-            target = resolve_user_path(file_path)
+            target_str = file_path or path or kwargs.get("filepath")
+            if not target_str:
+                return {"success": False, "output": "Missing required parameter 'file_path' or 'path'."}
+            target = resolve_user_path(target_str)
             target.parent.mkdir(parents=True, exist_ok=True)
             mode = "a" if append else "w"
             with open(target, mode, encoding="utf-8") as f:

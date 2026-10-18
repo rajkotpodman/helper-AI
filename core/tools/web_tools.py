@@ -376,9 +376,12 @@ class DownloadFileTool(BaseTool):
         "required": ["url", "destination_path"]
     }
 
-    def execute(self, url: str, destination_path: str) -> Dict[str, Any]:
+    def execute(self, url: str, destination_path: str = None, destination: str = None, path: str = None, **kwargs) -> Dict[str, Any]:
         try:
-            target = resolve_user_path(destination_path)
+            dest_str = destination_path or destination or path or kwargs.get("dest")
+            if not dest_str:
+                return {"success": False, "output": "Missing required parameter 'destination_path' or 'destination'."}
+            target = resolve_user_path(dest_str)
             target.parent.mkdir(parents=True, exist_ok=True)
 
             resp = requests.get(url, headers=HEADERS, stream=True, timeout=30)

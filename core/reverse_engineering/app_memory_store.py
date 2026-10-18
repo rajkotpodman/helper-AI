@@ -55,15 +55,25 @@ class AppMemoryStore:
             except Exception as e:
                 logger.warning(f"Failed to load app memory from {p}: {e}")
 
-    def save_app_profile(self, profile: Dict[str, Any], sync_markdown: bool = True) -> Dict[str, Any]:
+    def save_app_profile(self, profile: Any, data: Optional[Dict[str, Any]] = None, sync_markdown: bool = True) -> Dict[str, Any]:
         """
         Saves or updates an app memory profile to disk and in-memory cache.
+        Supports both save_app_profile(dict) and save_app_profile(slug, dict).
         """
-        app_name = profile.get("app_name") or profile.get("process_name") or "Application"
-        slug = profile.get("app_slug") or self._slugify(app_name)
-        profile["app_slug"] = slug
-        profile["app_name"] = app_name
-        profile["last_updated"] = datetime.now().isoformat()
+        if isinstance(profile, str) and isinstance(data, dict):
+            profile_dict = dict(data)
+            profile_dict["app_slug"] = profile
+        elif isinstance(profile, dict):
+            profile_dict = dict(profile)
+        else:
+            return {"success": False, "error": "Invalid profile format; expected dict or (slug, dict)."}
+
+        app_name = profile_dict.get("app_name") or profile_dict.get("process_name") or "Application"
+        slug = profile_dict.get("app_slug") or self._slugify(app_name)
+        profile_dict["app_slug"] = slug
+        profile_dict["app_name"] = app_name
+        profile_dict["last_updated"] = datetime.now().isoformat()
+        profile = profile_dict
         
         # Ensure fast_path structure exists
         if "fast_path" not in profile:

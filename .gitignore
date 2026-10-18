@@ -47,6 +47,9 @@ newfile.txt
 # External Frameworks & Vendor Repositories
 frameworks/
 rea_repo/
+livekit_repo/
+data/
+*.db
 
 # Screenshots
 screenshots/*.png

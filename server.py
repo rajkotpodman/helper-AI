@@ -92,6 +92,11 @@ class GoalExecutionRequest(BaseModel):
     safe_mode: Optional[bool] = Field(False, description="Whether to require confirmation before sensitive actions")
     max_steps: Optional[int] = Field(50, description="Maximum autonomous loops")
     language: Optional[str] = Field("en", description="Target response language code")
+    image_data: Optional[str] = Field(None, description="Base64 encoded clipboard screenshot or image")
+
+class VisionAnalyzeRequest(BaseModel):
+    image_data: str
+    prompt: Optional[str] = ""
 
 
 class ApprovePermissionRequest(BaseModel):
@@ -240,7 +245,7 @@ async def execute_agent_goal(req: GoalExecutionRequest):
                     current_goal_info["history"].append({"type": event_type, **data})
 
             # Run autonomous agent loop
-            result = await active_agent.run(goal_str, on_event=on_event_callback)
+            result = await active_agent.run(goal_str, on_event=on_event_callback, image_data=req.image_data)
             current_goal_info["last_result"] = result
             await broadcast_ws("completed", result or {"success": True, "final_result": "Goal finished."})
             return result
@@ -277,6 +282,11 @@ async def execute_agent_goal(req: GoalExecutionRequest):
         "provider": provider,
         "message": "Autonomous goal pipeline started. Follow progress on WebSocket or execution drawer."
     }
+
+@app.post("/api/vision/analyze")
+async def analyze_vision_endpoint(req: VisionAnalyzeRequest):
+    from core.vision_engine import vision_engine
+    return vision_engine.analyze_image_with_ai(base64_data=req.image_data, goal=req.prompt or "")
 
 
 # --- Required Specification Endpoint: GET /api/system-status ---
@@ -433,6 +443,22 @@ async def cancel_running_agent():
 
 
 # --- Settings Configuration API ---
+@app.get("/api/settings")
+async def get_settings():
+    return {
+        "provider": os.getenv("LLM_PROVIDER", "gemini").strip("'\""),
+        "gemini_key": os.getenv("GEMINI_API_KEY", "").strip("'\""),
+        "groq_key": os.getenv("GROQ_API_KEY", "").strip("'\""),
+        "openai_key": os.getenv("OPENAI_API_KEY", "").strip("'\""),
+        "deepseek_key": os.getenv("DEEPSEEK_API_KEY", "").strip("'\""),
+        "custom_name": os.getenv("CUSTOM_LLM_NAME", "OpenRouter").strip("'\""),
+        "custom_url": os.getenv("CUSTOM_LLM_URL", "https://openrouter.ai/api/v1").strip("'\""),
+        "custom_key": os.getenv("CUSTOM_LLM_KEY", "").strip("'\""),
+        "custom_model": os.getenv("CUSTOM_LLM_MODEL", "anthropic/claude-3.5-sonnet").strip("'\""),
+        "ollama_model": os.getenv("OLLAMA_MODEL", "dolphin-llama3").strip("'\""),
+        "safe_mode": os.getenv("SAFE_MODE", "false").strip("'\"").lower() == "true"
+    }
+
 @app.post("/api/settings")
 async def update_settings(req: SettingsUpdateRequest):
     """Updates API keys and system settings in the .env file."""
@@ -543,6 +569,42 @@ async def speak_text_on_pc(payload: Dict[str, Any]):
         return JSONResponse(status_code=400, content={"error": "Text is required"})
     res = await VoiceEngine.speak_on_pc(text, voice)
     return {"success": res, "text": text, "voice": voice}
+
+
+# --- LiveKit WebRTC Voice & Multimodal Vision Engine ---
+class LiveKitTokenRequest(BaseModel):
+    room: Optional[str] = None
+    identity: Optional[str] = None
+    name: Optional[str] = None
+
+class LiveKitToolRequest(BaseModel):
+    tool: str
+    arguments: Optional[Dict[str, Any]] = None
+
+@app.get("/api/livekit/status")
+async def get_livekit_status():
+    from core.livekit_bridge import livekit_bridge
+    return livekit_bridge.get_status()
+
+@app.post("/api/livekit/token")
+async def get_livekit_token(req: LiveKitTokenRequest):
+    from core.livekit_bridge import livekit_bridge
+    return livekit_bridge.generate_token(room_name=req.room, identity=req.identity, name=req.name)
+
+@app.post("/api/livekit/session/start")
+async def start_livekit_session(req: LiveKitTokenRequest):
+    from core.livekit_bridge import livekit_bridge
+    return livekit_bridge.start_session(room_name=req.room)
+
+@app.post("/api/livekit/session/stop")
+async def stop_livekit_session():
+    from core.livekit_bridge import livekit_bridge
+    return livekit_bridge.stop_session()
+
+@app.post("/api/livekit/execute-tool")
+async def execute_livekit_tool(req: LiveKitToolRequest):
+    from core.livekit_bridge import livekit_bridge
+    return await livekit_bridge.execute_tool_from_voice(req.tool, req.arguments or {})
 
 
 # --- Execution Launcher Helper ---

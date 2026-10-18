@@ -153,7 +153,9 @@ const state = {
   currentGoalText: '',
   lastResultData: null,
   stepCount: 1,
-  maxSteps: 50
+  maxSteps: 50,
+  attachedImageBase64: null,
+  attachedImageName: ''
 };
 
 // --- 3. DOM Elements Cache ---
@@ -166,6 +168,15 @@ function initElements() {
   elements.btnVoice = document.getElementById('btn-voice-input');
   elements.voiceLabel = document.getElementById('voice-btn-label');
   elements.micIcon = document.getElementById('mic-icon');
+
+  // Screenshot & Clipboard Image Elements
+  elements.attachedImageContainer = document.getElementById('attached-image-container');
+  elements.attachedImagePreview = document.getElementById('attached-image-preview');
+  elements.attachedImageTitle = document.getElementById('attached-image-title');
+  elements.attachedImageSize = document.getElementById('attached-image-size');
+  elements.btnRemoveAttachedImage = document.getElementById('btn-remove-attached-image');
+  elements.btnPasteScreenshotHint = document.getElementById('btn-paste-screenshot-hint');
+  elements.inputFileScreenshot = document.getElementById('input-file-screenshot');
   
   elements.executionDrawer = document.getElementById('execution-drawer');
   elements.executionStatus = document.getElementById('execution-status-label');
@@ -241,6 +252,24 @@ function initElements() {
   elements.connDurationText = document.getElementById('conn-duration-text');
   elements.connectionsReportDisplay = document.getElementById('connections-report-display');
   
+  // LiveKit WebRTC Voice & Vision Studio
+  elements.btnLivekitPill = document.getElementById('btn-livekit-pill');
+  elements.modalLivekit = document.getElementById('modal-livekit');
+  elements.btnCloseLivekitModal = document.getElementById('btn-close-livekit-modal');
+  elements.livekitStatusBadge = document.getElementById('livekit-status-badge');
+  elements.livekitOrb = document.getElementById('livekit-orb');
+  elements.livekitSessionState = document.getElementById('livekit-session-state');
+  elements.livekitRoomDisplay = document.getElementById('livekit-room-display');
+  elements.btnLivekitConnect = document.getElementById('btn-livekit-connect');
+  elements.btnLivekitConnectText = document.getElementById('btn-livekit-connect-text');
+  elements.btnLivekitScreenShare = document.getElementById('btn-livekit-screen-share');
+  elements.btnLivekitTestTool = document.getElementById('btn-livekit-test-tool');
+  elements.livekitTranscripts = document.getElementById('livekit-transcripts');
+  elements.inputLivekitUrl = document.getElementById('input-livekit-url');
+  elements.inputLivekitKey = document.getElementById('input-livekit-key');
+  elements.inputLivekitSecret = document.getElementById('input-livekit-secret');
+  elements.btnSaveLivekitSettings = document.getElementById('btn-save-livekit-settings');
+  
   // Language Selector
   elements.btnLangDropdown = document.getElementById('btn-lang-dropdown');
   elements.langDropdownMenu = document.getElementById('lang-dropdown-menu');
@@ -279,14 +308,23 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchSystemStatus();
   fetchMemoryStats();
   checkOllamaStatus();
+  loadSettingsIntoModal();
   
   // Periodic telemetry refresh & execution watchdog (recovers from socket drops)
-  setInterval(() => {
-    fetchSystemStatus();
-    fetchMemoryStats();
-    checkOllamaStatus();
-    checkGoalWatchdog();
-  }, 2500);
+  let isPolling = false;
+  setInterval(async () => {
+    if (isPolling) return;
+    isPolling = true;
+    try {
+      await fetchSystemStatus();
+      await fetchMemoryStats();
+      await checkGoalWatchdog();
+    } catch (e) {
+      // Ignore background telemetry errors
+    } finally {
+      isPolling = false;
+    }
+  }, 5000);
 });
 
 // --- 5. Textarea Auto-expand & Shortcut ---
@@ -306,6 +344,98 @@ function setupTextarea() {
       executeGoal();
     }
   });
+
+  // Clipboard Paste Support (Print Screen / Ctrl+V)
+  elements.goalInput.addEventListener('paste', handleImagePaste);
+  window.addEventListener('paste', (e) => {
+    // Only intercept if clipboard contains an image
+    if (e.clipboardData && e.clipboardData.items) {
+      for (let i = 0; i < e.clipboardData.items.length; i++) {
+        if (e.clipboardData.items[i].type.indexOf('image') !== -1) {
+          handleImagePaste(e);
+          break;
+        }
+      }
+    }
+  });
+
+  // Drag & Drop Image onto Prompt Area
+  elements.goalInput.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    elements.goalInput.classList.add('border-cyan-400');
+  });
+  elements.goalInput.addEventListener('dragleave', () => {
+    elements.goalInput.classList.remove('border-cyan-400');
+  });
+  elements.goalInput.addEventListener('drop', (e) => {
+    e.preventDefault();
+    elements.goalInput.classList.remove('border-cyan-400');
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        attachImageBlob(file, file.name || 'Dropped Screenshot');
+      }
+    }
+  });
+
+  // Screenshot Button & File Input Handlers
+  elements.btnPasteScreenshotHint?.addEventListener('click', () => {
+    elements.inputFileScreenshot?.click();
+  });
+  elements.inputFileScreenshot?.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      attachImageBlob(e.target.files[0], e.target.files[0].name || 'Selected Screenshot');
+    }
+  });
+  elements.btnRemoveAttachedImage?.addEventListener('click', detachImage);
+}
+
+function handleImagePaste(e) {
+  const clipboardData = e.clipboardData || window.clipboardData;
+  if (!clipboardData) return;
+  const items = clipboardData.items;
+  if (!items) return;
+
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      e.preventDefault();
+      const blob = items[i].getAsFile();
+      attachImageBlob(blob, 'Pasted Screenshot (Clipboard)');
+      return;
+    }
+  }
+}
+
+function attachImageBlob(blob, title = 'Pasted Screenshot') {
+  if (!blob) return;
+  const reader = new FileReader();
+  reader.onload = (evt) => {
+    state.attachedImageBase64 = evt.target.result;
+    state.attachedImageName = title;
+    
+    if (elements.attachedImageContainer) elements.attachedImageContainer.classList.remove('hidden');
+    if (elements.attachedImagePreview) elements.attachedImagePreview.src = evt.target.result;
+    if (elements.attachedImageTitle) elements.attachedImageTitle.textContent = title;
+    const kb = (blob.size / 1024).toFixed(1);
+    if (elements.attachedImageSize) elements.attachedImageSize.textContent = `${kb} KB`;
+
+    // Suggest default analysis prompt if prompt is empty
+    if (elements.goalInput && (!elements.goalInput.value || elements.goalInput.value.trim() === '')) {
+      elements.goalInput.value = 'Analyze this pasted screenshot: explain what is on the screen, diagnose any errors, and recommend next actions.';
+      elements.goalInput.dispatchEvent(new Event('input'));
+    }
+    elements.goalInput?.focus();
+    appendTerminalLog(`📸 Screenshot attached from clipboard (${kb} KB). Ready for multimodal analysis.`, 'info');
+  };
+  reader.readAsDataURL(blob);
+}
+
+function detachImage() {
+  state.attachedImageBase64 = null;
+  state.attachedImageName = '';
+  if (elements.attachedImageContainer) elements.attachedImageContainer.classList.add('hidden');
+  if (elements.attachedImagePreview) elements.attachedImagePreview.src = '';
+  if (elements.inputFileScreenshot) elements.inputFileScreenshot.value = '';
 }
 
 // --- 6. Quick Ideas Chips ---
@@ -641,6 +771,10 @@ function handleStreamEvent(data) {
     else if (state.stepCount === 2) updateStepper(2); // Planning
     else updateStepper(3); // Executing
   } 
+  else if (type === 'image_analyzed') {
+    const meta = payload.metadata || {};
+    appendTerminalLog(`📸 Vision Inspection Complete: Screen structure identified (${meta.width || 'Screen'}x${meta.height || ''}, ${meta.theme || 'Standard'})`, 'success');
+  }
   else if (type === 'thought') {
     const planText = payload.thought || payload.message || payload.plan || 'Analyzing next action...';
     appendTerminalLog(`💡 Plan: ${planText}`, 'thought');
@@ -720,6 +854,10 @@ async function executeGoal() {
   elements.btnStop?.classList.remove('hidden');
   
   try {
+    if (state.attachedImageBase64) {
+      appendTerminalLog('📸 Attached screenshot submitted for multimodal vision analysis...', 'action');
+    }
+    
     const response = await fetch('/api/execute', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -727,7 +865,8 @@ async function executeGoal() {
         goal: goal,
         provider: state.provider,
         safe_mode: state.safeMode,
-        language: state.activeLanguage
+        language: state.activeLanguage,
+        image_data: state.attachedImageBase64 || null
       })
     });
     
@@ -979,6 +1118,14 @@ function setupModals() {
   elements.btnRerunConnCheck?.addEventListener('click', runConnectionsCheck);
   elements.btnCloseConnections?.addEventListener('click', () => elements.modalConnections?.classList.add('hidden'));
 
+  // LiveKit Voice & Vision Studio
+  elements.btnLivekitPill?.addEventListener('click', openLivekitModal);
+  elements.btnCloseLivekitModal?.addEventListener('click', () => elements.modalLivekit?.classList.add('hidden'));
+  elements.btnLivekitConnect?.addEventListener('click', toggleLivekitSession);
+  elements.btnLivekitScreenShare?.addEventListener('click', toggleLivekitScreenShare);
+  elements.btnLivekitTestTool?.addEventListener('click', testLivekitToolFromVoice);
+  elements.btnSaveLivekitSettings?.addEventListener('click', saveLivekitCredentials);
+
   // Universal Custom AI 1-Click Preset Chips
   document.querySelectorAll('.btn-preset-chip').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -1119,7 +1266,7 @@ function updateProviderKeyVisibility() {
   document.getElementById('group-ollama-config')?.classList.toggle('hidden', p !== 'ollama');
 }
 
-function loadSettingsIntoModal() {
+async function loadSettingsIntoModal() {
   if (elements.selectProvider) elements.selectProvider.value = state.provider;
   if (elements.checkboxSafeMode) elements.checkboxSafeMode.checked = state.safeMode;
   if (elements.inputGeminiKey) elements.inputGeminiKey.value = localStorage.getItem('helper_gemini_key') || '';
@@ -1132,6 +1279,35 @@ function loadSettingsIntoModal() {
   if (elements.inputGroqKey) elements.inputGroqKey.value = localStorage.getItem('helper_groq_key') || '';
   if (elements.inputOllamaModel) elements.inputOllamaModel.value = localStorage.getItem('helper_ollama_model') || 'dolphin-llama3';
   updateProviderKeyVisibility();
+
+  try {
+    const res = await fetch('/api/settings');
+    if (res.ok) {
+      const s = await res.json();
+      if (s.provider) {
+        state.provider = s.provider;
+        if (elements.selectProvider) elements.selectProvider.value = s.provider;
+        if (elements.providerStateText) elements.providerStateText.textContent = s.provider.toUpperCase();
+      }
+      if (s.gemini_key && !elements.inputGeminiKey?.value) {
+        if (elements.inputGeminiKey) elements.inputGeminiKey.value = s.gemini_key;
+        localStorage.setItem('helper_gemini_key', s.gemini_key);
+      }
+      if (s.groq_key && !elements.inputGroqKey?.value) {
+        if (elements.inputGroqKey) elements.inputGroqKey.value = s.groq_key;
+        localStorage.setItem('helper_groq_key', s.groq_key);
+      }
+      if (s.openai_key && !elements.inputOpenaiKey?.value) {
+        if (elements.inputOpenaiKey) elements.inputOpenaiKey.value = s.openai_key;
+        localStorage.setItem('helper_openai_key', s.openai_key);
+      }
+      if (s.deepseek_key && !elements.inputDeepseekKey?.value) {
+        if (elements.inputDeepseekKey) elements.inputDeepseekKey.value = s.deepseek_key;
+        localStorage.setItem('helper_deepseek_key', s.deepseek_key);
+      }
+      updateProviderKeyVisibility();
+    }
+  } catch (e) {}
 }
 
 function saveSettingsFromModal() {
@@ -1274,4 +1450,161 @@ function downloadBlob(content, filename, mimeType) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ============================================================================
+// LIVEKIT WEBRTC VOICE & MULTIMODAL VISION STUDIO
+// ============================================================================
+let livekitState = {
+  active: false,
+  room: 'helper-ai-room',
+  token: null,
+  screenStream: null
+};
+
+async function openLivekitModal() {
+  elements.modalLivekit?.classList.remove('hidden');
+  await checkLivekitStatus();
+}
+
+async function checkLivekitStatus() {
+  try {
+    const res = await fetch('/api/livekit/status');
+    const data = await res.json();
+    if (elements.livekitStatusBadge) {
+      elements.livekitStatusBadge.textContent = data.is_active ? 'Voice Live' : 'Voice Ready';
+      elements.livekitStatusBadge.className = data.is_active ? 'font-semibold text-emerald-400' : 'font-semibold text-purple-400';
+    }
+    if (elements.livekitRoomDisplay) {
+      elements.livekitRoomDisplay.textContent = `Room: ${data.default_room} • ${data.tools_bridged_count} PC Tools`;
+    }
+  } catch (e) {
+    console.error('Failed to query LiveKit status:', e);
+  }
+}
+
+async function toggleLivekitSession() {
+  if (!livekitState.active) {
+    // Start session
+    try {
+      if (elements.livekitSessionState) elements.livekitSessionState.textContent = 'Connecting WebRTC room...';
+      const tokenRes = await fetch('/api/livekit/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room: livekitState.room, identity: 'user_browser_' + Date.now(), name: 'Desktop User' })
+      });
+      const tokenData = await tokenRes.json();
+      
+      await fetch('/api/livekit/session/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ room: livekitState.room })
+      });
+      
+      livekitState.active = true;
+      livekitState.token = tokenData.token;
+      
+      if (elements.btnLivekitConnect) {
+        elements.btnLivekitConnect.classList.remove('from-purple-600', 'to-indigo-600');
+        elements.btnLivekitConnect.classList.add('bg-red-600', 'hover:bg-red-500');
+      }
+      if (elements.btnLivekitConnectText) elements.btnLivekitConnectText.textContent = 'End Voice Session';
+      if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🟢 Session Connected • Listening & Speaking';
+      elements.livekitOrb?.classList.add('scale-110', 'ring-4', 'ring-purple-400');
+      
+      appendLivekitTranscript('Helper-AI', 'Hello! Helper-AI WebRTC Voice session connected. You can speak to control your PC or ask questions.');
+      appendTerminalLog('🎙️ LiveKit WebRTC Voice & Vision session active', 'info');
+    } catch (err) {
+      if (elements.livekitSessionState) elements.livekitSessionState.textContent = 'Connection failed: ' + err.message;
+    }
+  } else {
+    // Stop session
+    try {
+      await fetch('/api/livekit/session/stop', { method: 'POST' });
+    } catch (e) {}
+    livekitState.active = false;
+    if (livekitState.screenStream) {
+      livekitState.screenStream.getTracks().forEach(t => t.stop());
+      livekitState.screenStream = null;
+    }
+    if (elements.btnLivekitConnect) {
+      elements.btnLivekitConnect.classList.remove('bg-red-600', 'hover:bg-red-500');
+      elements.btnLivekitConnect.classList.add('from-purple-600', 'to-indigo-600');
+    }
+    if (elements.btnLivekitConnectText) elements.btnLivekitConnectText.textContent = 'Start Live Voice Session';
+    if (elements.livekitSessionState) elements.livekitSessionState.textContent = 'Standby • Ready to Connect';
+    elements.livekitOrb?.classList.remove('scale-110', 'ring-4', 'ring-purple-400');
+    appendLivekitTranscript('System', 'Voice session ended.');
+  }
+}
+
+async function toggleLivekitScreenShare() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+    alert('Screen sharing is not supported in this browser.');
+    return;
+  }
+  if (!livekitState.screenStream) {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      livekitState.screenStream = stream;
+      elements.btnLivekitScreenShare?.classList.add('bg-cyan-600/30', 'border-cyan-400', 'text-cyan-300');
+      appendLivekitTranscript('System', '🖥️ Desktop Screen Sharing active. Multimodal vision feed enabled.');
+      appendTerminalLog('🖥️ LiveKit screen sharing vision stream attached', 'action');
+      stream.getVideoTracks()[0].onended = () => {
+        livekitState.screenStream = null;
+        elements.btnLivekitScreenShare?.classList.remove('bg-cyan-600/30', 'border-cyan-400', 'text-cyan-300');
+        appendLivekitTranscript('System', 'Screen sharing stopped.');
+      };
+    } catch (err) {
+      console.warn('Screen share canceled or failed:', err);
+    }
+  } else {
+    livekitState.screenStream.getTracks().forEach(t => t.stop());
+    livekitState.screenStream = null;
+    elements.btnLivekitScreenShare?.classList.remove('bg-cyan-600/30', 'border-cyan-400', 'text-cyan-300');
+  }
+}
+
+async function testLivekitToolFromVoice() {
+  appendLivekitTranscript('You (Voice)', 'Helper, check PC health status.');
+  try {
+    const res = await fetch('/api/livekit/execute-tool', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool: 'get_system_health', arguments: {} })
+    });
+    const data = await res.json();
+    appendLivekitTranscript('Helper-AI (Voice)', data.voice_narration || 'PC Health checked.');
+  } catch (err) {
+    appendLivekitTranscript('Helper-AI', 'Error running tool: ' + err.message);
+  }
+}
+
+function appendLivekitTranscript(speaker, text) {
+  if (!elements.livekitTranscripts) return;
+  const item = document.createElement('div');
+  const isUser = speaker.toLowerCase().includes('you');
+  item.className = `p-2 rounded-lg text-xs ${isUser ? 'bg-purple-900/30 text-purple-200 border border-purple-500/20' : 'bg-slate-900/80 text-slate-200 border border-white/5'}`;
+  item.innerHTML = `<span class="font-bold ${isUser ? 'text-purple-300' : 'text-cyan-400'}">${speaker}:</span> ${text}`;
+  elements.livekitTranscripts.appendChild(item);
+  elements.livekitTranscripts.scrollTop = elements.livekitTranscripts.scrollHeight;
+}
+
+async function saveLivekitCredentials() {
+  const payload = {
+    provider: elements.selectProvider?.value || 'gemini',
+    livekit_url: elements.inputLivekitUrl?.value || '',
+    livekit_key: elements.inputLivekitKey?.value || '',
+    livekit_secret: elements.inputLivekitSecret?.value || ''
+  };
+  try {
+    const res = await fetch('/api/settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    alert('LiveKit credentials saved successfully.');
+  } catch (e) {
+    alert('Failed to save LiveKit credentials: ' + e.message);
+  }
 }

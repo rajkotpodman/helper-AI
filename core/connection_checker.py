@@ -178,6 +178,20 @@ class ConnectionChecker:
             "message": f"Server listening on {host}:{port}" if port_open else f"Server standby on port {port}"
         }
 
+    def check_livekit(self) -> Dict[str, Any]:
+        """Validates LiveKit WebRTC Voice and Vision engine readiness."""
+        try:
+            from core.livekit_bridge import livekit_bridge
+            return livekit_bridge.test_connection()
+        except Exception as e:
+            return {
+                "name": "livekit_webrtc",
+                "category": "Voice & Video",
+                "status": "error",
+                "latency_ms": 0,
+                "message": f"LiveKit check error: {str(e)}"
+            }
+
     def check_all(self, timeout: float = 3.0) -> Dict[str, Any]:
         """Runs all connection checks concurrently and returns an aggregated health map."""
         start_t = time.perf_counter()
@@ -194,7 +208,8 @@ class ConnectionChecker:
             "custom_ai": lambda: self.check_llm("custom"),
             "chrome_browser": self.check_chrome,
             "mcp_servers": self.check_mcp,
-            "websocket_server": self.check_websocket_backend
+            "websocket_server": self.check_websocket_backend,
+            "livekit_webrtc": self.check_livekit
         }
 
         with ThreadPoolExecutor(max_workers=8) as executor:
