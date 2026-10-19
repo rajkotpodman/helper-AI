@@ -191,6 +191,22 @@ Want Helper-AI to understand a new application or website?
 
 ---
 
+## 🎙️ Hands-Free Voice Agent & Desktop Sidecar
+
+Helper-AI includes a fully integrated, zero-latency **Hands-Free Speech-to-Speech Voice Agent** and **Windows Desktop Sidecar**:
+
+* 🗣️ **Completely Hands-Free:** Speak naturally without pressing buttons. Continuous Voice Activity Detection (VAD) automatically listens, executes your command, and speaks the answer aloud.
+* ⚡ **Global Hotkey Companion (`Ctrl + Shift + Space`):** Run `run_voice_sidecar.bat` to keep Helper-AI running quietly in the background. Press `Ctrl + Shift + Space` anytime—whether in a full-screen game, IDE, or browser—to summon the voice agent.
+* 🎧 **High-Definition Neural Voices:** Powered by Edge-TTS and local Windows SAPI5 fallback, supporting natural conversational speech in English (Aria, Guy, Jenny), Hindi (Swara, Madhur), and Gujarati (Dhwani, Niranjan).
+* 🌐 **Live Web Visualizer & Capsule:** Click the floating **🎙️ HANDS-FREE VOICE AGENT** orb on the web dashboard to enter the LiveKit Voice Studio with real-time waveform audio visualizer, live conversation transcripts, and desktop screen sharing.
+
+### Quick Start with Voice Sidecar:
+1. Ensure the Helper-AI backend is running (`run.bat` or `python app.py`).
+2. Double-click **`run_voice_sidecar.bat`**.
+3. Press **`Ctrl + Shift + Space`** anywhere in Windows and speak your request!
+
+---
+
 ## 💡 Practical Examples of What You Can Tell Helper-AI
 
 Here are real tasks you can copy and paste into Helper-AI right now:

@@ -693,6 +693,21 @@
         </div>
       </div>
 
+      <!-- Neural Voice Persona Selector -->
+      <div class="flex items-center justify-between w-full max-w-md mx-auto mb-3 bg-slate-950/60 p-2 rounded-xl border border-white/5 text-xs">
+        <span class="text-slate-400 font-medium flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400"></i> Neural Voice Persona:
+        </span>
+        <select id="livekit-voice-select" class="bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-white text-xs font-mono">
+          <option value="en-US-AriaNeural">Aria (US Female - Crisp)</option>
+          <option value="en-US-GuyNeural">Guy (US Male - Natural)</option>
+          <option value="en-US-JennyNeural">Jenny (Conversational)</option>
+          <option value="hi-IN-SwaraNeural">Swara (Hindi / Indian English)</option>
+          <option value="gu-IN-DhwaniNeural">Dhwani (Gujarati Female)</option>
+          <option value="gu-IN-NiranjanNeural">Niranjan (Gujarati Male)</option>
+        </select>
+      </div>
+
       <!-- Action Buttons -->
       <div class="flex flex-wrap items-center justify-center gap-3 mb-4">
         <button id="btn-livekit-connect" class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-purple-500/20 transition">
@@ -763,8 +778,12 @@
   </script>
   <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
-  <!-- Floating Side Space Dock for Pro & Store Actions (Bottom Right) -->
+  <!-- Floating Side Space Dock with Hands-Free Voice Agent Trigger -->
   <aside class="pro-buttons-side-container fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 flex flex-col sm:flex-row items-end sm:items-center gap-2 p-1.5 sm:p-2 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl" aria-label="Official Links">
+    <button id="btn-floating-voice-orb" class="pro-btn bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold flex items-center gap-1.5 shadow-lg shadow-purple-500/30 transition transform hover:scale-105">
+      <i data-lucide="mic" class="w-3.5 h-3.5 text-cyan-300"></i>
+      <span>🎙️ HANDS-FREE VOICE AGENT</span>
+    </button>
     <button class="pro-btn btn-buy-pro" onclick="window.open('https://wa.me/919898048483', '_blank')">⚡ BUY NOW PRO (APPOINTMENT)</button>
     <button class="pro-btn btn-donate" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScJ7WjuxEXqdoSlUtxN7NQ8UeKpbEAeA9iIO-IXOmBmYzlLHQ/viewform?usp=sharing&ouid=116676179363878319046', '_blank')">🪙 DONATION SYSTEM</button>
     <button class="pro-btn btn-store" onclick="window.open('https://wa.me/c/919898048483', '_blank')">🛒 OFFICIAL DIGITAL STORE</button>

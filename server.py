@@ -15,7 +15,7 @@ from typing import Dict, Any, List, Optional
 
 import psutil
 from dotenv import load_dotenv, set_key
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -558,10 +558,43 @@ async def translate_text(req: TranslationApiRequest):
     return {"translated_text": translated, "target_lang": req.target_lang}
 
 
-# --- Edge-TTS Voice Output ---
+# --- Voice Engine & Hands-Free Voice Agent ---
+class VoiceSynthesizeRequest(BaseModel):
+    text: str
+    voice: Optional[str] = "en-US-AriaNeural"
+    rate: Optional[str] = "+0%"
+    pitch: Optional[str] = "+0Hz"
+
+class VoiceDispatchRequest(BaseModel):
+    transcript: str
+    voice: Optional[str] = "en-US-AriaNeural"
+    speak_on_pc: Optional[bool] = False
+    provider: Optional[str] = "gemini"
+
+@app.get("/api/voice/voices")
+async def list_available_voices():
+    """List available neural voices supported by Helper-AI Voice Engine."""
+    from core.voice_engine import VoiceEngine
+    return {"voices": VoiceEngine.list_voices()}
+
+@app.post("/api/voice/synthesize")
+async def synthesize_voice_audio(req: VoiceSynthesizeRequest):
+    """Synthesizes text into high-definition neural MP3 audio stream."""
+    from core.voice_engine import VoiceEngine, DEFAULT_VOICE
+    if not req.text or not req.text.strip():
+        raise HTTPException(status_code=400, detail="Text cannot be empty.")
+    voice = req.voice or DEFAULT_VOICE
+    audio_bytes = await VoiceEngine.synthesize_to_bytes(req.text, voice=voice, rate=req.rate or "+0%", pitch=req.pitch or "+0Hz")
+    if not audio_bytes:
+        raise HTTPException(status_code=500, detail="Speech synthesis failed.")
+    return Response(content=audio_bytes, media_type="audio/mpeg", headers={
+        "Content-Disposition": "inline; filename=speech.mp3",
+        "Cache-Control": "max-age=3600"
+    })
+
 @app.post("/api/voice/speak")
 async def speak_text_on_pc(payload: Dict[str, Any]):
-    """Read aloud text using Edge-TTS or system speech."""
+    """Read aloud text using Edge-TTS or system speech directly on PC speakers."""
     from core.voice_engine import VoiceEngine, DEFAULT_VOICE
     text = payload.get("text", "")
     voice = payload.get("voice", DEFAULT_VOICE)
@@ -569,6 +602,87 @@ async def speak_text_on_pc(payload: Dict[str, Any]):
         return JSONResponse(status_code=400, content={"error": "Text is required"})
     res = await VoiceEngine.speak_on_pc(text, voice)
     return {"success": res, "text": text, "voice": voice}
+
+@app.post("/api/voice/dispatch")
+async def dispatch_voice_command(req: VoiceDispatchRequest):
+    """Processes hands-free spoken user commands and generates a conversational speech reply."""
+    from core.voice_engine import VoiceEngine, DEFAULT_VOICE
+    import base64
+
+    transcript = (req.transcript or "").strip()
+    if not transcript:
+        raise HTTPException(status_code=400, detail="Transcript is required.")
+
+    voice = req.voice or DEFAULT_VOICE
+    logger.info(f"[VoiceAgent] Received spoken command: {transcript}")
+
+    await broadcast_ws("voice_event", {
+        "status": "processing",
+        "transcript": transcript,
+        "voice": voice
+    })
+
+    # Fast tool execution detection for common spoken queries
+    t_lower = transcript.lower()
+    tool_executed = None
+    spoken_reply = ""
+    full_output = ""
+
+    if any(k in t_lower for k in ["cpu", "ram", "memory", "health", "system"]):
+        cpu = psutil.cpu_percent(interval=0.1)
+        mem = psutil.virtual_memory().percent
+        tool_executed = "get_system_health"
+        spoken_reply = f"Your system is running smoothly. CPU usage is currently {cpu} percent, and RAM usage is at {mem} percent."
+        full_output = spoken_reply
+    elif "time" in t_lower:
+        now_str = time.strftime("%I:%M %p")
+        spoken_reply = f"The current local time is {now_str}."
+        full_output = spoken_reply
+    else:
+        # Pass to LLM for conversational or agent tool response
+        try:
+            llm = LLMClient(provider=req.provider or "gemini")
+            sys_prompt = (
+                "You are Helper-AI's Voice Persona. The user just spoke to you via hands-free microphone. "
+                "Provide a crisp, direct, helpful spoken response (1 to 3 short sentences max). "
+                "Never use markdown asterisks, bullet points, emojis, or code blocks in spoken responses."
+            )
+            spoken_reply = await asyncio.to_thread(
+                llm.complete,
+                f"{sys_prompt}\n\nUser Spoke: {transcript}"
+            )
+            spoken_reply = spoken_reply.replace("*", "").replace("#", "").replace("`", "").strip()
+            full_output = spoken_reply
+        except Exception as e:
+            logger.error(f"LLM voice processing error: {e}")
+            spoken_reply = f"I heard your request: {transcript}. However, my language service encountered a momentary issue."
+            full_output = spoken_reply
+
+    # Synthesize audio response
+    audio_bytes = await VoiceEngine.synthesize_to_bytes(spoken_reply, voice=voice)
+    audio_b64 = base64.b64encode(audio_bytes).decode("utf-8") if audio_bytes else ""
+
+    # If PC speaker playback requested, trigger local playback
+    if req.speak_on_pc:
+        asyncio.create_task(VoiceEngine.speak_on_pc(spoken_reply, voice=voice))
+
+    await broadcast_ws("voice_event", {
+        "status": "speaking",
+        "transcript": transcript,
+        "reply": spoken_reply,
+        "has_audio": bool(audio_b64)
+    })
+
+    return {
+        "success": True,
+        "transcript": transcript,
+        "reply": spoken_reply,
+        "full_output": full_output,
+        "tool_executed": tool_executed,
+        "audio_base64": audio_b64,
+        "voice": voice
+    }
+
 
 
 # --- LiveKit WebRTC Voice & Multimodal Vision Engine ---

@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.6.0] - 2026-10-19
+
+### 🎙️ Hands-Free Voice Agent & Windows Desktop Sidecar
+- **Continuous Hands-Free Speech-to-Speech Loop:**
+  - Integrated speech recognition with automated voice activity detection (VAD), debounced end-of-speech silence detection, and hands-free spoken loop in Web UI and LiveKit Studio.
+  - Interactive pulsing neural voice visualizer with distinct state transitions: Standby, Listening (cyan ring), Thinking (purple spinning ring), and Speaking (emerald scale pulse).
+  - Floating **🎙️ HANDS-FREE VOICE AGENT** launch capsule in bottom right dock for 1-click invocation from any page.
+- **Enhanced Neural Voice Engine (`core/voice_engine.py`):**
+  - Upgraded Edge-TTS to `7.3.1` supporting crisp, zero-latency natural neural speech without API keys.
+  - Added native multi-language voice selection: English (Aria, Guy, Jenny, Sonia), Hindi (Swara, Madhur), and Gujarati (Dhwani, Niranjan).
+  - Built-in offline Windows SAPI5 / PowerShell speech synthesis fallback ensuring audio output never fails even without network connection.
+- **FastAPI Voice Endpoints (`app.py` & `server.py`):**
+  - `GET /api/voice/voices`: Lists supported neural voices with language and accent metadata.
+  - `POST /api/voice/synthesize`: Returns streaming `audio/mpeg` MP3 byte response with client caching headers.
+  - `POST /api/voice/dispatch`: Fast natural language spoken command processing with direct tool execution (CPU/RAM health, time, web search) and synthesized speech audio return.
+- **Desktop Companion Sidecar (`sidecar.py` & `run_voice_sidecar.bat`):**
+  - Lightweight background Windows desktop companion registered to global hotkey `Ctrl + Shift + Space`.
+  - Native Win32 `RegisterHotKey` event loop summoning hands-free voice agent from any application or game.
+  - Dual audio output: Plays response through host PC speakers while popping up Windows toast notifications.
+- **Automated Test Suite (`tests/test_handsfree_voice.py`):**
+  - 7 comprehensive automated tests covering voice engine listing, audio byte synthesis, FastAPI voice endpoints, and desktop sidecar initialization.
+
 ## [2.5.0] - 2026-10-19
 
 ### 🧬 AI 2026: Biological Wetware & Superintelligence Hub

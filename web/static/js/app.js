@@ -269,6 +269,8 @@ function initElements() {
   elements.inputLivekitKey = document.getElementById('input-livekit-key');
   elements.inputLivekitSecret = document.getElementById('input-livekit-secret');
   elements.btnSaveLivekitSettings = document.getElementById('btn-save-livekit-settings');
+  elements.btnFloatingVoiceOrb = document.getElementById('btn-floating-voice-orb');
+  elements.selectLivekitVoice = document.getElementById('livekit-voice-select');
   
   // Language Selector
   elements.btnLangDropdown = document.getElementById('btn-lang-dropdown');
@@ -1125,6 +1127,12 @@ function setupModals() {
   elements.btnLivekitScreenShare?.addEventListener('click', toggleLivekitScreenShare);
   elements.btnLivekitTestTool?.addEventListener('click', testLivekitToolFromVoice);
   elements.btnSaveLivekitSettings?.addEventListener('click', saveLivekitCredentials);
+  elements.btnFloatingVoiceOrb?.addEventListener('click', () => {
+    openLivekitModal();
+    if (!livekitState.active) {
+      toggleLivekitSession();
+    }
+  });
 
   // Universal Custom AI 1-Click Preset Chips
   document.querySelectorAll('.btn-preset-chip').forEach(btn => {
@@ -1483,11 +1491,16 @@ async function checkLivekitStatus() {
   }
 }
 
+let voiceAgentRecognition = null;
+let voiceAgentAudio = null;
+let voiceSilenceTimer = null;
+let voiceCurrentUtterance = '';
+
 async function toggleLivekitSession() {
   if (!livekitState.active) {
     // Start session
     try {
-      if (elements.livekitSessionState) elements.livekitSessionState.textContent = 'Connecting WebRTC room...';
+      if (elements.livekitSessionState) elements.livekitSessionState.textContent = 'Connecting WebRTC room & Voice Engine...';
       const tokenRes = await fetch('/api/livekit/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1509,11 +1522,14 @@ async function toggleLivekitSession() {
         elements.btnLivekitConnect.classList.add('bg-red-600', 'hover:bg-red-500');
       }
       if (elements.btnLivekitConnectText) elements.btnLivekitConnectText.textContent = 'End Voice Session';
-      if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🟢 Session Connected • Listening & Speaking';
-      elements.livekitOrb?.classList.add('scale-110', 'ring-4', 'ring-purple-400');
+      if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🟢 Session Connected • Listening Hands-Free';
+      elements.livekitOrb?.classList.add('scale-110', 'ring-4', 'ring-cyan-400');
       
-      appendLivekitTranscript('Helper-AI', 'Hello! Helper-AI WebRTC Voice session connected. You can speak to control your PC or ask questions.');
-      appendTerminalLog('🎙️ LiveKit WebRTC Voice & Vision session active', 'info');
+      appendLivekitTranscript('Helper-AI', 'Hello! Helper-AI Hands-free Voice session connected. You can speak naturally without pressing any buttons to control your PC or ask questions.');
+      appendTerminalLog('🎙️ Hands-Free Voice Agent connected. Speech-to-Speech active.', 'info');
+
+      // Start continuous hands-free speech recognition loop
+      startHandsFreeVoiceLoop();
     } catch (err) {
       if (elements.livekitSessionState) elements.livekitSessionState.textContent = 'Connection failed: ' + err.message;
     }
@@ -1523,6 +1539,16 @@ async function toggleLivekitSession() {
       await fetch('/api/livekit/session/stop', { method: 'POST' });
     } catch (e) {}
     livekitState.active = false;
+    if (voiceAgentRecognition) {
+      try { voiceAgentRecognition.stop(); } catch(e) {}
+      voiceAgentRecognition = null;
+    }
+    if (voiceAgentAudio) {
+      voiceAgentAudio.pause();
+      voiceAgentAudio = null;
+    }
+    clearTimeout(voiceSilenceTimer);
+
     if (livekitState.screenStream) {
       livekitState.screenStream.getTracks().forEach(t => t.stop());
       livekitState.screenStream = null;
@@ -1533,8 +1559,169 @@ async function toggleLivekitSession() {
     }
     if (elements.btnLivekitConnectText) elements.btnLivekitConnectText.textContent = 'Start Live Voice Session';
     if (elements.livekitSessionState) elements.livekitSessionState.textContent = 'Standby • Ready to Connect';
-    elements.livekitOrb?.classList.remove('scale-110', 'ring-4', 'ring-purple-400');
-    appendLivekitTranscript('System', 'Voice session ended.');
+    elements.livekitOrb?.classList.remove('scale-110', 'ring-4', 'ring-cyan-400', 'ring-purple-400', 'ring-emerald-400');
+    appendLivekitTranscript('System', 'Hands-free voice session ended.');
+  }
+}
+
+function startHandsFreeVoiceLoop() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    appendLivekitTranscript('System', '⚠️ Speech recognition not supported in this browser. You can type commands in the test input.');
+    return;
+  }
+
+  if (voiceAgentRecognition) {
+    try { voiceAgentRecognition.stop(); } catch(e) {}
+  }
+
+  voiceAgentRecognition = new SpeechRec();
+  voiceAgentRecognition.continuous = true;
+  voiceAgentRecognition.interimResults = true;
+  voiceAgentRecognition.lang = 'en-US';
+
+  voiceAgentRecognition.onstart = () => {
+    if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🎙️ Listening... (Speak freely hands-free)';
+    elements.livekitOrb?.classList.add('scale-110', 'ring-4', 'ring-cyan-400');
+    elements.livekitOrb?.classList.remove('ring-purple-400', 'ring-emerald-400');
+  };
+
+  voiceAgentRecognition.onresult = (evt) => {
+    let interim = '';
+    let final = '';
+    for (let i = evt.resultIndex; i < evt.results.length; ++i) {
+      if (evt.results[i].isFinal) {
+        final += evt.results[i][0].transcript;
+      } else {
+        interim += evt.results[i][0].transcript;
+      }
+    }
+    const current = final || interim;
+    if (current && current.trim()) {
+      voiceCurrentUtterance = current.trim();
+      if (elements.livekitSessionState) elements.livekitSessionState.textContent = `🎙️ Heard: "${voiceCurrentUtterance}"`;
+      
+      clearTimeout(voiceSilenceTimer);
+      voiceSilenceTimer = setTimeout(() => {
+        if (voiceCurrentUtterance && livekitState.active) {
+          const toSend = voiceCurrentUtterance;
+          voiceCurrentUtterance = '';
+          dispatchSpokenCommand(toSend);
+        }
+      }, 950);
+    }
+  };
+
+  voiceAgentRecognition.onerror = (err) => {
+    console.warn('Voice loop notice:', err.error);
+    if (livekitState.active && err.error !== 'aborted') {
+      setTimeout(() => {
+        if (livekitState.active) startHandsFreeVoiceLoop();
+      }, 1000);
+    }
+  };
+
+  voiceAgentRecognition.onend = () => {
+    if (livekitState.active && (!voiceAgentAudio || voiceAgentAudio.paused)) {
+      setTimeout(() => {
+        if (livekitState.active && (!voiceAgentAudio || voiceAgentAudio.paused)) {
+          try { voiceAgentRecognition.start(); } catch(e) {}
+        }
+      }, 400);
+    }
+  };
+
+  try {
+    voiceAgentRecognition.start();
+  } catch(e) {
+    console.error('Failed to start speech recognition:', e);
+  }
+}
+
+async function dispatchSpokenCommand(transcript) {
+  if (!transcript || !transcript.trim()) return;
+  appendLivekitTranscript('You (Voice)', transcript);
+  if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🧠 Helper-AI is thinking & executing...';
+  elements.livekitOrb?.classList.remove('ring-cyan-400');
+  elements.livekitOrb?.classList.add('ring-purple-400', 'animate-spin');
+
+  if (voiceAgentRecognition) {
+    try { voiceAgentRecognition.stop(); } catch(e) {}
+  }
+
+  try {
+    const res = await fetch('/api/voice/dispatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        transcript: transcript,
+        voice: elements.selectLivekitVoice?.value || 'en-US-AriaNeural',
+        speak_on_pc: false,
+        provider: state.provider || 'gemini'
+      })
+    });
+    const data = await res.json();
+    elements.livekitOrb?.classList.remove('animate-spin');
+
+    if (data.reply) {
+      appendLivekitTranscript('Helper-AI (Voice)', data.reply);
+      if (data.audio_base64) {
+        playAgentVoiceAudio(data.audio_base64);
+      } else {
+        playClientSpeechFallback(data.reply);
+      }
+    } else {
+      appendLivekitTranscript('Helper-AI', 'No response generated.');
+      resumeVoiceListening();
+    }
+  } catch (err) {
+    elements.livekitOrb?.classList.remove('animate-spin');
+    appendLivekitTranscript('Helper-AI', 'Voice dispatch error: ' + err.message);
+    resumeVoiceListening();
+  }
+}
+
+function playAgentVoiceAudio(base64Mp3) {
+  if (voiceAgentAudio) {
+    voiceAgentAudio.pause();
+    voiceAgentAudio = null;
+  }
+  voiceAgentAudio = new Audio('data:audio/mpeg;base64,' + base64Mp3);
+  if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🔊 Helper-AI speaking...';
+  elements.livekitOrb?.classList.remove('ring-cyan-400', 'ring-purple-400');
+  elements.livekitOrb?.classList.add('ring-emerald-400', 'scale-125');
+
+  voiceAgentAudio.onended = () => {
+    elements.livekitOrb?.classList.remove('scale-125', 'ring-emerald-400');
+    resumeVoiceListening();
+  };
+  voiceAgentAudio.onerror = () => {
+    resumeVoiceListening();
+  };
+  voiceAgentAudio.play().catch(() => resumeVoiceListening());
+}
+
+function playClientSpeechFallback(text) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🔊 Helper-AI speaking...';
+    elements.livekitOrb?.classList.add('ring-emerald-400', 'scale-125');
+    utt.onend = () => {
+      elements.livekitOrb?.classList.remove('scale-125', 'ring-emerald-400');
+      resumeVoiceListening();
+    };
+    window.speechSynthesis.speak(utt);
+  } else {
+    resumeVoiceListening();
+  }
+}
+
+function resumeVoiceListening() {
+  if (livekitState.active) {
+    if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🎙️ Listening... (Speak freely hands-free)';
+    elements.livekitOrb?.classList.add('ring-cyan-400');
+    startHandsFreeVoiceLoop();
   }
 }
 
