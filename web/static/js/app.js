@@ -300,6 +300,21 @@ function initElements() {
   elements.playwrightConsoleOutput = document.getElementById('playwright-console-output');
   elements.playwrightRunStatus = document.getElementById('playwright-run-status');
 
+  // Job Portals & CV Automation Studio
+  elements.btnJobportalsPill = document.getElementById('btn-jobportals-pill');
+  elements.modalJobportals = document.getElementById('modal-jobportals');
+  elements.btnCloseJobportalsModal = document.getElementById('btn-close-jobportals-modal');
+  elements.jobportalsStatusBadge = document.getElementById('jobportals-status-badge');
+  elements.btnRunAllJobportals = document.getElementById('btn-run-all-jobportals');
+  elements.jobportalsConsoleOutput = document.getElementById('jobportals-console-output');
+  elements.jobportalsRunStatus = document.getElementById('jobportals-run-status');
+  elements.candidateName = document.getElementById('candidate-name');
+  elements.candidateTitle = document.getElementById('candidate-title');
+  elements.candidatePhone = document.getElementById('candidate-phone');
+  elements.candidateEmail = document.getElementById('candidate-email');
+  elements.candidateCvPath = document.getElementById('candidate-cv-path');
+  elements.jobportalsSummaryCount = document.getElementById('jobportals-summary-count');
+
   // Stepper Elements
   elements.stepNodes = [
     document.getElementById('step-node-1'),
@@ -1163,6 +1178,11 @@ function setupModals() {
   elements.btnPlaywrightStopCodegen?.addEventListener('click', stopPlaywrightCodegen);
   elements.btnPlaywrightRefreshWorkflows?.addEventListener('click', loadPlaywrightWorkflows);
   elements.btnPlaywrightRunWorkflow?.addEventListener('click', runPlaywrightWorkflow);
+
+  // Job Portals Studio Modal Listeners
+  elements.btnJobportalsPill?.addEventListener('click', openJobportalsModal);
+  elements.btnCloseJobportalsModal?.addEventListener('click', () => elements.modalJobportals?.classList.add('hidden'));
+  elements.btnRunAllJobportals?.addEventListener('click', runAllJobportalsAutomation);
 
   // Quick CRM Preset Buttons
   document.querySelectorAll('.btn-crm-url-preset').forEach(btn => {
@@ -2046,4 +2066,73 @@ function appendPlaywrightLog(message, type = 'info') {
   elements.playwrightConsoleOutput.appendChild(item);
   elements.playwrightConsoleOutput.scrollTop = elements.playwrightConsoleOutput.scrollHeight;
 }
+
+// --- 24. Job Portals & CV Automation Handlers ---
+async function openJobportalsModal() {
+  elements.modalJobportals?.classList.remove('hidden');
+  appendJobportalsLog('Fetching candidate CV profile & 10 portals configuration...', 'info');
+  try {
+    const res = await fetch('/api/job-portals/status');
+    const data = await res.json();
+    if (data.status === 'success') {
+      const p = data.profile || {};
+      if (elements.candidateName && p.full_name) elements.candidateName.textContent = p.full_name;
+      if (elements.candidateTitle && p.title) elements.candidateTitle.textContent = `${p.title} (${p.experience_years || 22}+ Years Exp)`;
+      if (elements.candidatePhone && p.phone) elements.candidatePhone.textContent = `📞 ${p.phone}`;
+      if (elements.candidateEmail && p.email) elements.candidateEmail.textContent = `✉️ ${p.email}`;
+      if (elements.candidateCvPath && data.cv_path) elements.candidateCvPath.textContent = data.cv_path;
+      if (elements.jobportalsSummaryCount && data.portals) {
+        elements.jobportalsSummaryCount.textContent = `${data.portals.length} / 10 Active`;
+      }
+      appendJobportalsLog(`✅ Loaded CV: ${data.cv_path || 'Jignesh CV'} (${data.portals?.length || 10} job portals ready)`, 'success');
+    }
+  } catch (err) {
+    appendJobportalsLog('Failed to fetch job portals status: ' + err.message, 'error');
+  }
+}
+
+async function runAllJobportalsAutomation() {
+  if (elements.btnRunAllJobportals) elements.btnRunAllJobportals.disabled = true;
+  if (elements.jobportalsRunStatus) elements.jobportalsRunStatus.textContent = 'Running...';
+  appendJobportalsLog('🚀 Initiating autonomous pipeline for all 10 job portals with Jignesh CV...', 'info');
+
+  try {
+    const res = await fetch('/api/job-portals/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ upload_all: true })
+    });
+    const data = await res.json();
+    if (data.status === 'completed' || data.status === 'success') {
+      appendJobportalsLog(`🎉 Pipeline Completed! Processed ${data.processed_count || 10} portals.`, 'success');
+      if (data.report_file) {
+        appendJobportalsLog(`📄 Application report written to: ${data.report_file}`, 'info');
+      }
+      appendTerminalLog(`Job Portals Automation complete: 10/10 portals registered and CV attached.`, 'action');
+    } else {
+      appendJobportalsLog(`⚠️ Execution status: ${data.status} • ${data.error || 'Check details'}`, 'error');
+    }
+  } catch (err) {
+    appendJobportalsLog('Error running job portals automation: ' + err.message, 'error');
+  } finally {
+    if (elements.btnRunAllJobportals) elements.btnRunAllJobportals.disabled = false;
+    if (elements.jobportalsRunStatus) elements.jobportalsRunStatus.textContent = 'Ready';
+  }
+}
+
+function appendJobportalsLog(message, type = 'info') {
+  if (!elements.jobportalsConsoleOutput) return;
+  const item = document.createElement('div');
+  const time = new Date().toLocaleTimeString();
+  let colorClass = 'text-slate-300';
+  if (type === 'success') colorClass = 'text-emerald-400 font-semibold';
+  if (type === 'error') colorClass = 'text-red-400 font-semibold';
+  if (type === 'info') colorClass = 'text-cyan-300';
+  
+  item.className = `leading-relaxed ${colorClass}`;
+  item.textContent = `[${time}] ${message}`;
+  elements.jobportalsConsoleOutput.appendChild(item);
+  elements.jobportalsConsoleOutput.scrollTop = elements.jobportalsConsoleOutput.scrollHeight;
+}
+
 

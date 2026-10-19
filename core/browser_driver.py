@@ -655,6 +655,102 @@ class ProjectBrowser:
                 "output": f"Failed to type into '{target}': {str(e)}"
             }
 
+    def upload_file(self, file_path: str, target: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Uploads a local file to a file input (<input type='file'>) on the current webpage.
+        Handles hidden, styled, or proxy file inputs robustly across modern SPAs.
+        """
+        driver = self.get_driver()
+        clean_path = str(file_path).strip().strip('"').strip("'")
+        resolved_path = Path(clean_path).resolve()
+        if not resolved_path.exists():
+            # Check Downloads directory as fallback
+            downloads_fallback = Path.home() / "Downloads" / Path(clean_path).name
+            if downloads_fallback.exists():
+                resolved_path = downloads_fallback
+            else:
+                return {
+                    "success": False,
+                    "output": f"File to upload not found at path: '{file_path}'"
+                }
+
+        abs_file = str(resolved_path)
+        logger.info(f"Attempting to upload file '{abs_file}' into current page...")
+
+        # 1. Search for file inputs on main page
+        file_inputs = driver.find_elements(By.XPATH, "//input[@type='file']")
+        
+        # 2. If not found, inspect iframes
+        if not file_inputs:
+            for iframe in driver.find_elements(By.TAG_NAME, "iframe"):
+                try:
+                    driver.switch_to.frame(iframe)
+                    inner_inputs = driver.find_elements(By.XPATH, "//input[@type='file']")
+                    if inner_inputs:
+                        file_inputs = inner_inputs
+                        break
+                except Exception:
+                    pass
+                finally:
+                    try:
+                        driver.switch_to.default_content()
+                    except Exception:
+                        pass
+
+        # 3. If still not found, click visible upload triggers to reveal file input
+        if not file_inputs:
+            try:
+                upload_triggers = driver.find_elements(By.XPATH, "//*[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'upload') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'resume') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'browse') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'attach')]")
+                for ut in upload_triggers:
+                    if ut.is_displayed():
+                        driver.execute_script("arguments[0].click();", ut)
+                        time.sleep(1.0)
+                        file_inputs = driver.find_elements(By.XPATH, "//input[@type='file']")
+                        if file_inputs:
+                            break
+            except Exception:
+                pass
+
+        if not file_inputs:
+            return {
+                "success": False,
+                "output": f"No <input type='file'> element found on current page '{driver.current_url}' to attach '{resolved_path.name}'."
+            }
+
+        # 4. Attach file via send_keys
+        uploaded = False
+        last_err = ""
+        for fi in file_inputs:
+            try:
+                # Ensure input is interactable even if CSS hidden (display:none or visibility:hidden)
+                driver.execute_script("""
+                    arguments[0].style.display = 'block';
+                    arguments[0].style.visibility = 'visible';
+                    arguments[0].style.opacity = '1';
+                    arguments[0].style.width = '100px';
+                    arguments[0].style.height = '100px';
+                """, fi)
+                fi.send_keys(abs_file)
+                time.sleep(1.2)
+                uploaded = True
+                break
+            except Exception as e:
+                last_err = str(e)
+                continue
+
+        if uploaded:
+            time.sleep(1.5)
+            return {
+                "success": True,
+                "output": f"Successfully uploaded file '{resolved_path.name}' ({resolved_path.stat().st_size} bytes) to page.",
+                "file_path": abs_file,
+                "page": self.get_page_summary()
+            }
+        return {
+            "success": False,
+            "output": f"Found file input but send_keys failed: {last_err}"
+        }
+
     def get_page_summary(self) -> Dict[str, Any]:
         """Extracts current URL, title, and interactive buttons/inputs on screen (including role=button and contenteditable)."""
         try:

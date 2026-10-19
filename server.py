@@ -799,6 +799,31 @@ async def run_playwright_workflow_endpoint(req: PlaywrightWorkflowRunRequest):
     )
 
 
+class JobPortalProcessRequest(BaseModel):
+    cv_path: Optional[str] = None
+    portal_id: Optional[str] = None
+
+@app.get("/api/job-portals/status")
+async def get_job_portals_status():
+    """Returns candidate CV data and status of all 10 job portals."""
+    from core.job_portal_automation import job_portal_automation
+    cv_data = job_portal_automation.parse_cv_details()
+    portals = job_portal_automation.get_portals()
+    return {
+        "candidate": cv_data,
+        "portals": portals
+    }
+
+@app.post("/api/job-portals/process")
+async def process_job_portals_endpoint(req: JobPortalProcessRequest):
+    """Executes automated registration and CV upload across job portals."""
+    from core.job_portal_automation import job_portal_automation
+    if req.portal_id:
+        return job_portal_automation.register_and_upload(req.portal_id, req.cv_path)
+    return job_portal_automation.process_all_10_portals(req.cv_path)
+
+
+
 # --- Execution Launcher Helper ---
 def start_server(host: str = "127.0.0.1", port: int = 8000, open_browser: bool = False):
     """Launch the FastAPI server using Uvicorn."""

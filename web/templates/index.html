@@ -103,6 +103,12 @@
           <span>CRM Studio (<strong id="playwright-status-badge" class="font-semibold text-emerald-400">Ready</strong>)</span>
         </button>
 
+        <!-- Job Portals & CV Automation Studio Pill -->
+        <button id="btn-jobportals-pill" class="nav-pill border-cyan-500/30 hover:border-cyan-400" title="10 Job Portals Registration & CV Upload Studio">
+          <i data-lucide="briefcase" class="w-4 h-4 text-cyan-400"></i>
+          <span>Job Portals (<strong id="jobportals-status-badge" class="font-semibold text-cyan-400">10 Ready</strong>)</span>
+        </button>
+
         <!-- Project Browser Button -->
         <button id="btn-project-browser" class="nav-pill" title="Open Desktop Chrome Browser Session">
           <i data-lucide="globe" class="w-4 h-4 text-cyan-400"></i>
@@ -247,6 +253,9 @@
           </button>
           <button class="idea-chip" data-prompt="Open PowerShell, test git version and write system info to Desktop/sysinfo.txt">
             <span>📄</span> <span>System Info to Desktop</span>
+          </button>
+          <button class="idea-chip border-cyan-500/40 hover:border-cyan-400 bg-cyan-500/10 text-cyan-300" data-prompt="now 10 website job releated so create my account on popular job portel website i want freelancer any job work from home after internship in my download folder jignesh cv file is available create 10 account and upload cv in each site">
+            <span>💼</span> <span>10 Job Portals & CV Upload (Jignesh CV)</span>
           </button>
         </div>
 
@@ -904,6 +913,168 @@
         </div>
         <div id="playwright-console-output" class="terminal-box text-xs max-h-36 overflow-y-auto space-y-1 p-2.5 bg-slate-950/90 border border-white/10 rounded-xl font-mono text-slate-300">
           <div class="text-slate-500 italic">Playwright ready. Record in Chrome or run lead workflows.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Job Portals & CV Automation Studio Modal -->
+  <div id="modal-jobportals" class="modal-backdrop hidden">
+    <div class="modal-dialog max-w-4xl border border-cyan-500/30 shadow-2xl shadow-cyan-500/10">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="briefcase" class="w-5 h-5 text-cyan-400"></i> 10 Job Portals Registration & CV Upload Studio
+        </h3>
+        <button id="btn-close-jobportals-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <!-- Candidate Profile & CV Card -->
+      <div class="p-4 bg-slate-900/80 rounded-2xl border border-cyan-500/20 mb-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
+          <div class="flex items-center gap-2">
+            <span class="text-lg">👤</span>
+            <div>
+              <h4 id="candidate-name" class="text-sm font-bold text-white">Jignesh J. Kariya</h4>
+              <p id="candidate-title" class="text-xs text-cyan-300 font-mono">Infrastructure Engineer / Systems Administrator (22+ Years Exp)</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 text-xs">
+            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold" id="candidate-phone">📞 +91 9898048483</span>
+            <span class="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono" id="candidate-email">✉️ oo71097145198@gmail.com</span>
+          </div>
+        </div>
+
+        <div class="mt-2 pt-2 border-t border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="text-slate-400 flex items-center gap-1.5 font-mono">
+            <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i>
+            <span>Active CV: <strong id="candidate-cv-path" class="text-slate-200">C:\Users\DELL\Downloads\Jignesh_Kariya_CV.pdf</strong></span>
+          </div>
+          <button id="btn-run-all-jobportals" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-cyan-500/20 transition">
+            <i data-lucide="rocket" class="w-4 h-4"></i>
+            <span>⚡ Process All 10 Portals & Upload CV</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 10 Portals Grid -->
+      <div class="mb-4">
+        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+          <span>Target Job Portals (10 Sites Configured)</span>
+          <span id="jobportals-summary-count" class="text-cyan-400 font-mono text-[10px]">10 / 10 Active</span>
+        </div>
+        <div id="jobportals-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
+          <!-- Dynamically populated or static starter list -->
+          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🎓</span>
+              <div>
+                <strong class="text-white block">1. Internshala</strong>
+                <span class="text-[10px] text-slate-400">Internships & WFH Fresher Jobs</span>
+              </div>
+            </div>
+            <a href="https://internshala.com/registration/student" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
+          </div>
+          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">💼</span>
+              <div>
+                <strong class="text-white block">2. Indeed India</strong>
+                <span class="text-[10px] text-slate-400">Remote & Work From Home Jobs</span>
+              </div>
+            </div>
+            <a href="https://secure.indeed.com/account/register" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
+          </div>
+          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🇮🇳</span>
+              <div>
+                <strong class="text-white block">3. Naukri.com</strong>
+                <span class="text-[10px] text-slate-400">India's #1 Leading Job Portal</span>
+              </div>
+            </div>
+            <a href="https://www.naukri.com/registration/createAccount" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
+          </div>
+          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🌐</span>
+              <div>
+                <strong class="text-white block">4. Foundit (Monster India)</strong>
+                <span class="text-[10px] text-slate-400">IT & Infrastructure Roles</span>
+              </div>
+            </div>
+            <a href="https://www.foundit.in/seeker/registration" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
+          </div>
+          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🚀</span>
+              <div>
+                <strong class="text-white block">5. Upwork</strong>
+                <span class="text-[10px] text-slate-400">Global Freelancer & Remote Contracts</span>
+              </div>
+            </div>
+            <a href="https://www.upwork.com/nx/signup/" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
+          </div>
+          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">💻</span>
+              <div>
+                <strong class="text-white block">6. Freelancer.com</strong>
+                <span class="text-[10px] text-slate-400">90M+ Professionals Freelance Work</span>
+              </div>
+            </div>
+            <a href="https://www.freelancer.com/signup" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
+          </div>
+          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🦄</span>
+              <div>
+                <strong class="text-white block">7. Wellfound (AngelList)</strong>
+                <span class="text-[10px] text-slate-400">Top Tech Startups & Remote Jobs</span>
+              </div>
+            </div>
+            <a href="https://wellfound.com/jobs" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
+          </div>
+          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🔗</span>
+              <div>
+                <strong class="text-white block">8. LinkedIn Jobs</strong>
+                <span class="text-[10px] text-slate-400">Global Professional Network</span>
+              </div>
+            </div>
+            <a href="https://www.linkedin.com/jobs/" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
+          </div>
+          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">🎯</span>
+              <div>
+                <strong class="text-white block">9. Truelancer</strong>
+                <span class="text-[10px] text-slate-400">India & Worldwide Freelancing</span>
+              </div>
+            </div>
+            <a href="https://www.truelancer.com/signup" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
+          </div>
+          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="text-sm">📱</span>
+              <div>
+                <strong class="text-white block">10. Apna</strong>
+                <span class="text-[10px] text-slate-400">Direct Recruiter Hiring & Fast Track</span>
+              </div>
+            </div>
+            <a href="https://apna.co/jobs" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Execution Console Output -->
+      <div>
+        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+          <span>Automation Log & Desktop Report</span>
+          <span id="jobportals-run-status" class="text-slate-400 font-mono text-[10px]">Ready</span>
+        </div>
+        <div id="jobportals-console-output" class="terminal-box text-xs max-h-32 overflow-y-auto space-y-1 p-2.5 bg-slate-950/90 border border-white/10 rounded-xl font-mono text-slate-300">
+          <div class="text-slate-500 italic">Job Portals Engine ready. Click 'Process All 10 Portals & Upload CV' to begin.</div>
         </div>
       </div>
     </div>

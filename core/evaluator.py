@@ -94,6 +94,10 @@ class GroundTruthEvaluator:
         if action in ["write_file", "save_file", "create_file"] or (action == "execute_powershell" and ">" in action_args.get("command", "")):
             return self._verify_file_operation(action, action_args, tool_result)
 
+        # 5.5 Job Portal Automation verification
+        if action == "job_portal_automation":
+            return self._verify_job_portal(action_args, tool_result)
+
         # 6. Default Fallback Verification
         if raw_success:
             return EvaluationResult(
@@ -377,3 +381,19 @@ class GroundTruthEvaluator:
                 failure_reason="FILE_NOT_FOUND_AFTER_WRITE",
                 suggested_fix="Verify directory permissions and path existence."
             )
+
+    def _verify_job_portal(self, action_args: Dict[str, Any], tool_result: Dict[str, Any]) -> EvaluationResult:
+        """Evaluates whether job portal automation or CV attachment was verifiably executed."""
+        raw_success = tool_result.get("success", False)
+        out = str(tool_result.get("output", ""))
+        if raw_success and any(k in out.lower() for k in ["complete", "attached", "parsed", "report written", "status:"]):
+            return EvaluationResult(
+                is_verified=True,
+                ground_truth_evidence=f"Job portal automation verified. Output: {out[:140]}..."
+            )
+        return EvaluationResult(
+            is_verified=False,
+            ground_truth_evidence="Job portal action failed or did not confirm execution.",
+            failure_reason="JOB_PORTAL_ACTION_FAILED",
+            suggested_fix="Run 'job_portal_automation' with action='process_all' or check candidate CV in Downloads."
+        )

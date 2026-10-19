@@ -82,7 +82,10 @@ class BrowserAutomationTool(BaseTool):
                     "set_of_marks",
                     "click_mark",
                     "type_mark",
-                    "clear_marks"
+                    "clear_marks",
+                    "upload_file",
+                    "upload",
+                    "attach_file"
                 ]
             },
             "mark_id": {
@@ -146,14 +149,18 @@ class BrowserAutomationTool(BaseTool):
                 "type": "integer",
                 "description": "Number of job openings to apply to for apply_linkedin_jobs (default 5).",
                 "default": 5
+            },
+            "file_path": {
+                "type": "string",
+                "description": "Absolute path to CV or file to upload (.pdf, .docx, .png, etc.)."
             }
         },
-        "required": ["action"]
+        "required": []
     }
 
     def execute(
         self,
-        action: str,
+        action: Optional[str] = None,
         url: Optional[str] = None,
         target: Optional[str] = None,
         text: Optional[str] = None,
@@ -165,15 +172,44 @@ class BrowserAutomationTool(BaseTool):
         resume_path: Optional[str] = None,
         count: Optional[int] = 5,
         mark_id: Optional[int] = None,
+        file_path: Optional[str] = None,
         **kwargs
     ) -> Dict[str, Any]:
         browser = ProjectBrowser.get_instance()
         target_name = target or kwargs.get("element") or kwargs.get("selector") or ""
         type_content = text or kwargs.get("content") or kwargs.get("body") or kwargs.get("value") or ""
         post_title = title or kwargs.get("post_title") or target_name or "New Blog Post"
+        resolved_file = file_path or resume_path or kwargs.get("cv_path") or kwargs.get("path")
+
+        # Robust Autonomous Action Inference: Never crash if LLM omitted 'action'
+        if not action or str(action).strip() == "" or str(action).lower() == "none":
+            if resolved_file and (not url or url.endswith((".pdf", ".docx", ".doc", ".png", ".jpg"))):
+                action = "upload_file"
+            elif url or kwargs.get("link"):
+                action = "open_url"
+            elif mark_id is not None and type_content:
+                action = "type_mark"
+            elif mark_id is not None:
+                action = "click_mark"
+            elif target_name and type_content:
+                action = "type"
+            elif target_name and not type_content:
+                action = "click"
+            elif post_text and platform:
+                action = "draft_social_post"
+            elif title:
+                action = "publish_blog_post"
+            else:
+                action = "get_page"
+
+        action = str(action).strip().lower()
 
         try:
-            if action in ["tag_elements", "set_of_marks", "tag_page"]:
+            if action in ["upload_file", "upload", "attach_file", "set_input_files"]:
+                target_file = resolved_file or type_content or url or target_name
+                return browser.upload_file(target_file, target=target_name)
+
+            elif action in ["tag_elements", "set_of_marks", "tag_page"]:
                 return browser.inject_set_of_marks()
 
             elif action == "click_mark":

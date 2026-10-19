@@ -30,6 +30,7 @@ from core.tools.web_tools import (
 from core.tools.browser_tools import BrowserAutomationTool
 from core.tools.voice_tools import VoiceSpeechTool
 from core.tools.playwright_tools import VisionBrowserTool, PlaywrightCodegenTool, PlaywrightWorkflowTool
+from core.tools.job_portal_tools import JobPortalTool
 from core.tools.mcp_tools import MCPTool
 from core.tools.desktop_gui_tools import DesktopGUIControlTool
 from core.tools.universal_terminal_tools import (
@@ -101,7 +102,8 @@ class ToolRegistry:
             McpReaCallTool(),
             WindowsUIATool(),
             PlaywrightCodegenTool(),
-            PlaywrightWorkflowTool()
+            PlaywrightWorkflowTool(),
+            JobPortalTool()
         ]
         for t in defaults:
             self.register(t)
