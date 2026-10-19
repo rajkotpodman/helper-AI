@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.0] - 2026-10-19
+
+### ⚡ Playwright CRM & Web Automation Studio (Codegen & Batch Form Automation)
+- **Official Microsoft Playwright Codegen Integration (`core/playwright_manager.py`):**
+  - Integrated `playwright codegen` with native Python CLI to watch and record user form-filling in real Google Chrome.
+  - Generates clean, robust, and 100% reliable Python automation scripts in `workflows/playwright/`.
+  - Side-by-side Playwright Inspector with live locator inspection and selector extraction.
+- **Persistent Session & Authentication State (`--save-storage` & `--load-storage`):**
+  - Stores cookies, tokens, and active sessions in `workflows/storage/` (e.g. `tata_crm_session.json`).
+  - Completely bypasses repetitive login forms and OTP entries during subsequent batch executions.
+- **Batch Lead Execution Engine with Parameter Substitution:**
+  - Automated parameter replacement for `{{name}}`, `{{mobile}}`, `{{city}}`, `{{model}}`, etc. across Excel and CSV lead records.
+  - Supports visible browser execution or silent background execution with `--headless`.
+  - Comprehensive per-row execution summary reporting with pass/fail counts and timing metrics.
+- **Web UI Playwright CRM Studio Modal (`web/templates/index.html` & `web/static/js/app.js`):**
+  - Added `#btn-playwright-pill` top navigation indicator with live status badge (`Ready` / `Recording`).
+  - Added full `#modal-playwright` dialog featuring:
+    - 1-Click CRM URL presets (Tata Motors CRM, Salesforce, Zoho CRM, Google Forms).
+    - Live Codegen recorder launcher with Google Chrome toggle and session persistence checkbox.
+    - Workflows browser and script editor.
+    - Interactive Batch Leads data input (JSON/CSV) with instant parameterization.
+    - Real-time execution console stream.
+- **Agent Tool Registry Integration (`core/tools/playwright_tools.py`):**
+  - Registered `PlaywrightCodegenTool` (`playwright_codegen`) with `launch`, `stop`, and `status` actions.
+  - Registered `PlaywrightWorkflowTool` (`playwright_workflow`) with `list`, `get`, `save`, and `run` actions.
+- **1-Click Windows Launcher (`launch_crm_recorder.bat`):**
+  - Dedicated zero-friction batch file launching Playwright Codegen on Chrome with session saving.
+- **Pre-Built Tata CRM Starter Template (`workflows/playwright/tata_crm_template.py`):**
+  - Ready-to-run template with parameterized lead fields for testing and immediate deployment.
+- **Automated Test Suite (`tests/test_playwright_crm_suite.py`):**
+  - 9 automated unit and integration tests verifying status reporting, workflow listing, script persistence, batch execution, agent tool registration, and REST API endpoints.
+
 ## [2.6.0] - 2026-10-19
 
 ### 🎙️ Hands-Free Voice Agent & Windows Desktop Sidecar

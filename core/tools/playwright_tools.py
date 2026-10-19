@@ -4,7 +4,7 @@ Allows Helper-AI to inspect web pages, capture screenshots, and perform precisio
 DOM interactions using Playwright over Chrome DevTools Protocol (CDP).
 """
 import asyncio
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from core.tools.base import BaseTool
 from core.playwright_agent import PlaywrightVisionAgent
 
@@ -107,3 +107,155 @@ class VisionBrowserTool(BaseTool):
                 "output": f"Vision browser error: {str(e)}",
                 "error": str(e)
             }
+
+
+class PlaywrightCodegenTool(BaseTool):
+    """Playwright Codegen Live Recording Tool for CRM & Web Portals."""
+    name = "playwright_codegen"
+    description = (
+        "Launches Microsoft Playwright Codegen in real Google Chrome with the Playwright Inspector. "
+        "Allows user to click and fill forms in any CRM or web portal while Playwright writes the automation code live."
+    )
+    parameters = {
+        "type": "object",
+        "properties": {
+            "action": {
+                "type": "string",
+                "description": "Action: 'launch', 'stop', or 'status'",
+                "enum": ["launch", "stop", "status"]
+            },
+            "url": {
+                "type": "string",
+                "description": "Starting portal or CRM URL (e.g. Tata CRM login or form URL)."
+            },
+            "workflow_name": {
+                "type": "string",
+                "description": "Name for the recorded workflow script (e.g. 'tata_crm_lead_entry')."
+            },
+            "use_chrome": {
+                "type": "boolean",
+                "description": "Whether to use Google Chrome instead of Chromium (default True).",
+                "default": True
+            },
+            "save_session": {
+                "type": "boolean",
+                "description": "Whether to save cookies/session to avoid logging in again (default True).",
+                "default": True
+            }
+        },
+        "required": ["action"]
+    }
+
+    def execute(
+        self,
+        action: str,
+        url: Optional[str] = None,
+        workflow_name: Optional[str] = None,
+        use_chrome: bool = True,
+        save_session: bool = True,
+        **kwargs
+    ) -> Dict[str, Any]:
+        from core.playwright_manager import playwright_manager
+        if action == "launch":
+            res = playwright_manager.launch_codegen(
+                url=url,
+                workflow_name=workflow_name,
+                use_chrome=use_chrome,
+                save_session=save_session
+            )
+            return {
+                "success": res.get("success", False),
+                "output": res.get("message") or res.get("error"),
+                "details": res
+            }
+        elif action == "stop":
+            res = playwright_manager.stop_codegen()
+            return {"success": res["success"], "output": res.get("message") or res.get("error")}
+        elif action == "status":
+            st = playwright_manager.get_status()
+            return {"success": True, "output": f"Playwright version: {st['version']}, Codegen running: {st['codegen_active']}, Workflows: {st['workflows_count']}", "status": st}
+        else:
+            return {"success": False, "output": f"Unknown action: {action}"}
+
+
+class PlaywrightWorkflowTool(BaseTool):
+    """Playwright Automation Workflow & CRM Batch Execution Tool."""
+    name = "playwright_workflow"
+    description = (
+        "Lists, inspects, or executes recorded Playwright Python workflows. "
+        "Supports standalone replay or batch execution over CSV/Excel lead data."
+    )
+    parameters = {
+        "type": "object",
+        "properties": {
+            "action": {
+                "type": "string",
+                "description": "Action: 'list', 'get', 'save', 'run_standalone', 'run_batch'",
+                "enum": ["list", "get", "save", "run_standalone", "run_batch"]
+            },
+            "name": {
+                "type": "string",
+                "description": "Workflow script name (e.g. 'tata_crm_template.py')."
+            },
+            "code": {
+                "type": "string",
+                "description": "Code content to save (for action 'save')."
+            },
+            "data_records": {
+                "type": "array",
+                "items": {"type": "object"},
+                "description": "List of record dictionaries for batch form filling (for action 'run_batch')."
+            }
+        },
+        "required": ["action"]
+    }
+
+    def execute(
+        self,
+        action: str,
+        name: Optional[str] = None,
+        code: Optional[str] = None,
+        data_records: Optional[List[Dict[str, Any]]] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        from core.playwright_manager import playwright_manager
+
+        if action == "list":
+            wf = playwright_manager.list_workflows()
+            return {"success": True, "output": f"Found {len(wf)} Playwright workflows.", "workflows": wf}
+
+        elif action == "get":
+            if not name:
+                return {"success": False, "output": "Parameter 'name' is required for get action."}
+            res = playwright_manager.get_workflow(name)
+            return {"success": res.get("success", False), "output": f"Retrieved {name}", "workflow": res}
+
+        elif action == "save":
+            if not name or code is None:
+                return {"success": False, "output": "Parameters 'name' and 'code' are required for save action."}
+            res = playwright_manager.save_workflow(name, code)
+            return {"success": res.get("success", False), "output": res.get("message"), "path": res.get("path")}
+
+        elif action == "run_standalone":
+            if not name:
+                return {"success": False, "output": "Parameter 'name' is required for run_standalone action."}
+            res = playwright_manager.run_workflow_standalone(name)
+            return {
+                "success": res.get("success", False),
+                "output": res.get("output") or res.get("error"),
+                "result": res
+            }
+
+        elif action == "run_batch":
+            if not name or not data_records:
+                return {"success": False, "output": "Parameters 'name' and 'data_records' are required for run_batch."}
+            res = playwright_manager.run_workflow_batch(name, data_records)
+            return {
+                "success": res.get("success", False),
+                "output": f"Batch completed: {res.get('completed_rows')}/{res.get('total_rows')} rows filled successfully.",
+                "result": res
+            }
+
+        else:
+            return {"success": False, "output": f"Unknown action: {action}"}
+

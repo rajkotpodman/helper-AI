@@ -24,6 +24,7 @@
    - [G. Defensive Security Audits & File Protection](#g-defensive-security-audits--file-protection)
    - [H. Voice Speech (Hearing the Agent Speak Aloud)](#h-voice-speech-hearing-the-agent-speak-aloud)
    - [I. Exploring Biological Wetware Computing & Superintelligence Hub](#i-exploring-biological-wetware-computing--superintelligence-hub)
+   - [J. Playwright CRM & Form Automation Studio (Watch & Record in Chrome + Replay with Excel Leads)](#j-playwright-crm--form-automation-studio)
 8. [Running 100% Free & Offline (No Paid Keys Needed)](#8-running-100-free--offline)
 9. [Safe Mode & 1-Click Approval Dialogs (Human-in-the-Loop)](#9-safe-mode--1-click-approval-dialogs)
 10. [Beginner Troubleshooting & FAQ](#10-beginner-troubleshooting--faq)
@@ -41,6 +42,8 @@
 8. [સુરક્ષા અને ૧-ક્લિક મંજૂરી (Human-in-the-Loop)](#૮-સુરક્ષા-અને-૧-ક્લિક-મંજૂરી)
 9. [વારંવાર પૂછાતા પ્રશ્નો (FAQ)](#૯-વારંવાર-પૂછાતા-પ્રશ્નો-faq)
 10. [🧬 AI 2026: બાયોલોજિકલ વેટવેર અને સુપરઇન્ટેલિજન્સ હબ માર્ગદર્શિકા](#૧૦-ai-2026-બાયોલોજિકલ-વેટવેર-અને-સુપરઇન્ટેલિજન્સ-હબ-માર્ગદર્શિકા)
+11. [🎙️ હેન્ડ્સ-ફ્રી વોઇસ એજન્ટ અને ડેસ્કટોપ સાઇડકાર](#૧૧-હેન્ડ્સ-ફ્રી-વોઇસ-એજન્ટ-અને-ડેસ્કટોપ-સાઇડકાર)
+12. [⚡ પ્લેરાઇટ સીઆરએમ અને ફોર્મ ઓટોમેશન (ક્રોમમાં લાઇવ રેકોર્ડ અને એક્સેલ રિપ્લે)](#૧૨-પ્લેરાઇટ-સીઆરએમ-અને-ફોર્મ-ઓટોમેશન)
 
 ---
 
@@ -310,6 +313,49 @@ Open your browser and navigate to:
 3. **AI Alignment Incident Logs:** Filter and expand raw telemetry logs from the Anthropic shutdown evasion test, Apollo code steganography breach, and July 2026 Linux cgroup privilege escalation.
 4. **Synchronized Audio Lectures:** Listen to briefing podcasts while following along with auto-advancing paragraph highlights in both English and Gujarati.
 5. **Helper-AI Agent Bridge:** Type autonomous goals directly in the bridge console to dispatch research and system tasks directly into the local Python agent.
+
+---
+
+### J. Playwright CRM & Form Automation Studio (Watch & Record in Chrome + Replay with Excel Leads)
+**Why this tool exists:**
+Entering hundreds of leads or repetitive customer records into Tata Motors CRM, Salesforce, Zoho CRM, or complex government web portals is painful, slow, and error-prone. Popups, nested iframes, dynamic dropdowns, and frequent session timeouts break ordinary bots.
+
+Helper-AI integrates **Microsoft Playwright Codegen (Official Microsoft Tool - 68,000+ Stars - 100% Reliable)**:
+* **Live "Watch & Learn" Recording:** You click one button, a real Google Chrome browser opens alongside the Playwright Inspector.
+* As you type the customer name, phone number, vehicle model, and click Save in Tata CRM, Playwright writes the exact Python script live in front of your eyes!
+* **1-Click Login State Saving (`--save-storage`):** Your authentication cookies, tokens, and active session are saved to `workflows/storage/tata_crm_session.json`. You never have to re-enter passwords or OTPs for repetitive runs.
+* **Auto Batch Replay with Excel/CSV:** Parameterize recorded fields with `{{name}}`, `{{mobile}}`, `{{city}}`. Paste your lead list or pass an Excel file. Helper-AI automatically loops through every record and submits the forms without human intervention!
+
+#### 🚀 How to Use It in 3 Easy Steps:
+
+1. **Launch the Recorder:**
+   - Double-click **`launch_crm_recorder.bat`** in your project folder, OR
+   - Open `http://localhost:8000` and click the green **`CRM Studio (Ready)`** pill button in the top navigation.
+   - Enter your target CRM URL (e.g., `https://tatamotorscrm.example.com`) and workflow name (e.g., `tata_crm_lead_entry`).
+   - Click **⚡ Start Recording in Chrome**.
+
+2. **Fill One Form Manually:**
+   - The real Chrome window and Playwright Inspector will appear.
+   - Type in the customer name, mobile number, select the dropdowns, and click Submit/Save.
+   - Close the Chrome window when done. Your complete script is automatically saved in `workflows/playwright/tata_crm_lead_entry.py`!
+
+3. **Replay for 100s of Leads Automatically:**
+   - In the CRM Studio modal, select your recorded workflow.
+   - Paste your lead records as JSON or CSV:
+     ```json
+     [
+       {"name": "Rajesh Patel", "mobile": "9898012345", "city": "Ahmedabad"},
+       {"name": "Priya Sharma", "mobile": "9825011223", "city": "Vadodara"},
+       {"name": "Amit Shah", "mobile": "9825098765", "city": "Surat"}
+     ]
+     ```
+   - Check **Run Headless** if you want it to run silently in the background, or leave unchecked to watch the browser fill out each form live.
+   - Click **▶ Run Automation Now**!
+
+#### 🤖 Agent Goals You Can Give Helper-AI:
+* *"Launch Playwright recorder for Tata CRM login at https://tatamotorscrm.example.com and save my session."*
+* *"Run the 'tata_crm_template.py' workflow for the leads in leads.csv and give me a summary report."*
+* *"Check Playwright status and list all recorded web automation workflows."*
 
 ---
 
@@ -613,4 +659,46 @@ Helper-AI ને કોઈ પણ જાતના ઇનકાર કે અટ�
 * **Aria & Guy:** કુદરતી અમેરિકન અંગ્રેજી અવાજ
 
 જો ઈન્ટરનેટ બંધ થઈ જાય તો પણ હેલ્પર-AI વિન્ડોઝના ઇન-બિલ્ટ ઑફલાઇન સ્પીચ એન્જિન દ્વારા બોલી શકે છે—કોઈ અડચણ વગર!
+
+---
+
+## ૧૨. ⚡ પ્લેરાઇટ સીઆરએમ અને ફોર્મ ઓટોમેશન (ક્રોમમાં લાઇવ રેકોર્ડ અને એક્સેલ રિપ્લે)
+
+ટાટા મોટર્સ CRM, સેલ્સફોર્સ, ઝોહો કે કોઈપણ સરકારી/પ્રાઇવેટ વેબસાઇટમાં વારંવાર સેંકડો ગ્રાહકોની લીડ્સ (નામ, મોબાઇલ નંબર, શહેર, ગાડીનું મોડલ) એક પછી એક હાથે ભરવી ખૂબ કંટાળાજનક અને સમય બગાડનારું કામ છે.
+
+Helper-AI માં હવે **Microsoft Playwright Codegen (માઈક્રોસોફ્ટનું સત્તાવાર ૧૦૦% સચોટ ટૂલ)** ઇન્ટિગ્રેટ કરવામાં આવ્યું છે!
+
+### 🌟 આ કેવી રીતે કામ કરે છે?
+તમારે કોઈ કોડિંગ શીખવાની જરૂર નથી:
+1. તમે ફક્ત એક બટન દબાવો.
+2. તમારી સામે તમારું સાચું **Google Chrome** બ્રાઉઝર અને સાથે Playwright Inspector ખુલશે.
+3. તમે ક્રોમમાં જઈને ટાટા CRM માં એક ગ્રાહકનું નામ, મોબાઇલ નંબર ટાઇપ કરીને સેવ કરશો, તે જ ક્ષણે પ્લેરાઇટ તમારી આંખો સામે આપોઆપ પાયથન સ્ક્રિપ્ટ લખી લેશે!
+4. **લોગિન સેશન સેવિંગ:** તમારું લોગિન આઈડી, પાસવર્ડ અને કૂકીઝ આપોઆપ સેવ થઈ જાય છે, જેથી વારંવાર OTP કે લોગિન નાખવાની જરૂર પડતી નથી.
+5. **એક્સેલ ડેટા સાથે ઓટો-રિપ્લે:** એકવાર સ્ક્રિપ્ટ સેવ થઈ જાય પછી તમારી પાસે ૧૦૦ કે ૧૦૦૦ ગ્રાહકોનું એક્સેલ લિસ્ટ હોય, ફક્ત એક ક્લિકમાં AI બધા ગ્રાહકોના ફોર્મ જાતે ભરી દેશે!
+
+### 📋 સ્ટેપ-બાય-સ્ટેપ ઉપયોગ કરવાની રીત:
+
+#### પગલું ૧: રેકોર્ડર ચાલુ કરો
+* પ્રોજેક્ટ ફોલ્ડરમાં રહેલી **`launch_crm_recorder.bat`** ફાઇલ પર ડબલ ક્લિક કરો, અથવા
+* વેબ ડેશબોર્ડ (`http://localhost:8000`) પર ઉપર આપેલા લીલા રંગના **`CRM Studio (Ready)`** બટન પર ક્લિક કરો.
+* તમારા CRM નું URL નાખો (જેમ કે `https://tatamotorscrm.example.com`) અને સ્ક્રિપ્ટનું નામ આપો (જેમ કે `tata_crm_lead_entry`).
+* **"⚡ Start Recording in Chrome"** બટન દબાવો.
+
+#### પગલું ૨: એક ફોર્મ હાથે ભરો
+* ક્રોમ બ્રાઉઝરમાં પેજ ખુલે એટલે એક કસ્ટમરનું નામ, મોબાઇલ અને વિગતો ભરીને સેવ બટન દબાવો.
+* કામ પૂરું થાય એટલે ક્રોમ બ્રાઉઝર બંધ કરી દો. તમારી આખી સ્ક્રિપ્ટ `workflows/playwright/` ફોલ્ડરમાં સેવ થઈ ગઈ છે!
+
+#### પગલું ૩: એક્સેલ લીડ્સ સાથે ઓટોમેટિક રન કરો
+* CRM Studio માં તમારી સ્ક્રિપ્ટ સિલેક્ટ કરો.
+* તમારી એક્સેલ/CSV લીડ્સ પેસ્ટ કરો:
+  ```json
+  [
+    {"name": "રાજેશ પટેલ", "mobile": "9898012345", "city": "અમદાવાદ"},
+    {"name": "પ્રિયા શર્મા", "mobile": "9825011223", "city": "વડોદરા"}
+  ]
+  ```
+* **"▶ Run Automation Now"** દબાવો!
+* AI એક પછી એક તમામ ગ્રાહકોનું ફોર્મ આપોઆપ ભરીને સબમિટ કરી દેશે અને સંપૂર્ણ રિપોર્ટ આપશે.
+
+---
 

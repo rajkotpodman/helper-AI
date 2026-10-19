@@ -97,6 +97,12 @@
           <span>LiveKit: <strong id="livekit-status-badge" class="font-semibold text-purple-400">Voice Ready</strong></span>
         </button>
 
+        <!-- Playwright CRM & Form Automation Studio Pill -->
+        <button id="btn-playwright-pill" class="nav-pill border-emerald-500/30 hover:border-emerald-400" title="Playwright CRM Recorder & Batch Form Automation">
+          <i data-lucide="play" class="w-4 h-4 text-emerald-400"></i>
+          <span>CRM Studio (<strong id="playwright-status-badge" class="font-semibold text-emerald-400">Ready</strong>)</span>
+        </button>
+
         <!-- Project Browser Button -->
         <button id="btn-project-browser" class="nav-pill" title="Open Desktop Chrome Browser Session">
           <i data-lucide="globe" class="w-4 h-4 text-cyan-400"></i>
@@ -763,6 +769,143 @@
           </button>
         </div>
       </details>
+    </div>
+  </div>
+
+  <!-- 6. Playwright CRM & Form Automation Studio Modal -->
+  <div id="modal-playwright" class="modal-backdrop hidden">
+    <div class="modal-dialog max-w-3xl border border-emerald-500/30 shadow-2xl shadow-emerald-500/10">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i data-lucide="play" class="w-5 h-5 text-emerald-400"></i> Playwright CRM & Web Automation Studio
+        </h3>
+        <button id="btn-close-playwright-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <!-- Quick Preset & Recorder Section -->
+      <div class="p-4 bg-slate-900/70 rounded-2xl border border-emerald-500/20 mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-emerald-300 flex items-center gap-1.5 uppercase tracking-wide">
+            ⚡ 1. Live Codegen Recorder (Watch & Record in Chrome)
+          </span>
+          <span id="playwright-codegen-state-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">Idle</span>
+        </div>
+        <p class="text-xs text-slate-400 mb-3">
+          Opens a real Google Chrome browser and the Playwright Inspector. Any form you fill (Tata CRM, Salesforce, Google Forms) is recorded live into an automation Python script!
+        </p>
+
+        <!-- Presets -->
+        <div class="flex flex-wrap items-center gap-1.5 mb-3">
+          <span class="text-[11px] text-slate-400">Quick URL:</span>
+          <button type="button" class="btn-crm-url-preset px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-mono" data-url="https://tatamotorscrm.example.com">Tata Motors CRM</button>
+          <button type="button" class="btn-crm-url-preset px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-mono" data-url="https://login.salesforce.com">Salesforce</button>
+          <button type="button" class="btn-crm-url-preset px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-mono" data-url="https://crm.zoho.com">Zoho CRM</button>
+          <button type="button" class="btn-crm-url-preset px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-mono" data-url="https://docs.google.com/forms">Google Forms</button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] text-slate-400 mb-1">Target CRM / Web Portal URL</label>
+            <input type="text" id="playwright-input-url" placeholder="https://your-crm-url.com" value="https://tatamotorscrm.example.com" class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">Workflow Script Name</label>
+            <input type="text" id="playwright-input-name" placeholder="tata_crm_lead_entry" value="tata_crm_lead_entry" class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+          <div class="flex items-center gap-4 text-xs text-slate-300">
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" id="playwright-check-chrome" checked class="rounded border-white/20 bg-slate-950 text-emerald-500">
+              <span>Use Real Google Chrome</span>
+            </label>
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" id="playwright-check-save-session" checked class="rounded border-white/20 bg-slate-950 text-emerald-500">
+              <span>Save Login Session</span>
+            </label>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button id="btn-playwright-launch-codegen" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition">
+              <i data-lucide="video" class="w-4 h-4"></i>
+              <span>⚡ Start Recording in Chrome</span>
+            </button>
+            <button id="btn-playwright-stop-codegen" class="px-3 py-2 bg-red-600/30 hover:bg-red-600/50 text-red-300 border border-red-500/30 rounded-xl text-xs font-semibold hidden">
+              Stop Recorder
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Replay & Batch Execution Engine -->
+      <div class="p-4 bg-slate-900/70 rounded-2xl border border-white/10 mb-3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-bold text-cyan-300 flex items-center gap-1.5 uppercase tracking-wide">
+            🔁 2. Batch Automation & Lead Data Runner (Excel / CSV Replay)
+          </span>
+          <button id="btn-playwright-refresh-workflows" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Workflows
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">Select Workflow Script</label>
+            <select id="playwright-select-workflow" class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
+              <option value="tata_crm_template.py">tata_crm_template.py (Built-in Starter)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-1">Execution Mode</label>
+            <div class="flex items-center gap-3 pt-2 text-xs">
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name="playwright-exec-mode" value="batch" checked class="text-emerald-500">
+                <span>Batch Leads (CSV/JSON)</span>
+              </label>
+              <label class="flex items-center gap-1.5 cursor-pointer">
+                <input type="radio" name="playwright-exec-mode" value="standalone" class="text-emerald-500">
+                <span>Single Test Run</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div id="playwright-batch-data-container" class="mb-3">
+          <div class="flex items-center justify-between mb-1">
+            <label class="block text-[11px] text-slate-400">Leads Data (JSON Array or CSV with name, mobile, city):</label>
+            <span class="text-[10px] text-emerald-400">Parameterizes {{name}}, {{mobile}}, {{city}}</span>
+          </div>
+          <textarea id="playwright-batch-input" rows="3" class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs" placeholder='[{"name": "Rajesh Patel", "mobile": "9898012345", "city": "Ahmedabad"}, {"name": "Amit Shah", "mobile": "9825098765", "city": "Surat"}]'>[
+  {"name": "Rajesh Patel", "mobile": "9898012345", "city": "Ahmedabad"},
+  {"name": "Priya Sharma", "mobile": "9825011223", "city": "Vadodara"}
+]</textarea>
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <input type="checkbox" id="playwright-check-headless" class="rounded border-white/20 bg-slate-950 text-emerald-500">
+              <span>Run Headless (Hidden Background)</span>
+            </label>
+          </div>
+          <button id="btn-playwright-run-workflow" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-cyan-500/20 transition">
+            <i data-lucide="play" class="w-4 h-4"></i>
+            <span>▶ Run Automation Now</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Execution Console Output -->
+      <div>
+        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+          <span>Execution Console</span>
+          <span id="playwright-run-status" class="text-slate-400 font-mono text-[10px]">Ready</span>
+        </div>
+        <div id="playwright-console-output" class="terminal-box text-xs max-h-36 overflow-y-auto space-y-1 p-2.5 bg-slate-950/90 border border-white/10 rounded-xl font-mono text-slate-300">
+          <div class="text-slate-500 italic">Playwright ready. Record in Chrome or run lead workflows.</div>
+        </div>
+      </div>
     </div>
   </div>
 

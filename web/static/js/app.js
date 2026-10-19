@@ -279,6 +279,27 @@ function initElements() {
   elements.langItemsContainer = document.getElementById('lang-items-container');
   elements.activeLangLabel = document.getElementById('active-lang-label');
   
+  // Playwright CRM & Web Automation Studio
+  elements.btnPlaywrightPill = document.getElementById('btn-playwright-pill');
+  elements.modalPlaywright = document.getElementById('modal-playwright');
+  elements.btnClosePlaywrightModal = document.getElementById('btn-close-playwright-modal');
+  elements.playwrightStatusBadge = document.getElementById('playwright-status-badge');
+  elements.playwrightCodegenBadge = document.getElementById('playwright-codegen-state-badge');
+  elements.playwrightInputUrl = document.getElementById('playwright-input-url');
+  elements.playwrightInputName = document.getElementById('playwright-input-name');
+  elements.playwrightCheckChrome = document.getElementById('playwright-check-chrome');
+  elements.playwrightCheckSaveSession = document.getElementById('playwright-check-save-session');
+  elements.btnPlaywrightLaunchCodegen = document.getElementById('btn-playwright-launch-codegen');
+  elements.btnPlaywrightStopCodegen = document.getElementById('btn-playwright-stop-codegen');
+  elements.playwrightSelectWorkflow = document.getElementById('playwright-select-workflow');
+  elements.btnPlaywrightRefreshWorkflows = document.getElementById('btn-playwright-refresh-workflows');
+  elements.playwrightBatchContainer = document.getElementById('playwright-batch-data-container');
+  elements.playwrightBatchInput = document.getElementById('playwright-batch-input');
+  elements.playwrightCheckHeadless = document.getElementById('playwright-check-headless');
+  elements.btnPlaywrightRunWorkflow = document.getElementById('btn-playwright-run-workflow');
+  elements.playwrightConsoleOutput = document.getElementById('playwright-console-output');
+  elements.playwrightRunStatus = document.getElementById('playwright-run-status');
+
   // Stepper Elements
   elements.stepNodes = [
     document.getElementById('step-node-1'),
@@ -310,6 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchSystemStatus();
   fetchMemoryStats();
   checkOllamaStatus();
+  checkPlaywrightStatus();
   loadSettingsIntoModal();
   
   // Periodic telemetry refresh & execution watchdog (recovers from socket drops)
@@ -1134,6 +1156,31 @@ function setupModals() {
     }
   });
 
+  // Playwright CRM Studio Modal Listeners
+  elements.btnPlaywrightPill?.addEventListener('click', openPlaywrightModal);
+  elements.btnClosePlaywrightModal?.addEventListener('click', () => elements.modalPlaywright?.classList.add('hidden'));
+  elements.btnPlaywrightLaunchCodegen?.addEventListener('click', launchPlaywrightCodegen);
+  elements.btnPlaywrightStopCodegen?.addEventListener('click', stopPlaywrightCodegen);
+  elements.btnPlaywrightRefreshWorkflows?.addEventListener('click', loadPlaywrightWorkflows);
+  elements.btnPlaywrightRunWorkflow?.addEventListener('click', runPlaywrightWorkflow);
+
+  // Quick CRM Preset Buttons
+  document.querySelectorAll('.btn-crm-url-preset').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const url = e.currentTarget.getAttribute('data-url');
+      if (elements.playwrightInputUrl && url) elements.playwrightInputUrl.value = url;
+    });
+  });
+
+  // Batch vs Single Mode toggle
+  document.querySelectorAll('input[name="playwright-exec-mode"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      if (elements.playwrightBatchContainer) {
+        elements.playwrightBatchContainer.style.display = e.target.value === 'batch' ? 'block' : 'none';
+      }
+    });
+  });
+
   // Universal Custom AI 1-Click Preset Chips
   document.querySelectorAll('.btn-preset-chip').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -1795,3 +1842,208 @@ async function saveLivekitCredentials() {
     alert('Failed to save LiveKit credentials: ' + e.message);
   }
 }
+
+// ============================================================================
+// PLAYWRIGHT CRM & WEB AUTOMATION STUDIO ENGINE
+// ============================================================================
+let playwrightState = {
+  activeCodegen: false,
+  workflows: []
+};
+
+async function openPlaywrightModal() {
+  elements.modalPlaywright?.classList.remove('hidden');
+  await checkPlaywrightStatus();
+  await loadPlaywrightWorkflows();
+}
+
+async function checkPlaywrightStatus() {
+  try {
+    const res = await fetch('/api/playwright/status');
+    const data = await res.json();
+    playwrightState.activeCodegen = Boolean(data.active_codegen);
+    
+    if (elements.playwrightStatusBadge) {
+      elements.playwrightStatusBadge.textContent = data.playwright_installed ? (data.active_codegen ? 'Recording' : 'Ready') : 'CLI Missing';
+      elements.playwrightStatusBadge.className = data.active_codegen ? 'font-semibold text-amber-400' : 'font-semibold text-emerald-400';
+    }
+
+    if (elements.playwrightCodegenBadge) {
+      if (data.active_codegen) {
+        elements.playwrightCodegenBadge.textContent = `Recording (${data.codegen_details?.script_name || 'Active'})`;
+        elements.playwrightCodegenBadge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-red-600/30 text-red-300 font-mono animate-pulse';
+        elements.btnPlaywrightStopCodegen?.classList.remove('hidden');
+      } else {
+        elements.playwrightCodegenBadge.textContent = 'Idle';
+        elements.playwrightCodegenBadge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono';
+        elements.btnPlaywrightStopCodegen?.classList.add('hidden');
+      }
+    }
+  } catch (e) {
+    console.error('Failed to check Playwright status:', e);
+  }
+}
+
+async function loadPlaywrightWorkflows() {
+  try {
+    const res = await fetch('/api/playwright/workflows');
+    const data = await res.json();
+    playwrightState.workflows = data.workflows || [];
+    
+    if (elements.playwrightSelectWorkflow) {
+      elements.playwrightSelectWorkflow.innerHTML = '';
+      if (playwrightState.workflows.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No workflows found. Record one above!';
+        elements.playwrightSelectWorkflow.appendChild(opt);
+      } else {
+        playwrightState.workflows.forEach(w => {
+          const opt = document.createElement('option');
+          opt.value = w.filename;
+          opt.textContent = `${w.filename} (${w.size_bytes} B)`;
+          elements.playwrightSelectWorkflow.appendChild(opt);
+        });
+      }
+    }
+    appendPlaywrightLog(`Loaded ${playwrightState.workflows.length} automation workflow(s).`, 'info');
+  } catch (err) {
+    appendPlaywrightLog('Failed to load workflows: ' + err.message, 'error');
+  }
+}
+
+async function launchPlaywrightCodegen() {
+  const url = elements.playwrightInputUrl?.value.trim() || 'https://google.com';
+  const name = elements.playwrightInputName?.value.trim() || 'tata_crm_lead_entry';
+  const useChrome = elements.playwrightCheckChrome ? elements.playwrightCheckChrome.checked : true;
+  const saveSession = elements.playwrightCheckSaveSession ? elements.playwrightCheckSaveSession.checked : true;
+  
+  appendPlaywrightLog(`⚡ Launching Playwright Codegen for '${url}'...`, 'info');
+  appendTerminalLog(`Playwright Codegen starting on ${url}...`, 'action');
+
+  try {
+    const res = await fetch('/api/playwright/codegen/launch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: url,
+        script_name: name,
+        browser: useChrome ? 'chrome' : 'chromium',
+        save_session: saveSession
+      })
+    });
+    const data = await res.json();
+    if (data.status === 'started' || data.status === 'already_running') {
+      appendPlaywrightLog(`✅ Playwright Inspector & Chrome launched! Script will save to workflows/playwright/${name}.py`, 'success');
+      appendPlaywrightLog(`👉 Fill in your CRM form now. Playwright writes code live! Close the Chrome window when finished.`, 'info');
+      await checkPlaywrightStatus();
+    } else {
+      appendPlaywrightLog(`❌ Failed to start recorder: ${JSON.stringify(data)}`, 'error');
+    }
+  } catch (e) {
+    appendPlaywrightLog(`❌ Request error: ${e.message}`, 'error');
+  }
+}
+
+async function stopPlaywrightCodegen() {
+  try {
+    appendPlaywrightLog('Stopping active Codegen process...', 'info');
+    const res = await fetch('/api/playwright/codegen/stop', { method: 'POST' });
+    const data = await res.json();
+    appendPlaywrightLog(`Codegen stopped: ${JSON.stringify(data)}`, 'info');
+    await checkPlaywrightStatus();
+    await loadPlaywrightWorkflows();
+  } catch (e) {
+    appendPlaywrightLog('Error stopping codegen: ' + e.message, 'error');
+  }
+}
+
+async function runPlaywrightWorkflow() {
+  const workflow = elements.playwrightSelectWorkflow?.value;
+  if (!workflow) {
+    alert('Please select or record a workflow script first.');
+    return;
+  }
+
+  const mode = document.querySelector('input[name="playwright-exec-mode"]:checked')?.value || 'batch';
+  const headless = elements.playwrightCheckHeadless ? elements.playwrightCheckHeadless.checked : false;
+
+  let leadsData = [];
+  if (mode === 'batch') {
+    const raw = elements.playwrightBatchInput?.value.trim() || '[]';
+    try {
+      if (raw.startsWith('[') || raw.startsWith('{')) {
+        leadsData = JSON.parse(raw);
+        if (!Array.isArray(leadsData)) leadsData = [leadsData];
+      } else {
+        // Simple CSV parse
+        const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length > 1) {
+          const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+          leadsData = lines.slice(1).map(line => {
+            const cols = line.split(',').map(c => c.trim());
+            const obj = {};
+            headers.forEach((h, idx) => { obj[h] = cols[idx] || ''; });
+            return obj;
+          });
+        }
+      }
+    } catch (e) {
+      alert('Invalid JSON/CSV lead data: ' + e.message);
+      return;
+    }
+  }
+
+  appendPlaywrightLog(`▶ Starting execution of '${workflow}' in ${mode} mode (headless: ${headless})...`, 'info');
+  if (elements.playwrightRunStatus) elements.playwrightRunStatus.textContent = 'Running...';
+  if (elements.btnPlaywrightRunWorkflow) elements.btnPlaywrightRunWorkflow.disabled = true;
+
+  try {
+    const res = await fetch('/api/playwright/workflows/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        workflow_name: workflow,
+        mode: mode,
+        leads_data: leadsData,
+        headless: headless,
+        timeout: 180
+      })
+    });
+    const data = await res.json();
+    if (data.status === 'completed') {
+      appendPlaywrightLog(`✅ Workflow completed in ${data.duration_seconds || 0}s!`, 'success');
+      if (data.batch_summary) {
+        appendPlaywrightLog(`📊 Batch summary: ${data.batch_summary.successful}/${data.batch_summary.total_leads} leads processed successfully.`, 'info');
+      }
+      if (data.output) {
+        appendPlaywrightLog(`Output: ${data.output}`, 'info');
+      }
+      appendTerminalLog(`Playwright workflow '${workflow}' executed successfully.`, 'action');
+    } else {
+      appendPlaywrightLog(`⚠️ Execution status: ${data.status} • Error: ${data.error || 'Check logs'}`, 'error');
+      if (data.output) appendPlaywrightLog(data.output, 'error');
+    }
+  } catch (err) {
+    appendPlaywrightLog('Failed to execute workflow: ' + err.message, 'error');
+  } finally {
+    if (elements.playwrightRunStatus) elements.playwrightRunStatus.textContent = 'Ready';
+    if (elements.btnPlaywrightRunWorkflow) elements.btnPlaywrightRunWorkflow.disabled = false;
+  }
+}
+
+function appendPlaywrightLog(message, type = 'info') {
+  if (!elements.playwrightConsoleOutput) return;
+  const item = document.createElement('div');
+  const time = new Date().toLocaleTimeString();
+  let colorClass = 'text-slate-300';
+  if (type === 'success') colorClass = 'text-emerald-400 font-semibold';
+  if (type === 'error') colorClass = 'text-red-400 font-semibold';
+  if (type === 'info') colorClass = 'text-cyan-300';
+  
+  item.className = `leading-relaxed ${colorClass}`;
+  item.textContent = `[${time}] ${message}`;
+  elements.playwrightConsoleOutput.appendChild(item);
+  elements.playwrightConsoleOutput.scrollTop = elements.playwrightConsoleOutput.scrollHeight;
+}
+

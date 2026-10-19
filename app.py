@@ -697,6 +697,84 @@ async def dispatch_voice_command(req: VoiceDispatchRequest):
     }
 
 
+# --- Microsoft Playwright CRM & Heavy Automation Endpoints ---
+class PlaywrightLaunchRequest(BaseModel):
+    url: Optional[str] = None
+    workflow_name: Optional[str] = None
+    target_lang: Optional[str] = "python"
+    use_chrome: Optional[bool] = True
+    save_session: Optional[bool] = True
+    session_name: Optional[str] = "tata_crm_session"
+
+class PlaywrightWorkflowSaveRequest(BaseModel):
+    name: str
+    code: str
+
+class PlaywrightWorkflowRunRequest(BaseModel):
+    name: str
+    data_records: Optional[List[Dict[str, Any]]] = None
+    delay_between_records_s: Optional[float] = 1.0
+    timeout_seconds: Optional[int] = 180
+
+@app.get("/api/playwright/status")
+async def get_playwright_status():
+    """Returns Playwright installation, active Codegen state, and available workflows."""
+    from core.playwright_manager import playwright_manager
+    return playwright_manager.get_status()
+
+@app.post("/api/playwright/codegen/launch")
+async def launch_playwright_codegen_endpoint(req: PlaywrightLaunchRequest):
+    """Launches Playwright Codegen recorder with real Google Chrome."""
+    from core.playwright_manager import playwright_manager
+    return playwright_manager.launch_codegen(
+        url=req.url,
+        workflow_name=req.workflow_name,
+        target_lang=req.target_lang or "python",
+        use_chrome=bool(req.use_chrome),
+        save_session=bool(req.save_session),
+        session_name=req.session_name
+    )
+
+@app.post("/api/playwright/codegen/stop")
+async def stop_playwright_codegen_endpoint():
+    """Stops active Playwright Codegen recorder session."""
+    from core.playwright_manager import playwright_manager
+    return playwright_manager.stop_codegen()
+
+@app.get("/api/playwright/workflows")
+async def list_playwright_workflows_endpoint():
+    """Lists all recorded Playwright automation workflows."""
+    from core.playwright_manager import playwright_manager
+    return {"workflows": playwright_manager.list_workflows()}
+
+@app.get("/api/playwright/workflows/{name}")
+async def get_playwright_workflow_endpoint(name: str):
+    """Fetches code content for a given workflow script."""
+    from core.playwright_manager import playwright_manager
+    return playwright_manager.get_workflow(name)
+
+@app.post("/api/playwright/workflows/save")
+async def save_playwright_workflow_endpoint(req: PlaywrightWorkflowSaveRequest):
+    """Saves or updates a workflow Python script."""
+    from core.playwright_manager import playwright_manager
+    return playwright_manager.save_workflow(req.name, req.code)
+
+@app.post("/api/playwright/workflows/run")
+async def run_playwright_workflow_endpoint(req: PlaywrightWorkflowRunRequest):
+    """Runs a Playwright workflow standalone or in batch mode over Excel/CSV data records."""
+    from core.playwright_manager import playwright_manager
+    if req.data_records and len(req.data_records) > 0:
+        return playwright_manager.run_workflow_batch(
+            name=req.name,
+            data_records=req.data_records,
+            delay_between_records_s=req.delay_between_records_s or 1.0
+        )
+    return playwright_manager.run_workflow_standalone(
+        name=req.name,
+        timeout_seconds=req.timeout_seconds or 180
+    )
+
+
 # Mount screenshots directory
 screenshots_dir = Path(__file__).parent / "screenshots"
 screenshots_dir.mkdir(parents=True, exist_ok=True)

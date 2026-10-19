@@ -207,6 +207,17 @@ Helper-AI includes a fully integrated, zero-latency **Hands-Free Speech-to-Speec
 
 ---
 
+## ⚡ Playwright CRM & Form Automation Studio (100% Reliable Microsoft Tool)
+
+Helper-AI integrates **Microsoft Playwright Codegen (68,000+ Stars)** to automate any heavy, long, or complex form-filling workflows—specifically designed for portals like **Tata Motors CRM, Salesforce, Zoho CRM, Google Forms, and Government Portals**:
+
+* ⚡ **Live "Watch & Record" in Real Chrome:** You run one simple command (`python -m playwright codegen https://tatamotorscrm.example.com`) or click **CRM Studio** in the Web Dashboard. A real Google Chrome window opens up. As you type the customer name, mobile number, and click Save in Tata CRM, Playwright writes the exact Python script live in front of your eyes!
+* 🔒 **Persistent Session & Cookie Saving (`--save-storage`):** Your authentication state is automatically saved to `workflows/storage/tata_crm_session.json`. You never have to re-enter passwords or OTPs for subsequent runs.
+* 🔁 **Batch Auto-Replay with Excel/CSV Data:** Replay your recorded script parameterized with `{{name}}`, `{{mobile}}`, `{{city}}` over hundreds of lead records in seconds, either visibly or in silent headless mode.
+* 🚀 **1-Click Windows Launcher:** Simply double-click **`launch_crm_recorder.bat`** to start recording any web portal immediately!
+
+---
+
 ## 💡 Practical Examples of What You Can Tell Helper-AI
 
 Here are real tasks you can copy and paste into Helper-AI right now:
