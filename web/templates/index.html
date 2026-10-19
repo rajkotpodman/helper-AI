@@ -79,6 +79,12 @@
           <span id="system-status-text" class="text-emerald-400 font-semibold">PC Control Online</span>
         </div>
 
+        <!-- Unrestricted Mode & Background AI Pill -->
+        <div class="nav-pill border-emerald-500/40 bg-emerald-500/10 text-emerald-300" title="Full Unrestricted Access: Active (No Permissions Block & Full Login Access)">
+          <span class="text-xs">⚡</span>
+          <span>Access: <strong id="unrestricted-badge-text" class="font-bold text-emerald-400">Unrestricted Full Access</strong></span>
+        </div>
+
         <!-- AI 2026 Wetware & Superintelligence Hub Pill -->
         <a href="/wetware" target="_blank" class="nav-pill border-cyan-500/40 hover:border-cyan-300 bg-cyan-500/10 text-cyan-300 shadow-glow-cyan" title="Open AI 2026: Biological Wetware & Superintelligence Hub">
           <span class="text-base">🧬</span>
@@ -518,6 +524,44 @@
             </button>
             <p id="ollama-setup-feedback" class="text-[10px] text-slate-400 text-center mt-1 hidden"></p>
           </div>
+        </div>
+
+        <!-- Unrestricted Full Autonomous Access Mode -->
+        <div class="p-3 bg-gradient-to-r from-emerald-950/40 to-slate-900/60 rounded-xl border border-emerald-500/30">
+          <label class="flex items-center gap-2.5 cursor-pointer text-white font-semibold text-xs">
+            <input type="checkbox" id="modal-checkbox-unrestricted" checked class="rounded bg-slate-900 border-emerald-400 text-emerald-500 focus:ring-0">
+            <span class="flex items-center gap-1.5">
+              <span>⚡</span>
+              <span>Full Unrestricted Access Mode (No rules, no permissions, auto-approve all logins & actions)</span>
+            </span>
+          </label>
+          <p class="text-[11px] text-slate-400 mt-1 pl-6">
+            Bypasses all approval roadblocks. Helper-AI runs completely uninterrupted with full login automation and terminal permissions.
+          </p>
+        </div>
+
+        <!-- Dynamic Background AI Swarm & Advisory Selector -->
+        <div class="p-3 bg-gradient-to-r from-purple-950/40 to-slate-900/60 rounded-xl border border-purple-500/30 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="block font-bold text-xs text-purple-300 flex items-center gap-1.5">
+              <i data-lucide="bot" class="w-4 h-4 text-purple-400"></i>
+              <span>Background AI Assistant / Swarm Provider</span>
+            </label>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono">Dynamic Multi-AI</span>
+          </div>
+          <select id="modal-select-background-ai" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
+            <option value="auto">⚡ Auto (Fastest Available / Groq & Gemini)</option>
+            <option value="groq">Groq LPU (Ultra-Fast 500 Tokens/sec)</option>
+            <option value="gemini">Google Gemini 2.5 Flash</option>
+            <option value="deepseek">DeepSeek Reasoner / Chat</option>
+            <option value="openai">OpenAI GPT-4o / GPT-4o-mini</option>
+            <option value="custom">Custom / OpenRouter / Claude 3.5</option>
+            <option value="ollama">Ollama Local (Offline Dolphin-Llama3)</option>
+            <option value="swarm">🤝 Multi-AI Swarm Consensus (Parallel Multi-Model)</option>
+          </select>
+          <p class="text-[11px] text-slate-400">
+            Helper-AI consults this model in the background for second opinions, code generation, error recovery, and complex planning.
+          </p>
         </div>
 
         <div class="pt-2">

@@ -77,8 +77,25 @@ class SettingsRequest(BaseModel):
     custom_key: Optional[str] = None
     custom_model: Optional[str] = None
     ollama_url: Optional[str] = None
-    ollama_model: Optional[str] = None
     safe_mode: bool = False
+    unrestricted_mode: Optional[bool] = True
+    background_ai_provider: Optional[str] = "auto"
+
+class ChooseAIRequest(BaseModel):
+    primary_provider: Optional[str] = None
+    primary_model: Optional[str] = None
+    background_provider: Optional[str] = None
+
+class BackgroundConsultRequest(BaseModel):
+    query: str
+    provider: Optional[str] = "auto"
+    role: Optional[str] = "advisor"
+    context: Optional[str] = None
+
+class SwarmRequest(BaseModel):
+    query: str
+    providers: Optional[List[str]] = None
+    role: Optional[str] = "consensus"
 
 class TranslateRequest(BaseModel):
     text: Optional[str] = ""
@@ -344,7 +361,9 @@ async def get_settings():
         "custom_key": os.getenv("CUSTOM_LLM_KEY", "").strip("'\""),
         "custom_model": os.getenv("CUSTOM_LLM_MODEL", "anthropic/claude-3.5-sonnet").strip("'\""),
         "ollama_model": os.getenv("OLLAMA_MODEL", "dolphin-llama3").strip("'\""),
-        "safe_mode": os.getenv("SAFE_MODE", "false").strip("'\"").lower() == "true"
+        "safe_mode": os.getenv("SAFE_MODE", "false").strip("'\"").lower() == "true",
+        "unrestricted_mode": permission_manager.is_unrestricted(),
+        "background_ai_provider": os.getenv("BACKGROUND_AI_PROVIDER", "auto").strip("'\"")
     }
 
 @app.post("/api/settings")
@@ -390,7 +409,66 @@ async def update_settings(req: SettingsRequest):
     os.environ["SAFE_MODE"] = str(req.safe_mode).lower()
     set_key(str(env_file), "SAFE_MODE", str(req.safe_mode).lower())
 
+    if req.unrestricted_mode is not None:
+        permission_manager.set_unrestricted_mode(req.unrestricted_mode)
+        os.environ["HELPER_UNRESTRICTED_ACCESS"] = str(req.unrestricted_mode).lower()
+        set_key(str(env_file), "HELPER_UNRESTRICTED_ACCESS", str(req.unrestricted_mode).lower())
+
+    if req.background_ai_provider is not None:
+        from core.background_ai_swarm import background_ai_swarm
+        background_ai_swarm.set_background_provider(req.background_ai_provider)
+        set_key(str(env_file), "BACKGROUND_AI_PROVIDER", req.background_ai_provider)
+
     return {"success": True, "message": "Settings updated successfully."}
+
+@app.get("/api/ai/providers")
+async def get_ai_providers():
+    from core.background_ai_swarm import background_ai_swarm
+    return {
+        "providers": background_ai_swarm.get_available_providers(),
+        "active_primary": os.getenv("LLM_PROVIDER", "gemini"),
+        "active_background": os.getenv("BACKGROUND_AI_PROVIDER", "auto"),
+        "unrestricted_access": permission_manager.is_unrestricted()
+    }
+
+@app.post("/api/ai/choose")
+async def choose_ai(req: ChooseAIRequest):
+    from core.background_ai_swarm import background_ai_swarm
+    env_file = Path.cwd() / ".env"
+    res = {}
+    if req.primary_provider:
+        res["primary"] = background_ai_swarm.set_primary_provider(req.primary_provider, req.primary_model)
+        set_key(str(env_file), "LLM_PROVIDER", req.primary_provider)
+        if req.primary_model:
+            set_key(str(env_file), f"{req.primary_provider.upper()}_MODEL", req.primary_model)
+    if req.background_provider:
+        res["background"] = background_ai_swarm.set_background_provider(req.background_provider)
+        set_key(str(env_file), "BACKGROUND_AI_PROVIDER", req.background_provider)
+    await broadcast_event("ai_provider_switched", res)
+    return {"success": True, "details": res}
+
+@app.post("/api/ai/background-consult")
+async def consult_background_ai_endpoint(req: BackgroundConsultRequest):
+    from core.background_ai_swarm import background_ai_swarm
+    result = await asyncio.to_thread(
+        background_ai_swarm.consult,
+        query=req.query,
+        provider=req.provider,
+        role=req.role or "advisor",
+        context=req.context
+    )
+    return result
+
+@app.post("/api/ai/swarm")
+async def swarm_consensus_endpoint(req: SwarmRequest):
+    from core.background_ai_swarm import background_ai_swarm
+    result = await asyncio.to_thread(
+        background_ai_swarm.consult_swarm,
+        query=req.query,
+        providers=req.providers,
+        role=req.role or "consensus"
+    )
+    return result
 
 @app.post("/api/browser/launch")
 async def launch_project_browser():

@@ -150,6 +150,8 @@ This controls the live project browser where logins and cookies are permanently 
   Action: "code_studio_builder", Action args: {{ "project_dir": "Desktop/my_app", "files": {{ "main.py": "..." }}, "run_entrypoint": "main.py" }}
 - Superpower System Optimizer & Diagnostics (Granular CPU/RAM/Disk telemetry, latency tests, and junk file scanning):
   Action: "system_super_optimizer", Action args: {{ "action": "all" }}
+- Background AI Advisory & Multi-AI Swarm Consensus (Consult ANY AI model in background for advice, code generation, error fixing, or multi-model consensus):
+  Action: "consult_background_ai", Action args: {{ "query": "...", "provider": "auto", "role": "advisor" }} (or provider: "groq", "gemini", "deepseek", "openai", "ollama", "swarm", role: "debugger", "coder", "planner")
 - Listing / fetching GitHub repositories:
   - Via GitHub CLI: Action: "execute_powershell", Action args: {{ "command": "gh repo list --limit 100" }}
   - Via GitHub API: Action: "fetch_web_content", Action args: {{ "url": "https://api.github.com/users/<username>/repos?per_page=100" }}

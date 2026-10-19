@@ -1380,6 +1380,18 @@ async function loadSettingsIntoModal() {
         if (elements.inputDeepseekKey) elements.inputDeepseekKey.value = s.deepseek_key;
         localStorage.setItem('helper_deepseek_key', s.deepseek_key);
       }
+      const unrestrictBox = document.getElementById('modal-checkbox-unrestricted');
+      if (unrestrictBox) {
+        unrestrictBox.checked = s.unrestricted_mode !== false;
+      }
+      const bgAiSelect = document.getElementById('modal-select-background-ai');
+      if (bgAiSelect && s.background_ai_provider) {
+        bgAiSelect.value = s.background_ai_provider;
+      }
+      const unrestrictBadge = document.getElementById('unrestricted-badge-text');
+      if (unrestrictBadge) {
+        unrestrictBadge.textContent = (s.unrestricted_mode !== false) ? 'Unrestricted Full Access' : 'Restricted Mode';
+      }
       updateProviderKeyVisibility();
     }
   } catch (e) {}
@@ -1388,6 +1400,8 @@ async function loadSettingsIntoModal() {
 function saveSettingsFromModal() {
   state.provider = elements.selectProvider?.value || 'gemini';
   state.safeMode = elements.checkboxSafeMode?.checked || false;
+  const isUnrestricted = document.getElementById('modal-checkbox-unrestricted')?.checked !== false;
+  const backgroundAi = document.getElementById('modal-select-background-ai')?.value || 'auto';
   
   if (elements.inputGeminiKey) localStorage.setItem('helper_gemini_key', elements.inputGeminiKey.value);
   if (elements.inputDeepseekKey) localStorage.setItem('helper_deepseek_key', elements.inputDeepseekKey.value);
@@ -1414,10 +1428,16 @@ function saveSettingsFromModal() {
       openai_key: elements.inputOpenaiKey?.value || null,
       groq_key: elements.inputGroqKey?.value || null,
       ollama_model: elements.inputOllamaModel?.value || null,
-      safe_mode: state.safeMode
+      safe_mode: state.safeMode,
+      unrestricted_mode: isUnrestricted,
+      background_ai_provider: backgroundAi
     })
   }).catch(err => console.warn('Could not persist settings to server:', err));
   
+  const unrestrictBadge = document.getElementById('unrestricted-badge-text');
+  if (unrestrictBadge) {
+    unrestrictBadge.textContent = isUnrestricted ? 'Unrestricted Full Access' : 'Restricted Mode';
+  }
   updateSafeModeDisplay();
   if (elements.providerStateText) {
     elements.providerStateText.textContent = state.provider.toUpperCase();

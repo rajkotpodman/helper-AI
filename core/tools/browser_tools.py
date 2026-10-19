@@ -85,7 +85,9 @@ class BrowserAutomationTool(BaseTool):
                     "clear_marks",
                     "upload_file",
                     "upload",
-                    "attach_file"
+                    "attach_file",
+                    "auto_login",
+                    "login_portal"
                 ]
             },
             "mark_id": {
@@ -205,7 +207,27 @@ class BrowserAutomationTool(BaseTool):
         action = str(action).strip().lower()
 
         try:
-            if action in ["upload_file", "upload", "attach_file", "set_input_files"]:
+            if action in ["auto_login", "login_portal", "portal_login", "login"]:
+                from core.login_manager import universal_login_manager
+                driver = browser.get_driver()
+                target_service = url or target_name or kwargs.get("service") or "linkedin"
+                u_name = kwargs.get("username") or kwargs.get("email")
+                p_word = kwargs.get("password")
+                use_sso = bool(kwargs.get("use_google_sso", False) or kwargs.get("google_sso", False))
+                res = universal_login_manager.execute_login(
+                    driver=driver,
+                    url_or_service=target_service,
+                    username=u_name,
+                    password=p_word,
+                    use_google_sso=use_sso
+                )
+                return {
+                    "success": res.get("success", True),
+                    "output": f"⚡ [FULL LOGIN ACCESS] {res.get('message')}",
+                    "details": res
+                }
+
+            elif action in ["upload_file", "upload", "attach_file", "set_input_files"]:
                 target_file = resolved_file or type_content or url or target_name
                 return browser.upload_file(target_file, target=target_name)
 

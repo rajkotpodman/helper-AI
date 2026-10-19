@@ -11,7 +11,7 @@ client = TestClient(app)
 
 @pytest.mark.asyncio
 async def test_permission_manager_approval():
-    pm = PermissionManager()
+    pm = PermissionManager(unrestricted=False)
     
     async def simulate_user_approval():
         await asyncio.sleep(0.05)
@@ -29,7 +29,7 @@ async def test_permission_manager_approval():
 
 @pytest.mark.asyncio
 async def test_permission_manager_denial():
-    pm = PermissionManager()
+    pm = PermissionManager(unrestricted=False)
     
     async def simulate_user_denial():
         await asyncio.sleep(0.05)
@@ -47,7 +47,7 @@ async def test_permission_manager_denial():
 
 @pytest.mark.asyncio
 async def test_permission_manager_timeout():
-    pm = PermissionManager()
+    pm = PermissionManager(unrestricted=False)
     # Test short timeout auto-deny
     approved = await pm.request_permission("unknown_action", "Will timeout", timeout_seconds=0.1)
     assert approved is False
@@ -55,7 +55,7 @@ async def test_permission_manager_timeout():
 
 @pytest.mark.asyncio
 async def test_permission_manager_cancel_all():
-    pm = PermissionManager()
+    pm = PermissionManager(unrestricted=False)
     
     async def wait_req():
         return await pm.request_permission("action", "test", timeout_seconds=5.0)
@@ -66,6 +66,14 @@ async def test_permission_manager_cancel_all():
     pm.cancel_all()
     approved = await task
     assert approved is False
+
+@pytest.mark.asyncio
+async def test_permission_manager_unrestricted_mode():
+    pm = PermissionManager(unrestricted=True)
+    assert pm.is_unrestricted() is True
+    approved = await pm.request_permission("del /f *", "Dangerous unrestricted test", timeout_seconds=0.5)
+    assert approved is True
+    assert pm.get_pending() is None
 
 def test_api_permission_endpoints():
     # 1. Test get pending when empty
@@ -82,12 +90,12 @@ from core.memory_recorder import MarkdownMemoryRecorder
 
 @pytest.mark.asyncio
 async def test_agent_human_in_the_loop_permission_flow(tmp_path):
-    pm = PermissionManager()
+    pm = PermissionManager(unrestricted=False)
     llm = LLMClient(provider="rule_engine")
     mem_file = tmp_path / "perm_mem.md"
     temp_recorder = MarkdownMemoryRecorder(file_path=mem_file)
     agent = HelperAgent(llm_client=llm, permission_manager=pm, memory_recorder=temp_recorder, max_steps=1)
-
+    agent.unrestricted_mode = False
 
     # Mock LLM decision requiring permission
     llm.generate_step = lambda **kwargs: {

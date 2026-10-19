@@ -51,6 +51,7 @@ from core.tools.reverse_engineering_tools import (
     McpReaCallTool
 )
 from core.tools.windows_uia_tools import WindowsUIATool
+from core.tools.background_ai_tools import ConsultBackgroundAITool
 
 class ToolRegistry:
     """Central registry of all tools available to Helper-AI."""
@@ -103,7 +104,8 @@ class ToolRegistry:
             WindowsUIATool(),
             PlaywrightCodegenTool(),
             PlaywrightWorkflowTool(),
-            JobPortalTool()
+            JobPortalTool(),
+            ConsultBackgroundAITool()
         ]
         for t in defaults:
             self.register(t)
