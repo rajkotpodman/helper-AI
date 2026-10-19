@@ -606,6 +606,23 @@ if web_static_dir.exists():
 else:
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+wetware_dist_dir = base_dir / "ai_2026_hub" / "dist"
+wetware_assets_dir = wetware_dist_dir / "assets"
+
+if wetware_assets_dir.exists():
+    app.mount("/assets", StaticFiles(directory=str(wetware_assets_dir)), name="wetware-assets")
+
+if wetware_dist_dir.exists():
+    app.mount("/wetware-hub", StaticFiles(directory=str(wetware_dist_dir), html=True), name="wetware-hub")
+
+@app.get("/wetware")
+async def serve_wetware():
+    if wetware_dist_dir.exists():
+        index_f = wetware_dist_dir / "index.html"
+        if index_f.exists():
+            return FileResponse(index_f)
+    return {"message": "AI 2026 Wetware Hub build not found."}
+
 @app.get("/")
 async def serve_index():
     modern_index = web_templates_dir / "index.html"

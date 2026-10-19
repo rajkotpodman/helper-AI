@@ -3,3 +3,6 @@ contact_links:
   - name: 💬 Helper-AI Discussions
     url: https://github.com/rajkotpodman/helper-AI/discussions
     about: Ask questions, share tips, or discuss autonomous agent workflows.
+  - name: 🧬 AI 2026 Wetware Hub
+    url: https://github.com/rajkotpodman/helper-AI/blob/main/ai_2026_hub/README.md
+    about: Explore biological wetware, CL-1 neuron computing, and thermodynamic limits.

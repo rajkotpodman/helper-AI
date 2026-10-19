@@ -40,6 +40,6 @@ COPY . /app
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/status')" || exit 1
 
-EXPOSE 8000
+EXPOSE 8000 3000
 
 CMD ["python", "app.py"]

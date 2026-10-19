@@ -20,13 +20,13 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
       - GROQ_API_KEY=${GROQ_API_KEY:-}
-      - GROQ_MODEL=${GROQ_MODEL:-qwen/qwen3.8-27b}
+      - GROQ_MODEL=${GROQ_MODEL:-llama-3.3-70b-versatile}
       - CUSTOM_LLM_NAME=${CUSTOM_LLM_NAME:-OpenRouter}
       - CUSTOM_LLM_URL=${CUSTOM_LLM_URL:-https://openrouter.ai/api/v1}
       - CUSTOM_LLM_KEY=${CUSTOM_LLM_KEY:-}
       - CUSTOM_LLM_MODEL=${CUSTOM_LLM_MODEL:-anthropic/claude-3.5-sonnet}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
-      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:1.5b}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-dolphin-llama3}
       - SAFE_MODE=${SAFE_MODE:-false}
       - HOST=0.0.0.0
       - PORT=8000
@@ -35,6 +35,7 @@ services:
       - ./history:/app/history
       - ./downloads:/app/downloads
       - ./agent_memory:/app/agent_memory
+      - ./ai_2026_hub/dist:/app/ai_2026_hub/dist
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:

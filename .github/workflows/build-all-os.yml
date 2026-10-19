@@ -41,6 +41,17 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build AI 2026 Wetware Hub
+        working-directory: ai_2026_hub
+        run: |
+          npm install
+          npm run build
+
       - name: Install Inno Setup Compiler
         run: |
           choco install innosetup --no-progress --accept-license

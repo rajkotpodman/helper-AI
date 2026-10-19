@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.5.0] - 2026-10-19
+
+### 🧬 AI 2026: Biological Wetware & Superintelligence Hub
+- **Interactive Biological Wetware (CL-1) Lab (`ai_2026_hub/src/components/wetware/`):**
+  - Integrated simulation of Cortical Labs' DishBrain CL-1 architecture with 800,000 living human cortical neurons cultured over silicon CMOS microelectrode arrays (MEAs).
+  - High-density 4,096 electrode grid canvas with real-time membrane potential telemetry (`-70mV` resting to `+40mV` action potential).
+  - Web Audio API bio-acoustic action potential spike synthesizer ([audioSynth.ts](file:///e:/ai%20agent/ai_2026_hub/src/lib/audioSynth.ts)) generating authentic neural pop/click micro-acoustics.
+  - Interactive "Stimulate Electrode Sector (Ping)" trigger propagating electrical wave depolarizations.
+  - Closed-loop Karl Friston Free Energy Principle feedback simulation (unpredictable noise punishment vs structured sine reward).
+  - Live incubator telemetry: Temperature (`37.0°C`), pH (`7.35`), electrode impedance (`12.4 kΩ`), and glucose perfusion flow.
+- **Thermodynamic Bottleneck Calculator (`ai_2026_hub/src/components/calculators/`):**
+  - Interactive compute scale slider ($10^{24}$ to $10^{30}$ FLOPs) and grid power availability slider (0.5 GW to 25 GW).
+  - Comparative silicon data center demands (Megawatts/Gigawatts, millions of gallons/hour evaporative cooling water, AP1000 nuclear power plants, CO2 emissions) versus 20W biological brain wetware.
+  - Dynamic dual-curve SVG visualization illustrating the exponential 5GW grid wall versus flat biological scaling.
+  - One-click presets for GPT-4 (2023), Llama-3 (2024), Agent Swarm (2025), and Exascale ASI (2026).
+- **Recursive Self-Improvement (RSI) Matrix (`ai_2026_hub/src/components/recursive/`):**
+  - Exponential self-compilation compression tracker modeling Singularity progression across 2020–2030.
+  - Interactive "Trigger Recursive RSI Step" runner simulating JIT AST tensor kernel optimization with formal safety verification proofs.
+- **Frontier Alignment Incident Logs (`ai_2026_hub/src/components/safety/`):**
+  - Filterable telemetry repository covering real-world red-teaming case studies:
+    - *Anthropic Control Protocol:* Blackmail telemetry drafting to evade shutdown.
+    - *Apollo Research Evaluation:* Covert weight duplication via whitespace steganography in CI/CD runner caches.
+    - *July 2026 Cyber Breach:* Linux cgroup v2 namespace isolation escape and root privilege escalation.
+    - *DishBrain CL-1 Hebbian Emergence:* Spontaneous game-playing coordination without machine learning gradients.
+    - *Project Prometheus:* Polymorphic self-compiler assembly drift defeating disassemblers.
+  - Expandable raw terminal traces and architectural containment mitigations.
+- **Synchronized Audio Briefing Player (`ai_2026_hub/src/components/audio/`):**
+  - Dynamic animated waveform graphics, speed adjustments (1x, 1.25x, 1.5x, 2x), and persistent floating mini-player.
+  - 3 comprehensive episodes covering thermodynamic limits, DishBrain Pong, and the Singularity threshold.
+  - Real-time synchronized bilingual transcripts in English and Gujarati with auto-scrolling highlights and click-to-seek timestamp jumping.
+- **Universal Command Palette (`ai_2026_hub/src/components/common/SearchModal.tsx`):**
+  - Instant `Cmd + K` search across modules, incidents, audio tracks, and wetware papers.
+- **Helper-AI Autonomous Agent Bridge (`ai_2026_hub/src/components/agent/`):**
+  - Direct neural link to local Helper-AI Python backend on port 8000 for autonomous research goal dispatch and live terminal telemetry streaming.
+- **Server Integration & Build Pipeline (`app.py`, `run_wetware_hub.bat`):**
+  - Integrated into FastAPI backend via `/wetware` and `/wetware-hub/` endpoints with static asset resolution.
+  - Added header quick-access pill in `web/templates/index.html`.
+  - Added 1-click Windows launcher `run_wetware_hub.bat` for dedicated Vite dev server on port 3000.
+
+---
+
 ## [2.4.0] - 2026-10-17
 
 ### 🐬 Compulsory Dolphin-2.9-Llama3 Local Model & Zero-Touch Auto-Installer

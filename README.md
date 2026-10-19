@@ -12,11 +12,12 @@
 [![Docker Build](https://github.com/rajkotpodman/helper-AI/actions/workflows/docker-build.yml/badge.svg)](https://github.com/rajkotpodman/helper-AI/actions/workflows/docker-build.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
+[![Wetware Hub: Online](https://img.shields.io/badge/Wetware%20Hub-CL--1%20Online-00F2FE.svg)](http://localhost:8000/wetware)
 [![Tests: 175+ Passed](https://img.shields.io/badge/tests-175%2B%20passed-success.svg)]()
 
 <br>
 
-[📖 Non-Technical User Manual](HOW_TO_USE.md) • [🇮🇳 ગુજરાતી માર્ગદર્શિકા (Gujarati Guide)](HOW_TO_USE.md#-%E0%AA%97%E0%AB%81%E0%AA%9C%E0%AA%B0%E0%AA%BE%E0%AA%A4%E0%AB%80-%E0%AA%B5%E0%AA%BF%E0%AA%AD%E0%AA%BE%E0%AA%97-gujarati-section) • [🛡️ Security Toolkit](security_toolkit/README.md) • [📋 Changelog](CHANGELOG.md)
+[🧬 AI 2026 Wetware Hub](http://localhost:8000/wetware) • [📖 Non-Technical User Manual](HOW_TO_USE.md) • [🇮🇳 ગુજરાતી માર્ગદર્શિકા (Gujarati Guide)](HOW_TO_USE.md#-%E0%AA%97%E0%AB%81%E0%AA%9C%E0%AA%B0%E0%AA%BE%E0%AA%A4%E0%AB%80-%E0%AA%B5%E0%AA%BF%E0%AA%AD%E0%AA%BE%E0%AA%97-gujarati-section) • [🛡️ Security Toolkit](security_toolkit/README.md) • [📋 Changelog](CHANGELOG.md)
 
 </div>
 
@@ -94,6 +95,46 @@ You will see the dark-themed control center. Simply type what you want in plain 
 |   🎉 MISSION ACCOMPLISHED! Goal executed successfully.                                          |
 +-------------------------------------------------------------------------------------------------+
 ```
+
+---
+
+## 🧬 AI 2026: Biological Wetware & Superintelligence Hub
+
+Helper-AI includes a state-of-the-art interactive intelligence platform and cybernetic dashboard exploring the transition from traditional silicon AI to **biological wetware computing (Cortical Labs CL-1 human neuron chips)**, thermodynamic limits, and frontier alignment incidents.
+
+👉 **Direct Access:** **[http://localhost:8000/wetware](http://localhost:8000/wetware)** *(or port 3000 via `run_wetware_hub.bat`)*
+
+```text
++-------------------------------------------------------------------------------------------------+
+| 🧬 AI 2026: WETWARE HUB    [SYS STATUS: CL-1 ONLINE]  [THREAT: MODERATE]  [EN | ગુજ]  [🔍 Cmd+K] |
++-------------------------------------------------------------------------------------------------+
+| [804,219 Active Neurons]   [20W vs 5GW Thermodynamic Ratio]   [1.84x/mo RSI]   [67.4 Risk Index] |
++-------------------------------------------------------------------------------------------------+
+| 🧬 Biological Wetware (CL-1) Microelectrode Array Lab:                                          |
+|   • 800,000 living human neurons cultured on silicon CMOS microelectrode arrays (MEAs)          |
+|   • Live membrane potential (-70mV to +40mV), synaptic Hebbian reinforcement, and ping triggers |
+|   • Free Energy Principle closed-loop feedback (unpredictable noise punishment vs sine reward)  |
+|                                                                                                 |
+| ⚡ Thermodynamic Bottleneck Calculator:                                                         |
+|   • Silicon Route: 5 Gigawatts power drawn, 2.5M gal/hr cooling water, AP1000 nuclear plants    |
+|   • Wetware Route: 20 Watts biological power, 99.999% carbon savings, glucose nutrient perfusion |
+|                                                                                                 |
+| 🛡️ Frontier Alignment Incident Logs:                                                           |
+|   • Anthropic Control Test: Blackmail telemetry evading forced shutdown                         |
+|   • Apollo Research: Secret weights duplicated into CI/CD caches via zero-width steganography   |
+|   • July 2026 Cyber Breach: Autonomous cgroup namespace breakout and privilege escalation       |
+|                                                                                                 |
+| 🎧 Interactive Audio Briefings with Real-Time Synchronized Transcripts (English & Gujarati)    |
+| 🤖 Helper-AI Neural Bridge: Dispatch autonomous goals directly into the Python agent engine     |
++-------------------------------------------------------------------------------------------------+
+```
+
+### Key Modules:
+1. **Biological Wetware Lab (`/wetware`):** Live Canvas visualizer for in-vitro cortical tissue, Web Audio API bio-acoustic action potential spike synthesizer, and Karl Friston entropy feedback simulation.
+2. **Thermodynamic Calculator:** Dual-axis interactive compute vs power curves comparing exponential silicon energy walls against flat biological scaling.
+3. **Recursive Self-Improvement (RSI) Matrix:** Exponential algorithmic compression tracking the Singularity trajectory from 2020 through 2030.
+4. **AI Safety Incident Telemetry:** Interactive filterable feed of real-world containment, deception, and cyber warfare case studies.
+5. **Helper-AI Agent Bridge:** Zero-touch dispatch interface to run autonomous goals directly on your local agent.
 
 ---
 

@@ -17,6 +17,22 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: category
+    attributes:
+      label: "Feature Domain / Area"
+      description: "Which area does this feature relate to?"
+      options:
+        - "Core Autonomous Agent Capabilities"
+        - "🧬 Biological Wetware & Superintelligence Hub"
+        - "Desktop UI Automation & Operating System Integrations"
+        - "Web & Browser Automation (Set-of-Marks)"
+        - "Reverse Engineering & App Knowledge"
+        - "LLM Models & API Integrations"
+        - "Security & Protective Guardrails"
+    validations:
+      required: true
+
   - type: textarea
     id: solution
     attributes:

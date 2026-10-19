@@ -58,3 +58,26 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" pytest tests/ -v
+
+  build-wetware-hub:
+    name: Build AI 2026 Wetware Hub (React + Vite)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'ai_2026_hub/package.json'
+
+      - name: Install dependencies
+        working-directory: ai_2026_hub
+        run: npm install
+
+      - name: Verify Production Build
+        working-directory: ai_2026_hub
+        run: npm run build
+

@@ -12,3 +12,10 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+
+  # Maintain React & TypeScript dependencies for AI 2026 Wetware Hub
+  - package-ecosystem: "npm"
+    directory: "/ai_2026_hub"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10

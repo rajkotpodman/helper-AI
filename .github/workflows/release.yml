@@ -21,10 +21,21 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build AI 2026 Wetware Hub
+        working-directory: ai_2026_hub
+        run: |
+          npm install
+          npm run build
+
       - name: Build Source Archive
         run: |
           mkdir -p dist
-          tar -czf dist/helper-ai-${{ github.ref_name }}.tar.gz --exclude='.git' --exclude='node_modules' --exclude='__pycache__' --exclude='.venv' .
+          tar -czf dist/helper-ai-${{ github.ref_name }}.tar.gz --exclude='.git' --exclude='**/node_modules' --exclude='__pycache__' --exclude='.venv' .
 
       - name: Create Release
         uses: softprops/action-gh-release@v2

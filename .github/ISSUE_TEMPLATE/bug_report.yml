@@ -27,16 +27,34 @@ body:
       required: true
 
   - type: dropdown
+    id: component
+    attributes:
+      label: "Component / Subsystem"
+      description: "Which part of Helper-AI is affected?"
+      options:
+        - "Core Agent & Tool Engine"
+        - "🧬 AI 2026: Biological Wetware Hub (/wetware)"
+        - "Web Dashboard & Voice UI"
+        - "PC Desktop Automation (Windows UIA / Fast-Path)"
+        - "Browser Automation & Web Set-of-Marks"
+        - "Reverse Engineering (REA & App Memory)"
+        - "Defensive Security Toolkit"
+    validations:
+      required: true
+
+  - type: dropdown
     id: provider
     attributes:
       label: "LLM Provider"
       description: "Which LLM provider was active when the issue occurred?"
       options:
         - Gemini (gemini-flash-latest)
-        - Groq
-        - OpenAI
-        - Ollama
-        - Rule Engine
+        - Groq (llama-3.3-70b-versatile)
+        - OpenAI (gpt-4o / gpt-4o-mini)
+        - DeepSeek (deepseek-chat / reasoner)
+        - Universal AI / Custom API
+        - Ollama (dolphin-llama3)
+        - Rule Engine (Deterministic Offline)
     validations:
       required: true
 
