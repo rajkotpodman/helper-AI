@@ -299,14 +299,18 @@ async def start_goal(req: GoalRequest):
     if "/goal" in goal_str.lower() or "5 " in goal_str.lower() or "apply" in goal_str.lower():
         steps = max(steps, 100)
 
-    llm = LLMClient(provider=req.provider)
-    active_agent = HelperAgent(
-        llm_client=llm,
-        safe_mode=req.safe_mode,
-        max_steps=steps,
-        permission_manager=permission_manager,
-        memory_recorder=memory_recorder
-    )
+    try:
+        llm = LLMClient(provider=req.provider)
+        active_agent = HelperAgent(
+            llm_client=llm,
+            safe_mode=req.safe_mode,
+            max_steps=steps,
+            permission_manager=permission_manager,
+            memory_recorder=memory_recorder
+        )
+    except Exception as init_err:
+        logger.error(f"Failed to initialize HelperAgent: {init_err}", exc_info=True)
+        return JSONResponse(status_code=500, content={"error": f"Agent initialization failed: {str(init_err)}"})
 
     current_goal_info["is_running"] = True
     current_goal_info["goal"] = goal_str
