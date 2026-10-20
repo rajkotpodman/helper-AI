@@ -92,5 +92,14 @@ class JobPortalTool(BaseTool):
                 "details": res
             }
 
+        elif action_clean in ["enter_otp", "submit_otp", "verify_otp", "input_otp"]:
+            otp_code = str(kwargs.get("otp") or kwargs.get("code") or portal or "").strip()
+            res = job_portal_automation.enter_otp(otp_code, portal)
+            return {
+                "success": res.get("success", False),
+                "output": res.get("message", "OTP processed."),
+                "details": res
+            }
+
         else:
-            return {"success": False, "output": f"Unknown action: '{action}'. Choose from 'process_all', 'parse_cv', 'register_portal', 'status'."}
+            return {"success": False, "output": f"Unknown action: '{action}'. Choose from 'process_all', 'parse_cv', 'register_portal', 'status', 'enter_otp'."}

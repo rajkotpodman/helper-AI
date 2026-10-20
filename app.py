@@ -861,6 +861,10 @@ class JobPortalProcessRequest(BaseModel):
     cv_path: Optional[str] = None
     portal_id: Optional[str] = None
 
+class JobPortalOTPRequest(BaseModel):
+    otp: str
+    portal_id: Optional[str] = None
+
 @app.get("/api/job-portals/status")
 async def get_job_portals_status():
     """Returns candidate CV data and status of all 10 job portals."""
@@ -879,6 +883,13 @@ async def process_job_portals_endpoint(req: JobPortalProcessRequest):
     if req.portal_id:
         return job_portal_automation.register_and_upload(req.portal_id, req.cv_path)
     return job_portal_automation.process_all_10_portals(req.cv_path)
+
+@app.post("/api/job-portals/submit-otp")
+async def submit_job_portal_otp_endpoint(req: JobPortalOTPRequest):
+    """Submits the OTP code into the currently active portal verification page."""
+    from core.job_portal_automation import job_portal_automation
+    res = job_portal_automation.enter_otp(req.otp, req.portal_id)
+    return res
 
 
 

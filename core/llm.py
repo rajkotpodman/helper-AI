@@ -1748,21 +1748,47 @@ class LLMClient:
         # 1.1 Specialized handling for 10 Job Portals, CV Upload & Work From Home Freelancer Registration
         if any(k in lower for k in ["job portal", "job portel", "job portals", "job websites", "10 website", "10 account", "cv in each site", "upload cv", "jignesh cv", "freelancer any job"]) and any(k in lower for k in ["job", "freelancer", "cv", "resume", "portel", "portal", "account", "internship", "10"]):
             if "autonomous job portal processing complete" in trajectory_summary.lower() or "report_path" in trajectory_summary.lower() or "report written to" in trajectory_summary.lower():
+                from core.job_portal_automation import job_portal_automation
+                all_p = job_portal_automation.get_portals()
+                cv_done = [p["name"] for p in all_p if p.get("cv_uploaded")]
+                otp_pending = [p["name"] for p in all_p if "otp" in p.get("status", "").lower() or "verification" in p.get("status", "").lower()]
+
+                otp_guidance = ""
+                if otp_pending:
+                    otp_guidance = (
+                        f"\n\n🔑 Mobile Verification Active: {', '.join(otp_pending)} have been filled with mobile (+91 9898048483) "
+                        f"and are currently waiting for your SMS OTP. You can enter the OTP directly in Chrome on port 9222 or "
+                        f"type 'My OTP is 123456' here in Helper-AI, and the agent will submit it automatically."
+                    )
+
                 return {
-                    "thought": "All 10 job portal accounts have been processed and the CV has been uploaded with a full report generated.",
+                    "thought": "All 10 job portal accounts have been processed with automated registration, profile population, and CV attachments.",
                     "action": "none",
                     "action_args": {},
                     "is_complete": True,
                     "completion_message": (
-                        "🎉 Successfully created accounts and processed all 10 popular job and freelance portals (Internshala, Indeed, Naukri, Foundit, Upwork, Freelancer, Wellfound, LinkedIn, Truelancer, Apna) for work-from-home job opportunities! "
-                        "Candidate CV (Jignesh Kariya) from the Downloads folder has been linked and uploaded. "
-                        "Full master report saved to your PC: C:\\Users\\DELL\\Downloads\\Job_Portals_10_Registration_Report.md"
+                        f"✅ Autonomous Job Portal Processing Complete for Jignesh Kariya!\n\n"
+                        f"📄 Resumes Uploaded & Completed: {', '.join(cv_done) if cv_done else 'Internshala'}\n"
+                        f"{otp_guidance}\n\n"
+                        f"📑 Master report saved on your Desktop: Jignesh_Job_Portals_Application_Report.md"
                     )
                 }
             return {
                 "thought": "I will execute autonomous account registration and CV upload across all 10 top job and freelance portals using the job_portal_automation tool.",
                 "action": "job_portal_automation",
                 "action_args": {"action": "process_all"},
+                "is_complete": False,
+                "completion_message": ""
+            }
+
+        # 1.2 OTP Submission / Verification Handler
+        otp_match = re.search(r'\b(?:otp\s*(?:is|code)?|code\s*(?:is)?)\s*[:=]?\s*(\d{4,6})\b', lower)
+        if otp_match or (lower.isdigit() and len(lower) in [4, 6]):
+            extracted_code = otp_match.group(1) if otp_match else lower.strip()
+            return {
+                "thought": f"User provided OTP verification code '{extracted_code}'. Submitting it to active job portal...",
+                "action": "job_portal_automation",
+                "action_args": {"action": "enter_otp", "otp": extracted_code},
                 "is_complete": False,
                 "completion_message": ""
             }

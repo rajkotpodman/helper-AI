@@ -1,0 +1,62 @@
+{
+  "internshala": {
+    "status": "Completed",
+    "cv_uploaded": true,
+    "notes": "Navigated to Internshala (Search Internships, Jobs, & Courses | Hire Candidates | Internshala) \u2022 Clicked fallback button 'Google' \u2022 Attached CV 'Jignesh_Kariya_CV (1).docx' via profile resume page",
+    "last_run": "2026-10-20 13:16:16"
+  },
+  "indeed": {
+    "status": "Pending Verification / In Progress",
+    "cv_uploaded": false,
+    "notes": "Navigated to Indeed India (Sign In | Indeed Accounts) \u2022 Clicked fallback button 'Google'",
+    "last_run": "2026-10-20 13:16:44"
+  },
+  "naukri": {
+    "status": "Pending Verification / In Progress",
+    "cv_uploaded": false,
+    "notes": "Navigated to Naukri.com (Register on Naukri.com: Apply to Millions of Jobs Online) \u2022 Clicked fallback button 'Google'",
+    "last_run": "2026-10-20 13:17:17"
+  },
+  "foundit": {
+    "status": "Pending Verification / In Progress",
+    "cv_uploaded": false,
+    "notes": "Navigated to Foundit (Monster) (Foundit - Job Search & Recruitment) \u2022 Clicked 'Google' successfully",
+    "last_run": "2026-10-20 13:17:49"
+  },
+  "upwork": {
+    "status": "Pending Verification / In Progress",
+    "cv_uploaded": false,
+    "notes": "Navigated to Upwork (Just a moment...) \u2022 Clicked fallback button 'Freelancer'",
+    "last_run": "2026-10-20 13:18:13"
+  },
+  "freelancer": {
+    "status": "Pending Verification / In Progress",
+    "cv_uploaded": false,
+    "notes": "Navigated to Freelancer.com (Join 90.3M+ Professionals | Sign Up Free | Freelancer) \u2022 Clicked fallback button 'Freelancer'",
+    "last_run": "2026-10-20 13:18:32"
+  },
+  "wellfound": {
+    "status": "Pending Verification / In Progress",
+    "cv_uploaded": false,
+    "notes": "Navigated to Wellfound (AngelList) (Find Startup Jobs Near You and Remote Jobs | Wellfound) \u2022 Clicked fallback button 'Google'",
+    "last_run": "2026-10-20 13:19:07"
+  },
+  "linkedin": {
+    "status": "Pending Verification / In Progress",
+    "cv_uploaded": false,
+    "notes": "Navigated to LinkedIn Jobs (Jobs | LinkedIn) \u2022 OAuth button 'Sign in with Google' not immediately clickable (may require manual OTP)",
+    "last_run": "2026-10-20 13:19:56"
+  },
+  "truelancer": {
+    "status": "Pending Verification / In Progress",
+    "cv_uploaded": false,
+    "notes": "Navigated to Truelancer (Freelancer Signup | Employer Signup | Truelancer) \u2022 Clicked fallback button 'Freelancer'",
+    "last_run": "2026-10-20 13:20:17"
+  },
+  "apna": {
+    "status": "Pending Verification / In Progress",
+    "cv_uploaded": false,
+    "notes": "Navigated to Apna (80,628 Job Vacancies in India 2026 | Search Jobs in India | apna.co) \u2022 Clicked fallback button 'Google'",
+    "last_run": "2026-10-20 13:20:43"
+  }
+}

@@ -853,16 +853,27 @@ function handleExecutionComplete(data) {
   elements.btnExecute?.classList.remove('opacity-50', 'pointer-events-none');
   elements.btnStop?.classList.add('hidden');
   
+  const resultText = String(data?.final_result || data?.message || data?.error || '');
+  const hasError = data?.success === false || resultText.toLowerCase().includes('internal server error') || resultText.toLowerCase().includes('execution error');
+  
   if (elements.executionStatus) {
-    elements.executionStatus.textContent = data.success !== false ? 'Goal Completed Successfully' : 'Goal Execution Finished';
+    elements.executionStatus.textContent = !hasError ? 'Goal Completed Successfully' : 'Goal Execution Finished With Alert';
   }
   
-  appendTerminalLog(`🎉 Mission complete! Final status: ${data.success !== false ? 'SUCCESS' : 'FINISHED'}`, 'success');
+  if (elements.resultHeading) {
+    elements.resultHeading.textContent = !hasError ? 'Mission Accomplished!' : 'Action / Attention Required';
+  }
+  
+  if (!hasError) {
+    appendTerminalLog(`🎉 Mission complete! Final status: SUCCESS`, 'success');
+  } else {
+    appendTerminalLog(`⚠️ Execution status: ATTENTION NEEDED - ${resultText || 'Execution stopped with warnings'}`, 'warn');
+  }
   
   // Show comprehensive final result card
   if (elements.resultContainer && elements.resultBodyText) {
     elements.resultContainer.classList.remove('hidden');
-    elements.resultBodyText.textContent = data.final_result || data.message || 'Execution completed without output text.';
+    elements.resultBodyText.textContent = resultText || 'Execution completed without output text.';
   }
   
   fetchMemoryStats();
