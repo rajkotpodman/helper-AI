@@ -40,6 +40,17 @@ class BackgroundAISwarm:
         """Returns list of all configured AI providers with status and models."""
         providers = []
 
+        # 0. Anthropic Claude (Claude 3.5 Sonnet / Haiku / Opus)
+        ant_key = os.getenv("ANTHROPIC_API_KEY", "").strip().strip("'\"")
+        providers.append({
+            "id": "anthropic",
+            "name": "Anthropic Claude 3.5 Sonnet / Haiku",
+            "configured": bool(ant_key),
+            "default_model": os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022"),
+            "speed": "fast",
+            "best_for": "coding, reasoning, instruction-following, multi-step logic"
+        })
+
         # 1. Groq (Ultra-fast Llama 3.3, Qwen)
         groq_key = os.getenv("GROQ_API_KEY", "").strip().strip("'\"")
         providers.append({
@@ -133,7 +144,9 @@ class BackgroundAISwarm:
         self.active_primary_provider = provider_id.lower().strip()
         os.environ["LLM_PROVIDER"] = self.active_primary_provider
         if model:
-            if self.active_primary_provider == "gemini":
+            if self.active_primary_provider in ["anthropic", "claude"]:
+                os.environ["ANTHROPIC_MODEL"] = model
+            elif self.active_primary_provider == "gemini":
                 os.environ["GEMINI_MODEL"] = model
             elif self.active_primary_provider == "groq":
                 os.environ["GROQ_MODEL"] = model
@@ -166,8 +179,33 @@ class BackgroundAISwarm:
         t0 = time.perf_counter()
 
         try:
+            # 0. ANTHROPIC / CLAUDE
+            if prov in ["anthropic", "claude"]:
+                key = os.getenv("ANTHROPIC_API_KEY", "").strip().strip("'\"")
+                if not key:
+                    raise ValueError("ANTHROPIC_API_KEY is not set.")
+                mod = model or os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
+                headers = {
+                    "x-api-key": key,
+                    "anthropic-version": "2023-06-01",
+                    "Content-Type": "application/json"
+                }
+                payload = {
+                    "model": mod,
+                    "system": system_prompt,
+                    "messages": [{"role": "user", "content": user_prompt}],
+                    "max_tokens": 1500,
+                    "temperature": 0.2
+                }
+                resp = self._session.post("https://api.anthropic.com/v1/messages", headers=headers, json=payload, timeout=timeout)
+                lat = round((time.perf_counter() - t0) * 1000, 1)
+                if resp.status_code == 200:
+                    text = "".join([c.get("text", "") for c in resp.json().get("content", []) if c.get("type") == "text"])
+                    return {"success": True, "provider": "anthropic", "model": mod, "content": text.strip(), "latency_ms": lat}
+                raise RuntimeError(f"Anthropic API returned HTTP {resp.status_code}: {resp.text[:120]}")
+
             # 1. GROQ
-            if prov == "groq":
+            elif prov == "groq":
                 key = os.getenv("GROQ_API_KEY", "").strip().strip("'\"")
                 if not key:
                     raise ValueError("GROQ_API_KEY is not set.")

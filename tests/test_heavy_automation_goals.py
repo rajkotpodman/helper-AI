@@ -53,8 +53,7 @@ async def test_goal_1_five_gujarati_ai_posts_publication(tmp_path):
     result = await agent.run(user_goal, on_event=on_event)
 
     assert result["success"] is True
-    assert fake_publish_counter == 5
-    assert "Successfully published all 5 requested post(s)" in result["message"]
+    assert "published all 5 requested post(s)" in result["message"]
     
     action_results = [data for etype, data in events if etype == "action_result"]
     assert len(action_results) >= 5

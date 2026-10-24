@@ -1,37 +1,39 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en" data-ds-dark-theme="true">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#090D16">
+  <meta name="theme-color" content="#151517">
   <link rel="manifest" href="/static/manifest.json">
-  <title>Helper-AI • Autonomous PC Control & Internet Agent</title>
-  
-  <!-- Fonts -->
+  <title>DeepSeek Harness • Helper-AI • Autonomous PC Control & Internet Agent</title>
+
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
+      darkMode: ['class', '[data-ds-dark-theme="true"]'],
       theme: {
         extend: {
           colors: {
-            cyberDark: '#090D16',
-            cyberSurface: '#0D131F',
-            cyberCard: 'rgba(17, 24, 39, 0.72)',
-            cyberBorder: 'rgba(255, 255, 255, 0.08)',
-            electricBlue: '#3B82F6',
-            cyanGlow: '#06B6D4',
-            emeraldLive: '#10B981',
-            amberWarn: '#F59E0B'
+            dshBg: '#151517',
+            dshSidebar: '#18181b',
+            dshSurface: '#1e1e22',
+            dshCard: '#1d1d21',
+            dshBorder: '#27272a',
+            dshBorderSubtle: '#2e2e34',
+            dshBlue: '#3b82f6',
+            dshEmerald: '#10b981',
+            dshAmber: '#f59e0b',
+            dshRed: '#ef4444'
           },
           fontFamily: {
-            sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace']
+            sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Consolas', 'monospace']
           }
         }
       }
@@ -41,390 +43,518 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Custom Styles -->
+  <!-- DeepSeek Harness Design Styles -->
   <link rel="stylesheet" href="/static/css/styles.css">
 </head>
-<body class="text-slate-100 flex flex-col justify-between min-h-screen">
+<body class="bg-[#151517] text-[#f4f4f5] flex h-screen w-screen overflow-hidden font-sans select-none">
 
-  <!-- Top Ambient Glow Aura -->
-  <div class="fixed top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-blue-600/10 rounded-full blur-[130px] pointer-events-none -z-10"></div>
-
-  <div class="max-w-[1140px] w-full mx-auto px-4 sm:px-6 py-6 flex-1 flex flex-col">
+  <!-- ================= 1. LEFT SIDEBAR ================= -->
+  <aside id="dsh-sidebar" class="dsh-sidebar flex flex-col justify-between">
     
-    <!-- A. Top Navigation Header -->
-    <header class="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-white/[0.08] mb-8">
+    <!-- Top Section -->
+    <div class="p-3.5 space-y-4 flex-1 overflow-y-auto">
       
-      <!-- Brand Identity (Left) -->
-      <div class="flex items-center gap-3.5">
-        <div class="brand-logo-box">
-          <i data-lucide="zap" class="w-6 h-6 text-white stroke-[2.2]"></i>
+      <!-- Logo Header -->
+      <div class="flex items-center justify-between px-1.5 py-1">
+        <div class="flex items-center gap-2.5">
+          <!-- Helper-AI Logo Icon -->
+          <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white shadow shadow-blue-500/30 flex-shrink-0">
+            <i data-lucide="zap" class="w-3.5 h-3.5 fill-white"></i>
+          </div>
+          <span class="font-bold text-base tracking-tight text-white">Helper</span>
+          <span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] px-1.5 py-0.5 rounded font-mono font-bold tracking-wider">AI</span>
         </div>
-        <div>
-          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
-            Helper <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">- AI</span>
-          </h1>
-          <p class="text-xs font-medium text-slate-400">Autonomous PC Control & Internet Agent</p>
+        
+        <!-- Toggle Sidebar Icon -->
+        <button id="btn-toggle-sidebar" class="p-1 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition" title="Toggle Sidebar">
+          <i data-lucide="panel-left-close" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- New Session Button -->
+      <button id="btn-new-session" class="dsh-btn-new-session group">
+        <div class="w-4 h-4 rounded-full border border-zinc-500 group-hover:border-white flex items-center justify-center text-xs leading-none">+</div>
+        <span>New Session</span>
+      </button>
+
+      <!-- Primary Navigation -->
+      <nav class="space-y-1 pt-1">
+        <button id="btn-sidebar-plugins" type="button" class="dsh-nav-item w-full text-left">
+          <span class="text-base">🧩</span>
+          <span>Plugins</span>
+        </button>
+        <button id="btn-sidebar-automation" type="button" class="dsh-nav-item w-full text-left">
+          <span class="text-base">⏱</span>
+          <span>Automation tasks</span>
+        </button>
+        <a href="/wetware" target="_blank" class="dsh-nav-item">
+          <span class="text-base">🧬</span>
+          <span>AI 2026 Wetware Hub</span>
+        </a>
+        <button id="btn-dolphin-pill" type="button" class="dsh-nav-item justify-between w-full text-left" title="Dolphin-2.9-Llama3 AI Engine Status">
+          <div class="flex items-center gap-2">
+            <span class="text-base">🐬</span>
+            <span>Dolphin AI</span>
+          </div>
+          <span id="dolphin-status-text" class="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-cyan-400 font-mono">Ready</span>
+        </button>
+      </nav>
+
+      <!-- Workspaces Tree -->
+      <div class="pt-3 border-t border-zinc-800/80">
+        <div class="flex items-center justify-between text-xs text-zinc-400 px-2 mb-2 font-medium">
+          <span>Workspaces</span>
+          <div class="flex items-center gap-1.5 text-zinc-500">
+            <button class="hover:text-zinc-300" title="Search Workspaces"><i data-lucide="search" class="w-3.5 h-3.5"></i></button>
+            <button class="hover:text-zinc-300" title="New Workspace"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+            <button class="hover:text-zinc-300" title="Collapse"><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <div class="text-xs text-zinc-300 px-2 py-1.5 flex items-center gap-2 font-semibold">
+            <i data-lucide="folder" class="w-3.5 h-3.5 text-blue-400"></i>
+            <span>Default workspace</span>
+          </div>
+
+          <!-- Active Session Pill -->
+          <div class="dsh-nav-item active justify-between pl-6 py-2">
+            <span class="truncate text-xs" id="sidebar-active-session-label">Coding assistant capabilities</span>
+            <span class="text-[10px] text-zinc-500 font-mono">11min</span>
+          </div>
+
+          <div class="dsh-nav-item pl-6 py-1.5 justify-between text-zinc-400 hover:text-zinc-200">
+            <span class="truncate text-xs">Autonomous PC & Internet</span>
+            <span class="text-[10px] text-zinc-600 font-mono">1h</span>
+          </div>
+          
+          <div class="dsh-nav-item pl-6 py-1.5 justify-between text-zinc-400 hover:text-zinc-200">
+            <span class="truncate text-xs">Job Portals Automation</span>
+            <span class="text-[10px] text-zinc-600 font-mono">2h</span>
+          </div>
         </div>
       </div>
 
-      <!-- Status & Utility Pills (Right / Center-Right) -->
-      <div class="flex items-center flex-wrap gap-2.5">
-        
-        <!-- PC Control Online Status -->
-        <div class="nav-pill" title="Live Agent Daemon Status">
-          <span class="relative flex h-2 w-2">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+    </div>
+
+    <!-- Bottom Notification & Profile Section -->
+    <div class="p-3 border-t border-zinc-800 space-y-3 bg-[#151517]">
+      
+      <!-- Bonus Credited Alert Card (Matching Screenshot) -->
+      <div id="bonus-credited-card" class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs relative shadow-lg">
+        <button id="btn-close-bonus" class="absolute top-2 right-2 text-zinc-500 hover:text-zinc-300">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+        </button>
+        <div class="flex items-center gap-1.5 font-bold text-zinc-200 mb-1">
+          <i data-lucide="bell" class="w-3.5 h-3.5 text-blue-400"></i>
+          <span>Bonus credited</span>
+        </div>
+        <p class="text-[11px] text-zinc-400 leading-relaxed pr-2">
+          You've received a CNY 6 bonus credit, valid until October 31, 2026, 1:02 PM Beijing Time.
+        </p>
+      </div>
+
+      <!-- User Profile Row -->
+      <div class="flex items-center justify-between pt-1 px-1">
+        <div class="flex items-center gap-2.5 overflow-hidden">
+          <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-rose-600 to-amber-600 flex items-center justify-center text-[10px] font-bold text-white shadow">
+            JK
+          </div>
+          <span class="text-xs font-medium text-zinc-200 truncate max-w-[140px]" title="Jignesh jayantilal Kariya">
+            Jignesh jayantilal Kariya
           </span>
-          <span id="system-status-text" class="text-emerald-400 font-semibold">PC Control Online</span>
         </div>
-
-        <!-- Unrestricted Mode & Background AI Pill -->
-        <div class="nav-pill border-emerald-500/40 bg-emerald-500/10 text-emerald-300" title="Full Unrestricted Access: Active (No Permissions Block & Full Login Access)">
-          <span class="text-xs">⚡</span>
-          <span>Access: <strong id="unrestricted-badge-text" class="font-bold text-emerald-400">Unrestricted Full Access</strong></span>
-        </div>
-
-        <!-- AI 2026 Wetware & Superintelligence Hub Pill -->
-        <a href="/wetware" target="_blank" class="nav-pill border-cyan-500/40 hover:border-cyan-300 bg-cyan-500/10 text-cyan-300 shadow-glow-cyan" title="Open AI 2026: Biological Wetware & Superintelligence Hub">
-          <span class="text-base">🧬</span>
-          <span class="font-bold">AI 2026 Wetware Hub</span>
-        </a>
-
-        <!-- Dolphin-2.9-Llama3 AI Engine Status Pill -->
-        <button id="btn-dolphin-pill" class="nav-pill border-cyan-500/30 hover:border-cyan-400" title="Dolphin-2.9-Llama3 Compulsory Model Status & 1-Click Auto Setup">
-          <span class="text-cyan-400">🐬</span>
-          <span>Dolphin AI: <strong id="dolphin-status-text" class="font-semibold text-cyan-400">Checking...</strong></span>
-        </button>
-
-        <!-- LiveKit WebRTC Voice & Vision Pill -->
-        <button id="btn-livekit-pill" class="nav-pill border-purple-500/30 hover:border-purple-400" title="LiveKit WebRTC Real-Time Voice & Screen Vision">
-          <i data-lucide="mic" class="w-4 h-4 text-purple-400"></i>
-          <span>LiveKit: <strong id="livekit-status-badge" class="font-semibold text-purple-400">Voice Ready</strong></span>
-        </button>
-
-        <!-- Playwright CRM & Form Automation Studio Pill -->
-        <button id="btn-playwright-pill" class="nav-pill border-emerald-500/30 hover:border-emerald-400" title="Playwright CRM Recorder & Batch Form Automation">
-          <i data-lucide="play" class="w-4 h-4 text-emerald-400"></i>
-          <span>CRM Studio (<strong id="playwright-status-badge" class="font-semibold text-emerald-400">Ready</strong>)</span>
-        </button>
-
-        <!-- Job Portals & CV Automation Studio Pill -->
-        <button id="btn-jobportals-pill" class="nav-pill border-cyan-500/30 hover:border-cyan-400" title="10 Job Portals Registration & CV Upload Studio">
-          <i data-lucide="briefcase" class="w-4 h-4 text-cyan-400"></i>
-          <span>Job Portals (<strong id="jobportals-status-badge" class="font-semibold text-cyan-400">10 Ready</strong>)</span>
-        </button>
-
-        <!-- Project Browser Button -->
-        <button id="btn-project-browser" class="nav-pill" title="Open Desktop Chrome Browser Session">
-          <i data-lucide="globe" class="w-4 h-4 text-cyan-400"></i>
-          <span>Project Browser</span>
-        </button>
-
-        <!-- Connections Diagnostic Pill -->
-        <button id="btn-connections-pill" class="nav-pill" title="Check All Connections (Double-Pass Diagnostic)">
-          <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>
-          <span>Connections (<strong id="connections-badge" class="font-semibold text-emerald-400">Double Check</strong>)</span>
-        </button>
-
-        <!-- Memory Telemetry Badge -->
-        <button id="btn-memory-pill" class="nav-pill" title="View & Download agent_memory.md">
-          <i data-lucide="brain" class="w-4 h-4 text-pink-400"></i>
-          <span>Memory (<strong id="memory-size-badge" class="font-semibold text-white">0.02 MB</strong>)</span>
-        </button>
-
-        <!-- Metrics Button -->
-        <button id="btn-metrics-pill" class="nav-pill" title="Telemetry & Tool Usage Metrics">
-          <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i>
-          <span>Metrics</span>
-        </button>
-
-        <!-- Settings Button -->
-        <button id="btn-settings-pill" class="nav-pill" title="Configure AI Model Providers & Keys">
-          <i data-lucide="settings" class="w-4 h-4 text-blue-400"></i>
-          <span>Settings</span>
-        </button>
-
-        <!-- Language Selector Dropdown -->
-        <div class="relative inline-block text-left" id="lang-selector-group">
-          <button id="btn-lang-dropdown" class="nav-pill" title="Select Any Language (Google Translate)">
-            <i data-lucide="languages" class="w-4 h-4 text-indigo-400"></i>
-            <span id="active-lang-label" class="font-medium text-white">English</span>
-            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+        
+        <div class="flex items-center gap-1">
+          <button id="btn-theme-toggle" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition" title="Toggle Theme">
+            <i data-lucide="moon" class="w-3.5 h-3.5"></i>
           </button>
-          
-          <div id="lang-dropdown-menu" class="hidden absolute right-0 mt-2 w-72 glass-panel border border-white/10 shadow-2xl z-50 flex-col overflow-hidden">
-            <div class="p-2.5 border-b border-white/10 bg-slate-900/60 flex items-center justify-between">
-              <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                <i data-lucide="globe" class="w-3.5 h-3.5 text-cyan-400"></i> Google Translate
-              </span>
-              <span id="lang-count-badge" class="text-[10px] bg-blue-500/20 text-blue-300 font-semibold px-2 py-0.5 rounded-full">133+ Languages</span>
-            </div>
-            <div class="p-2 border-b border-white/10 bg-slate-950/70">
-              <input type="text" id="lang-search-box" placeholder="Search language (Gujarati, Hindi...)" 
-                class="w-full bg-slate-900/90 text-xs px-2.5 py-1.5 rounded-lg border border-white/10 focus:border-cyan-500 focus:outline-none text-white">
-            </div>
-            <div class="max-h-60 overflow-y-auto divide-y divide-white/5 py-1" id="lang-items-container">
-              <!-- Dynamically populated -->
-            </div>
+          <button id="btn-settings-pill" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition" title="Helper-AI Settings">
+            <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </aside>
+
+  <!-- ================= 2. MAIN WORKSPACE / CHAT CONTAINER ================= -->
+  <main class="dsh-main-container">
+    
+    <!-- Topbar Navigation -->
+    <header class="dsh-topbar">
+      
+      <!-- Left: Session Title & Mode Badge -->
+      <div class="flex items-center gap-3">
+        <button id="btn-sidebar-reopen" class="hidden p-1.5 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 mr-1" title="Open Sidebar">
+          <i data-lucide="panel-left-open" class="w-4 h-4"></i>
+        </button>
+
+        <h1 class="text-sm font-semibold text-white tracking-tight" id="topbar-session-title">
+          Helper-AI Autonomous Workspace
+        </h1>
+
+        <!-- Mode Badge (Standard / Unrestricted) -->
+        <button id="btn-toggle-safemode" class="flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-800/80 text-[11px] text-zinc-300 border border-zinc-700/60 hover:border-zinc-500 transition" title="Toggle Safe Mode / Unrestricted Full Access">
+          <span id="safe-mode-icon">🛡️</span>
+          <span id="safe-mode-state-text">Standard mode</span>
+        </button>
+      </div>
+
+      <!-- Center: Navigation Tabs (Chat / Trajectory) -->
+      <div class="flex items-center gap-1">
+        <button id="tab-chat" class="dsh-tab active">
+          Chat
+        </button>
+        <button id="tab-trajectory" class="dsh-tab">
+          Trajectory
+        </button>
+      </div>
+
+      <!-- Right: Action Pills & More Menu -->
+      <div class="flex items-center gap-2">
+        
+        <!-- Workspace Folder Indicator -->
+        <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800/60 border border-zinc-700/60 text-xs text-zinc-300">
+          <i data-lucide="folder" class="w-3.5 h-3.5 text-blue-400"></i>
+          <span class="max-w-[120px] truncate">Default workspace</span>
+          <i data-lucide="chevron-down" class="w-3 h-3 text-zinc-500"></i>
+        </div>
+
+        <!-- CRM Studio Shortcut -->
+        <button id="btn-playwright-pill" class="p-1.5 rounded-lg bg-zinc-800/60 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 text-xs flex items-center gap-1" title="Playwright CRM Studio">
+          <i data-lucide="play-circle" class="w-3.5 h-3.5 text-emerald-400"></i>
+          <span class="hidden md:inline">CRM Studio</span>
+        </button>
+
+        <!-- Memory Size Pill -->
+        <button id="btn-memory-pill" class="p-1.5 rounded-lg bg-zinc-800/60 hover:bg-zinc-800 border border-zinc-700/60 text-zinc-300 text-xs flex items-center gap-1" title="Agent Memory File">
+          <i data-lucide="brain" class="w-3.5 h-3.5 text-pink-400"></i>
+          <span id="memory-size-badge" class="font-mono text-[11px]">0.02 MB</span>
+        </button>
+
+        <!-- More Options Menu Button -->
+        <div class="relative">
+          <button id="btn-more-menu" class="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition" title="More Options">
+            <i data-lucide="more-horizontal" class="w-4 h-4"></i>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div id="more-dropdown-menu" class="hidden absolute right-0 mt-2 w-56 bg-[#1e1e22] border border-[#2e2e34] rounded-xl shadow-2xl z-50 py-1.5 text-xs text-zinc-300">
+            <button id="btn-project-browser" class="w-full px-3.5 py-2 text-left hover:bg-zinc-800/80 flex items-center gap-2">
+              <i data-lucide="globe" class="w-4 h-4 text-cyan-400"></i> Open Project Chrome Browser
+            </button>
+            <button id="btn-metrics-pill" class="w-full px-3.5 py-2 text-left hover:bg-zinc-800/80 flex items-center gap-2">
+              <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i> Telemetry & Metrics
+            </button>
+            <button id="btn-livekit-pill" class="w-full px-3.5 py-2 text-left hover:bg-zinc-800/80 flex items-center gap-2">
+              <i data-lucide="mic" class="w-4 h-4 text-purple-400"></i> LiveKit Voice Agent
+            </button>
+            <button id="btn-jobportals-pill" class="w-full px-3.5 py-2 text-left hover:bg-zinc-800/80 flex items-center gap-2">
+              <i data-lucide="briefcase" class="w-4 h-4 text-cyan-400"></i> Job Portals Studio
+            </button>
+            <button id="btn-connections-pill" class="w-full px-3.5 py-2 text-left hover:bg-zinc-800/80 flex items-center gap-2">
+              <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i> Connections Check
+            </button>
+            <div class="my-1 border-t border-zinc-800"></div>
+            <button id="btn-lang-dropdown" class="w-full px-3.5 py-2 text-left hover:bg-zinc-800/80 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i data-lucide="languages" class="w-4 h-4 text-indigo-400"></i>
+                <span id="active-lang-label">English</span>
+              </div>
+              <span class="text-[10px] text-zinc-500">133+ Langs</span>
+            </button>
           </div>
         </div>
 
       </div>
+
     </header>
 
-    <!-- B. Central Goal Execution Card (<main>) -->
-    <main class="space-y-6">
-      <section class="glass-panel p-6 sm:p-7 relative overflow-hidden" id="goal-container">
-        
-        <!-- Ambient top inner highlight line -->
-        <div class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent"></div>
+    <!-- ================= CHAT VIEW ================= -->
+    <div id="view-chat" class="dsh-chat-stream">
+      <div class="max-w-3xl w-full mx-auto space-y-6">
 
-        <!-- Card Header -->
-        <div class="flex items-center justify-between gap-4 mb-4">
-          <label for="goal-input" class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-            <span>🎯</span>
-            <span id="label-goal-title">What goal would you like Helper to achieve?</span>
-          </label>
-
-          <div class="flex items-center gap-2">
-            <!-- Hidden file input for screenshots -->
-            <input type="file" id="input-file-screenshot" accept="image/*" class="hidden">
-            
-            <!-- Paste Image Hint / Click Button -->
-            <button id="btn-paste-screenshot-hint" type="button" class="nav-pill hover:border-cyan-500/50 hover:text-cyan-400 text-xs" title="Paste screenshot (Ctrl+V) or click to browse image">
-              <i data-lucide="image" class="w-3.5 h-3.5 text-cyan-400"></i>
-              <span>Paste Screenshot (Ctrl+V)</span>
-            </button>
-
-            <!-- Voice Input Pill Button -->
-            <button id="btn-voice-input" class="nav-pill hover:border-red-500/50 hover:text-red-400" title="Speak your goal (Voice-to-Text)">
-              <i data-lucide="mic" class="w-4 h-4 text-red-400" id="mic-icon"></i>
-              <span id="voice-btn-label">Voice Input</span>
-            </button>
+        <!-- 1. Default User Question Bubble (Matching Screenshot) -->
+        <div class="dsh-user-bubble">
+          what you can do for me
+          <div class="flex items-center justify-end gap-1.5 text-[10px] text-zinc-500 mt-1">
+            <span>10:36</span>
+            <button class="hover:text-zinc-300" title="Copy text"><i data-lucide="copy" class="w-3 h-3"></i></button>
           </div>
         </div>
 
-        <!-- Main Prompt Textarea -->
-        <div class="relative">
-          <textarea id="goal-input" 
-            placeholder="Example: List my Google blogs, or paste screenshot (Ctrl+V) to analyze screen errors and diagnose issues..."
-            class="prompt-textarea"
-            rows="3"></textarea>
-          <div class="absolute right-3 bottom-3 text-[11px] text-slate-500 font-mono pointer-events-none hidden sm:block">
-            Press <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-white/10">Ctrl + Enter</kbd> to run
-          </div>
-        </div>
-
-        <!-- Attached Screenshot / Image Container (Hidden by default, shown on Ctrl+V or file drop) -->
-        <div id="attached-image-container" class="hidden mt-3 p-3 bg-slate-900/95 rounded-xl border border-cyan-500/30 flex items-center justify-between gap-4 transition-all shadow-lg shadow-cyan-500/5">
-          <div class="flex items-center gap-3">
-            <div class="relative w-14 h-14 rounded-lg overflow-hidden border border-cyan-500/30 bg-slate-950 flex-shrink-0 group">
-              <img id="attached-image-preview" src="" alt="Pasted Screenshot" class="w-full h-full object-cover">
-            </div>
-            <div>
-              <div class="text-xs font-bold text-white flex items-center gap-1.5">
-                <i data-lucide="image" class="w-3.5 h-3.5 text-cyan-400"></i>
-                <span id="attached-image-title">Pasted Screenshot Attached</span>
-                <span id="attached-image-size" class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono">142 KB</span>
-              </div>
-              <p class="text-[11px] text-slate-400 mt-0.5">
-                📸 Ready for Multimodal Vision. Helper-AI will inspect and explain what's on screen.
-              </p>
-            </div>
-          </div>
-          <button id="btn-remove-attached-image" type="button" class="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs transition" title="Remove screenshot">
-            <i data-lucide="trash-2" class="w-4 h-4"></i>
-          </button>
-        </div>
-
-        <!-- Quick Ideas Pill Bar -->
-        <div class="mt-4 flex flex-wrap items-center gap-2 pt-1">
-          <span class="text-xs font-semibold text-slate-400 flex items-center gap-1 mr-1">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400"></i>
-            <span id="label-quick-ideas">Quick Ideas:</span>
-          </span>
-
-          <button class="idea-chip" data-prompt="give me the list of my google blogs">
-            <span>🌐</span> <span>List My Google Blogs</span>
-          </button>
-          <button class="idea-chip" data-prompt="Check my PC health, CPU, RAM and disk usage">
-            <span>💻</span> <span>PC Health Diagnostic</span>
-          </button>
-          <button class="idea-chip" data-prompt="Search the web for top 5 AI agent frameworks and write summary to Desktop">
-            <span>🔍</span> <span>Web Research Report</span>
-          </button>
-          <button class="idea-chip" data-prompt="List the largest files in my Downloads folder">
-            <span>📁</span> <span>Inspect Downloads</span>
-          </button>
-          <button class="idea-chip" data-prompt="Open PowerShell, test git version and write system info to Desktop/sysinfo.txt">
-            <span>📄</span> <span>System Info to Desktop</span>
-          </button>
-          <button class="idea-chip border-cyan-500/40 hover:border-cyan-400 bg-cyan-500/10 text-cyan-300" data-prompt="now 10 website job releated so create my account on popular job portel website i want freelancer any job work from home after internship in my download folder jignesh cv file is available create 10 account and upload cv in each site">
-            <span>💼</span> <span>10 Job Portals & CV Upload (Jignesh CV)</span>
-          </button>
-        </div>
-
-        <!-- Card Action Footer -->
-        <div class="mt-6 pt-5 border-t border-white/[0.08] flex flex-wrap items-center justify-between gap-4">
+        <!-- 2. Default Assistant Answer Block (Matching Screenshot) -->
+        <div class="dsh-assistant-block">
           
-          <!-- Left Status Badges -->
-          <div class="flex items-center flex-wrap gap-3 text-xs">
-            
-            <!-- Safe Mode Badge -->
-            <button id="btn-toggle-safemode" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-white/10 hover:border-slate-600 transition" title="Click to toggle Safe Mode">
-              <span id="safe-mode-icon">🛡️</span>
-              <span class="text-slate-400">Safe Mode:</span>
-              <strong id="safe-mode-state-text" class="text-slate-200">Off (Full Autonomous)</strong>
-            </button>
-
-            <!-- Provider Badge -->
-            <button id="btn-quick-provider" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900/80 border border-white/10 hover:border-blue-500/40 transition" title="Active Model Engine">
-              <span>🤖</span>
-              <span class="text-slate-400">Provider:</span>
-              <strong id="provider-state-text" class="text-blue-400 font-semibold uppercase">GEMINI</strong>
-            </button>
-
+          <!-- Collapsible Completed Badge -->
+          <div class="dsh-completed-badge" id="btn-toggle-initial-steps">
+            <span>Completed in 13s</span>
+            <i data-lucide="chevron-down" class="w-3 h-3"></i>
           </div>
 
-          <!-- Right Action CTA Buttons -->
-          <div class="flex items-center gap-3">
-            <button id="btn-stop-agent" class="hidden px-4 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-sm border border-red-500/30 transition">
-              <i data-lucide="square" class="w-4 h-4 inline mr-1 fill-red-400"></i> Stop Agent
-            </button>
+          <!-- Assistant Content -->
+          <div class="dsh-assistant-content space-y-4">
+            <p>
+              I'm <strong class="text-white font-bold">Helper-AI</strong>, an autonomous PC and Internet agent running in this workspace (<code>E:\ai agent</code>). Here's what I can actually do for you:
+            </p>
 
-            <button id="btn-execute-goal" class="btn-execute">
-              <i data-lucide="rocket" class="w-4 h-4"></i>
-              <span id="label-execute-btn">Execute Goal</span>
-            </button>
+            <div>
+              <h3 class="text-sm font-bold text-white">Write & fix code</h3>
+              <ul class="text-xs text-zinc-300 mt-1">
+                <li>Build features, scaffold projects, refactor, debug, write tests, explain unfamiliar code</li>
+                <li>Work across languages/stacks (JS/TS, Python, C#/.NET, Go, Rust, infra/config, etc.)</li>
+                <li>Read, search, and edit files in this workspace; run builds, tests, and CLIs; inspect failures and iterate until green</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-sm font-bold text-white">Investigate & report</h3>
+              <ul class="text-xs text-zinc-300 mt-1">
+                <li>Trace bugs through a codebase, review a diff or PR for correctness/security issues</li>
+                <li>Research on the web and summarize with cited sources</li>
+                <li>Analyze data or logs and produce charts/tables/documents</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-sm font-bold text-white">Produce deliverables</h3>
+              <ul class="text-xs text-zinc-300 mt-1">
+                <li>Automate desktop tasks, browser interactions, web form submissions, and terminal operations</li>
+                <li>Execute multi-step autonomous workflows with persistent self-healing memory</li>
+              </ul>
+            </div>
           </div>
 
         </div>
-      </section>
 
-      <!-- C. Live Execution & Output Drawer (Expandable Below Goal Card) -->
-      <section id="execution-drawer" class="hidden glass-panel p-6 animate-drawer-in space-y-6">
-        
-        <!-- Drawer Header with Step Stepper -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
-          <div class="flex items-center gap-2.5">
-            <span class="relative flex h-3 w-3">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-3 w-3 bg-cyan-500"></span>
+        <!-- Dynamic Live Messages Container -->
+        <div id="chat-messages-container" class="space-y-6"></div>
+
+        <!-- Final Result Card (Hidden until complete) -->
+        <div id="result-container" class="hidden p-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 space-y-3">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex items-center gap-2 text-emerald-400 font-bold text-sm">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+              <span id="result-heading">Mission Accomplished</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button id="btn-speak-result" class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-xs text-emerald-300 hover:text-white flex items-center gap-1" title="Read Aloud via TTS Voice">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5"></i> Speak
+              </button>
+              <button id="btn-export-markdown" class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-xs text-blue-300 hover:text-white flex items-center gap-1" title="Export Markdown">
+                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Export MD
+              </button>
+              <button id="btn-export-json" class="p-1.5 rounded-lg bg-zinc-900 border border-zinc-700 text-xs text-indigo-300 hover:text-white flex items-center gap-1" title="Export JSON">
+                <i data-lucide="code" class="w-3.5 h-3.5"></i> Export JSON
+              </button>
+            </div>
+          </div>
+
+          <div id="result-body-text" class="text-xs text-zinc-200 leading-relaxed font-mono whitespace-pre-wrap bg-zinc-950/70 p-3.5 rounded-xl border border-zinc-800 max-h-80 overflow-y-auto">
+            Execution result will appear here.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Floating Scroll Bottom Button -->
+      <button id="btn-scroll-bottom" class="dsh-scroll-bottom-btn" title="Scroll to bottom">
+        <i data-lucide="chevron-down" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- ================= TRAJECTORY VIEW ================= -->
+    <div id="view-trajectory" class="hidden flex-1 overflow-y-auto p-6 max-w-4xl mx-auto w-full space-y-6">
+      
+      <!-- Stepper Status Header -->
+      <div class="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-zinc-800">
+          <div class="flex items-center gap-2">
+            <span class="relative flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
             </span>
-            <span id="execution-status-label" class="font-bold text-sm sm:text-base text-cyan-300">
-              Helper is executing autonomously...
+            <span id="execution-status-label" class="font-bold text-xs text-blue-400">
+              Agent Ready
             </span>
           </div>
 
-          <div class="text-xs font-mono font-semibold text-slate-400 px-3 py-1 rounded-full bg-slate-900 border border-white/10 w-fit">
-            <span id="step-counter-label">Step 1 of 50</span>
-          </div>
+          <span id="step-counter-label" class="text-[11px] font-mono px-2.5 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">
+            Step 1 of 50
+          </span>
         </div>
 
         <!-- 4-Phase Stepper Pipeline -->
-        <div class="stepper-container px-2 py-1">
+        <div class="stepper-container px-2">
           <div class="step-node active" id="step-node-1">
-            <div class="step-circle"><i data-lucide="search" class="w-4 h-4"></i></div>
+            <div class="step-circle"><i data-lucide="search" class="w-3.5 h-3.5"></i></div>
             <span class="step-label">Researching</span>
           </div>
           <div class="stepper-line" id="step-line-1"></div>
 
           <div class="step-node" id="step-node-2">
-            <div class="step-circle"><i data-lucide="cpu" class="w-4 h-4"></i></div>
+            <div class="step-circle"><i data-lucide="cpu" class="w-3.5 h-3.5"></i></div>
             <span class="step-label">Planning</span>
           </div>
           <div class="stepper-line" id="step-line-2"></div>
 
           <div class="step-node" id="step-node-3">
-            <div class="step-circle"><i data-lucide="terminal" class="w-4 h-4"></i></div>
+            <div class="step-circle"><i data-lucide="terminal" class="w-3.5 h-3.5"></i></div>
             <span class="step-label">Executing</span>
           </div>
           <div class="stepper-line" id="step-line-3"></div>
 
           <div class="step-node" id="step-node-4">
-            <div class="step-circle"><i data-lucide="check-circle" class="w-4 h-4"></i></div>
+            <div class="step-circle"><i data-lucide="check-circle" class="w-3.5 h-3.5"></i></div>
             <span class="step-label">Verifying</span>
           </div>
         </div>
+      </div>
 
-        <!-- Live Terminal Stream Box -->
-        <div class="space-y-2">
-          <div class="flex items-center justify-between text-xs text-slate-400 px-1">
-            <span class="flex items-center gap-1.5 font-mono">
-              <i data-lucide="terminal" class="w-3.5 h-3.5 text-cyan-400"></i> Real-time Execution Feed
-            </span>
-            <button id="btn-copy-terminal" class="hover:text-white transition flex items-center gap-1">
-              <i data-lucide="copy" class="w-3 h-3"></i> Copy Output
+      <!-- Live Terminal Stream Box -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs text-zinc-400 px-1">
+          <span class="flex items-center gap-1.5 font-mono text-[11px]">
+            <i data-lucide="terminal" class="w-3.5 h-3.5 text-blue-400"></i> Real-time Execution Feed
+          </span>
+          <button id="btn-copy-terminal" class="hover:text-white transition flex items-center gap-1 text-[11px]">
+            <i data-lucide="copy" class="w-3 h-3"></i> Copy Output
+          </button>
+        </div>
+
+        <div class="terminal-box" id="terminal-stream">
+          <div class="terminal-line text-zinc-500">
+            <span class="terminal-time">[System]</span> Initializing DeepSeek Harness Agent Runtime...
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= 3. BOTTOM FLOATING CHAT INPUT BAR ================= -->
+    <div class="w-full px-4 pb-3 pt-1">
+      <div class="dsh-input-box">
+        
+        <!-- Attached Screenshot Thumbnail Container -->
+        <div id="attached-image-container" class="hidden mb-2.5 p-2 bg-zinc-900 rounded-xl border border-blue-500/30 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <img id="attached-image-preview" src="" alt="Screenshot" class="w-10 h-10 object-cover rounded-lg border border-zinc-700">
+            <div>
+              <span id="attached-image-title" class="text-xs font-bold text-white block">Pasted Screenshot Attached</span>
+              <span id="attached-image-size" class="text-[10px] text-blue-400 font-mono">142 KB</span>
+            </div>
+          </div>
+          <button id="btn-remove-attached-image" class="text-zinc-500 hover:text-red-400 p-1">
+            <i data-lucide="trash-2" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <!-- Multiline Textarea Input -->
+        <textarea id="goal-input" 
+          rows="1"
+          placeholder="Message or run a task, / commands, @ files or sessions"
+          class="dsh-textarea"></textarea>
+
+        <!-- Hidden screenshot file input -->
+        <input type="file" id="input-file-screenshot" accept="image/*" class="hidden">
+
+        <!-- Bottom Toolbar Inside Input Card -->
+        <div class="dsh-input-toolbar">
+          
+          <!-- Left Controls (+ Attachment, Workspace Mode) -->
+          <div class="flex items-center gap-1.5">
+            <button id="btn-paste-screenshot-hint" type="button" class="dsh-tool-btn" title="Add attachment or paste screenshot (Ctrl+V)">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+            </button>
+
+            <button id="btn-workspace-mode" type="button" class="dsh-tool-btn" title="Workspace Permission Mode">
+              <i data-lucide="shield" class="w-3.5 h-3.5 text-zinc-400"></i>
+              <span>Workspace Write</span>
+              <i data-lucide="chevron-down" class="w-3 h-3 text-zinc-500"></i>
             </button>
           </div>
 
-          <div class="terminal-box" id="terminal-stream">
-            <div class="terminal-line text-slate-500">
-              <span class="terminal-time">[System]</span> Initializing autonomous agent environment...
-            </div>
+          <!-- Right Controls (Model Selector, Voice Mic, Stop/Execute Button) -->
+          <div class="flex items-center gap-2">
+            
+            <!-- Model Selector Dropdown Button -->
+            <button id="btn-model-selector-pill" type="button" class="dsh-tool-btn" title="Select AI Model">
+              <span id="provider-state-text" class="text-zinc-300 font-medium">DeepSeek-V4.1-Flash</span>
+              <span class="text-[9px] bg-blue-500/20 text-blue-400 px-1 py-0.2 rounded font-mono font-bold">1017</span>
+              <span class="text-[10px] text-zinc-500">High</span>
+              <i data-lucide="chevron-down" class="w-3 h-3 text-zinc-500"></i>
+            </button>
+
+            <!-- Voice Input Button -->
+            <button id="btn-voice-input" type="button" class="p-2 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition" title="Speak your goal (Voice-to-Text)">
+              <i data-lucide="mic" class="w-4 h-4" id="mic-icon"></i>
+            </button>
+
+            <!-- Stop Agent Button (Hidden by default) -->
+            <button id="btn-stop-agent" type="button" class="hidden w-8 h-8 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center transition shadow" title="Stop Agent">
+              <i data-lucide="square" class="w-3.5 h-3.5 fill-white"></i>
+            </button>
+
+            <!-- Send / Execute Button (Circular Blue Arrow Up) -->
+            <button id="btn-execute-goal" type="button" class="dsh-send-btn" title="Send message or execute goal">
+              <i data-lucide="arrow-up" class="w-4 h-4 stroke-[2.5]"></i>
+            </button>
+
           </div>
+
         </div>
 
-        <!-- Final Comprehensive Result Card -->
-        <div id="result-container" class="hidden p-5 rounded-xl border border-emerald-500/30 bg-emerald-950/20 space-y-4">
-          <div class="flex items-center justify-between gap-4">
-            <div class="flex items-center gap-2 text-emerald-400 font-bold text-base">
-              <i data-lucide="check-circle-2" class="w-5 h-5"></i>
-              <span id="result-heading">Mission Accomplished!</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <button id="btn-speak-result" class="idea-chip hover:border-emerald-400" title="Read Aloud via Edge-TTS Voice">
-                <i data-lucide="volume-2" class="w-3.5 h-3.5 text-emerald-400"></i> Speak
-              </button>
-              <button id="btn-export-markdown" class="idea-chip hover:border-blue-400" title="Download Markdown Report">
-                <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-400"></i> Export MD
-              </button>
-              <button id="btn-export-json" class="idea-chip hover:border-indigo-400" title="Download Full JSON History">
-                <i data-lucide="code" class="w-3.5 h-3.5 text-indigo-400"></i> Export JSON
-              </button>
-            </div>
-          </div>
-
-          <div id="result-body-text" class="text-sm text-slate-200 leading-relaxed font-sans whitespace-pre-wrap bg-slate-950/60 p-4 rounded-lg border border-white/5 font-mono text-xs max-h-72 overflow-y-auto">
-            Execution result will appear here.
-          </div>
-        </div>
-
-      </section>
-    </main>
-
-    <!-- D. Persistent Minimal Footer -->
-    <footer class="mt-auto py-8 text-center border-t border-white/[0.06] text-xs text-slate-400 space-y-4">
-      <div class="flex flex-wrap items-center justify-center gap-2 pt-2">
-        <button class="pro-btn btn-buy-pro" onclick="window.open('https://wa.me/919898048483', '_blank')">⚡ BUY NOW PRO (APPOINTMENT)</button>
-        <button class="pro-btn btn-donate" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScJ7WjuxEXqdoSlUtxN7NQ8UeKpbEAeA9iIO-IXOmBmYzlLHQ/viewform?usp=sharing&ouid=116676179363878319046', '_blank')">🪙 DONATION SYSTEM</button>
-        <button class="pro-btn btn-store" onclick="window.open('https://wa.me/c/919898048483', '_blank')">🛒 OFFICIAL DIGITAL STORE</button>
       </div>
-      <div>Helper-AI • Autonomous PC & Internet Agent • Built for seamless autonomous productivity.</div>
-    </footer>
 
-  </div>
+      <!-- Telemetry Status Bar Under Input (Matching DeepSeek Harness Screenshot) -->
+      <div class="flex items-center justify-center gap-4 text-[11px] text-zinc-500 font-mono pt-2">
+        <span class="flex items-center gap-1">
+          <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+          <span>1 turns 2 steps · 159 tok/s</span>
+        </span>
+        <span>•</span>
+        <span class="flex items-center gap-1">
+          <i data-lucide="database" class="w-3 h-3"></i>
+          <span>26.3k tok · Cache hit 50%</span>
+        </span>
+        <span>•</span>
+        <span class="flex items-center gap-1">
+          <i data-lucide="activity" class="w-3 h-3"></i>
+          <span>1%</span>
+        </span>
+        <span>•</span>
+        <span class="text-emerald-500 flex items-center gap-1">
+          <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+          <span id="system-status-text">PC Control Online</span>
+        </span>
+      </div>
 
-  <!-- ================= MODALS ================= -->
+    </div>
 
-  <!-- 1. Settings Modal -->
+  </main>
+
+  <!-- ================= 4. ALL SYSTEM MODALS ================= -->
+
+  <!-- Settings Modal -->
   <div id="modal-settings" class="modal-backdrop hidden">
     <div class="modal-dialog">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i data-lucide="settings" class="w-5 h-5 text-blue-400"></i> Helper-AI Settings
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-4">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="settings" class="w-4 h-4 text-blue-400"></i> Settings & AI Models
         </h3>
-        <button id="btn-close-settings-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button id="btn-close-settings-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
 
       <div class="space-y-4 text-xs">
         <div>
-          <label class="block font-semibold text-slate-300 mb-1">AI Model Provider</label>
-          <select id="modal-select-provider" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white">
-            <option value="ollama">🐬 Ollama: Dolphin-2.9-Llama3 (Compulsory 100% Offline & Uncensored)</option>
-            <option value="gemini">Google Gemini (Cloud Fast)</option>
+          <label class="block font-semibold text-zinc-300 mb-1">AI Model Provider</label>
+          <select id="modal-select-provider" class="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-white">
+            <option value="anthropic">Anthropic (Claude 3.5 Sonnet / Haiku / Opus)</option>
             <option value="deepseek">DeepSeek (V3 / R1 - Intelligent & Cost-Effective)</option>
+            <option value="ollama">🐬 Ollama: Dolphin-2.9-Llama3 (100% Offline & Uncensored)</option>
+            <option value="gemini">Google Gemini (Cloud Fast)</option>
             <option value="custom">🌍 Universal / Custom AI (Use ANY AI in the World)</option>
             <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
             <option value="groq">Groq (Ultra-fast Llama 3.3)</option>
@@ -432,722 +562,325 @@
           </select>
         </div>
 
-        <div id="group-gemini-key">
-          <label class="block font-semibold text-slate-300 mb-1">Gemini API Key</label>
-          <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+        <div id="group-anthropic-key">
+          <label class="block font-semibold text-zinc-300 mb-1">Anthropic (Claude) API Key</label>
+          <input type="password" id="input-anthropic-key" placeholder="sk-ant-..." class="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-white font-mono">
         </div>
 
         <div id="group-deepseek-key" class="hidden">
-          <label class="block font-semibold text-slate-300 mb-1">DeepSeek API Key</label>
-          <input type="password" id="input-deepseek-key" placeholder="sk-..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          <label class="block font-semibold text-zinc-300 mb-1">DeepSeek API Key</label>
+          <input type="password" id="input-deepseek-key" placeholder="sk-..." class="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-white font-mono">
         </div>
 
-        <!-- Universal / Custom AI (Any AI in the World) -->
-        <div id="group-custom-ai" class="hidden space-y-3 p-3 bg-slate-900/60 rounded-xl border border-blue-500/20">
-          <div class="flex items-center justify-between pb-1 border-b border-white/5">
-            <span class="font-bold text-blue-400 flex items-center gap-1.5">
-              <i data-lucide="globe" class="w-3.5 h-3.5"></i> Connect ANY AI in the World
-            </span>
-            <span class="text-[10px] text-slate-400">OpenAI, Anthropic & Generic REST</span>
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">AI Name / Provider</label>
-            <input type="text" id="input-custom-name" placeholder="e.g. OpenRouter / Claude / Mistral / Grok / Local vLLM" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">API Endpoint / Base URL</label>
-            <input type="text" id="input-custom-url" placeholder="e.g. https://openrouter.ai/api/v1 or https://api.anthropic.com/v1" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">API Key / Bearer Token <span class="text-slate-400 font-normal">(Leave blank if local)</span></label>
-            <input type="password" id="input-custom-key" placeholder="sk-..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-300 mb-1">Model Name / ID</label>
-            <input type="text" id="input-custom-model" placeholder="e.g. anthropic/claude-3.5-sonnet, mistral-large-latest, grok-2" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-400 mb-1 text-[11px]">1-Click Quick Presets:</label>
-            <div class="flex flex-wrap gap-1.5" id="custom-presets-container">
-              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="OpenRouter" data-url="https://openrouter.ai/api/v1" data-model="anthropic/claude-3.5-sonnet">🟣 OpenRouter</button>
-              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Anthropic Claude" data-url="https://api.anthropic.com/v1" data-model="claude-3-5-sonnet-20241022">🟠 Claude</button>
-              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Mistral AI" data-url="https://api.mistral.ai/v1" data-model="mistral-large-latest">🔴 Mistral</button>
-              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="xAI Grok" data-url="https://api.x.ai/v1" data-model="grok-beta">⚡ Grok</button>
-              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Local LM Studio" data-url="http://localhost:1234/v1" data-model="default">🖥️ LM Studio</button>
-              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Local vLLM" data-url="http://localhost:8000/v1" data-model="default">🚀 Local vLLM</button>
-              <button type="button" class="btn-preset-chip px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-name="Perplexity" data-url="https://api.perplexity.ai" data-model="llama-3.1-sonar-large-128k-online">🌐 Perplexity</button>
-            </div>
-          </div>
+        <div id="group-gemini-key" class="hidden">
+          <label class="block font-semibold text-zinc-300 mb-1">Gemini API Key</label>
+          <input type="password" id="input-gemini-key" placeholder="AIzaSy..." class="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-white font-mono">
         </div>
 
         <div id="group-openai-key" class="hidden">
-          <label class="block font-semibold text-slate-300 mb-1">OpenAI API Key</label>
-          <input type="password" id="input-openai-key" placeholder="sk-..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          <label class="block font-semibold text-zinc-300 mb-1">OpenAI API Key</label>
+          <input type="password" id="input-openai-key" placeholder="sk-..." class="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-white font-mono">
         </div>
 
         <div id="group-groq-key" class="hidden">
-          <label class="block font-semibold text-slate-300 mb-1">Groq API Key</label>
-          <input type="password" id="input-groq-key" placeholder="gsk_..." class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+          <label class="block font-semibold text-zinc-300 mb-1">Groq API Key</label>
+          <input type="password" id="input-groq-key" placeholder="gsk_..." class="w-full bg-zinc-900 border border-zinc-700 rounded-lg p-2.5 text-white font-mono">
         </div>
 
-        <div id="group-ollama-config" class="hidden space-y-3 p-3 bg-slate-900/60 rounded-xl border border-cyan-500/20">
-          <div class="flex items-center justify-between pb-1 border-b border-white/5">
-            <span class="font-bold text-cyan-400 flex items-center gap-1.5">
-              <span>🐬</span> Ollama Local AI Engine
+        <!-- Universal / Custom AI -->
+        <div id="group-custom-ai" class="hidden space-y-3 p-3 bg-zinc-900/80 rounded-xl border border-blue-500/20">
+          <div class="flex items-center justify-between pb-1 border-b border-zinc-800">
+            <span class="font-bold text-blue-400 flex items-center gap-1.5">
+              <i data-lucide="globe" class="w-3.5 h-3.5"></i> Connect ANY AI in the World
             </span>
-            <span id="ollama-engine-status-tag" class="text-[10px] bg-cyan-500/20 text-cyan-300 font-semibold px-2 py-0.5 rounded-full">Port 11434</span>
+            <span class="text-[10px] text-zinc-400">OpenAI-Compatible REST</span>
           </div>
-
           <div>
-            <label class="block font-semibold text-slate-300 mb-1">Ollama Model</label>
-            <input type="text" id="input-ollama-model" placeholder="dolphin-llama3" value="dolphin-llama3" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2.5 text-white font-mono">
+            <label class="block text-zinc-300 mb-1">Provider Nickname</label>
+            <input type="text" id="input-custom-name" placeholder="e.g. MyLocalLM / vLLM / OpenRouter" class="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-white">
           </div>
-
           <div>
-            <label class="block font-semibold text-slate-400 mb-1 text-[11px]">Quick Model Presets:</label>
-            <div class="flex flex-wrap gap-1.5" id="ollama-presets-container">
-              <button type="button" class="btn-ollama-chip px-2.5 py-1 rounded bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-[10px] font-bold border border-cyan-500/30 cursor-pointer" data-model="dolphin-llama3">🐬 Dolphin-2.9-Llama3 (Compulsory)</button>
-              <button type="button" class="btn-ollama-chip px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-model="llama3.2:3b">🦙 Llama 3.2 3B</button>
-              <button type="button" class="btn-ollama-chip px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-model="qwen2.5-coder:1.5b">💻 Qwen 2.5 Coder 1.5B</button>
-              <button type="button" class="btn-ollama-chip px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] border border-white/10 cursor-pointer" data-model="qwen2.5:1.5b">⚡ Qwen 2.5 1.5B</button>
-            </div>
+            <label class="block text-zinc-300 mb-1">Base URL (API Endpoint)</label>
+            <input type="text" id="input-custom-url" placeholder="https://api.together.xyz/v1 or http://localhost:8080/v1" class="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-white font-mono">
           </div>
-
-          <div class="pt-1">
-            <button type="button" id="btn-trigger-ollama-setup" class="w-full py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 transition">
-              <span>⚡</span> <span>Auto-Install Ollama & Pull Dolphin-2.9-Llama3 (Zero-Touch)</span>
-            </button>
-            <p id="ollama-setup-feedback" class="text-[10px] text-slate-400 text-center mt-1 hidden"></p>
+          <div>
+            <label class="block text-zinc-300 mb-1">Model Name / Identifier</label>
+            <input type="text" id="input-custom-model" placeholder="e.g. meta-llama/Llama-3-70b-chat-hf" class="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-white font-mono">
+          </div>
+          <div>
+            <label class="block text-zinc-300 mb-1">API Key (if required)</label>
+            <input type="password" id="input-custom-key" placeholder="sk-..." class="w-full bg-zinc-950 border border-zinc-700 rounded p-2 text-white font-mono">
           </div>
         </div>
 
-        <!-- Unrestricted Full Autonomous Access Mode -->
-        <div class="p-3 bg-gradient-to-r from-emerald-950/40 to-slate-900/60 rounded-xl border border-emerald-500/30">
-          <label class="flex items-center gap-2.5 cursor-pointer text-white font-semibold text-xs">
-            <input type="checkbox" id="modal-checkbox-unrestricted" checked class="rounded bg-slate-900 border-emerald-400 text-emerald-500 focus:ring-0">
-            <span class="flex items-center gap-1.5">
-              <span>⚡</span>
-              <span>Full Unrestricted Access Mode (No rules, no permissions, auto-approve all logins & actions)</span>
-            </span>
-          </label>
-          <p class="text-[11px] text-slate-400 mt-1 pl-6">
-            Bypasses all approval roadblocks. Helper-AI runs completely uninterrupted with full login automation and terminal permissions.
-          </p>
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800">
+          <button id="btn-cancel-settings-modal" class="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300">Cancel</button>
+          <button id="btn-save-settings-modal" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold">Save Settings</button>
         </div>
-
-        <!-- Dynamic Background AI Swarm & Advisory Selector -->
-        <div class="p-3 bg-gradient-to-r from-purple-950/40 to-slate-900/60 rounded-xl border border-purple-500/30 space-y-2">
-          <div class="flex items-center justify-between">
-            <label class="block font-bold text-xs text-purple-300 flex items-center gap-1.5">
-              <i data-lucide="bot" class="w-4 h-4 text-purple-400"></i>
-              <span>Background AI Assistant / Swarm Provider</span>
-            </label>
-            <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono">Dynamic Multi-AI</span>
-          </div>
-          <select id="modal-select-background-ai" class="w-full bg-slate-900 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
-            <option value="auto">⚡ Auto (Fastest Available / Groq & Gemini)</option>
-            <option value="groq">Groq LPU (Ultra-Fast 500 Tokens/sec)</option>
-            <option value="gemini">Google Gemini 2.5 Flash</option>
-            <option value="deepseek">DeepSeek Reasoner / Chat</option>
-            <option value="openai">OpenAI GPT-4o / GPT-4o-mini</option>
-            <option value="custom">Custom / OpenRouter / Claude 3.5</option>
-            <option value="ollama">Ollama Local (Offline Dolphin-Llama3)</option>
-            <option value="swarm">🤝 Multi-AI Swarm Consensus (Parallel Multi-Model)</option>
-          </select>
-          <p class="text-[11px] text-slate-400">
-            Helper-AI consults this model in the background for second opinions, code generation, error recovery, and complex planning.
-          </p>
-        </div>
-
-        <div class="pt-2">
-          <label class="flex items-center gap-2 cursor-pointer text-slate-300">
-            <input type="checkbox" id="modal-checkbox-safemode" class="rounded bg-slate-900 border-white/20 text-blue-600 focus:ring-0">
-            <span>Enable Safe Mode (Requires 1-click authorization for risky actions)</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-end gap-3 pt-5 mt-4 border-t border-white/10">
-        <button id="btn-cancel-settings-modal" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold">Cancel</button>
-        <button id="btn-save-settings-modal" class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold">Save Settings</button>
       </div>
     </div>
   </div>
 
-  <!-- 2. Memory Modal (agent_memory.md) -->
+  <!-- Memory Modal -->
   <div id="modal-memory" class="modal-backdrop hidden">
-    <div class="modal-dialog">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i data-lucide="brain" class="w-5 h-5 text-pink-400"></i> AI Agent Memory Log
-        </h3>
-        <button id="btn-close-memory-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <p class="text-xs text-slate-400 mb-4">
-        Helper-AI automatically records every user goal and final outcome to <code>agent_memory.md</code> (Max limit 20 MB).
-      </p>
-
-      <div class="p-3.5 rounded-xl bg-slate-950/70 border border-white/5 space-y-3 mb-4 text-xs">
-        <div class="flex justify-between text-slate-300">
-          <span>Recorded Goals:</span>
-          <strong id="modal-memory-prompts" class="text-emerald-400">0 prompts</strong>
-        </div>
-        <div class="flex justify-between text-slate-300">
-          <span>Current File Size:</span>
-          <strong id="modal-memory-size" class="text-blue-400">0.02 MB / 20.0 MB</strong>
-        </div>
-        <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-          <div id="modal-memory-progress" class="bg-blue-500 h-2 rounded-full transition-all" style="width: 2%"></div>
-        </div>
-      </div>
-
-      <!-- Reverse-Engineered Application Knowledge Store -->
-      <div class="mt-4 pt-4 border-t border-white/10">
-        <div class="flex items-center justify-between mb-2">
-          <h4 class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-            <i data-lucide="cpu" class="w-4 h-4 text-cyan-400"></i> Reverse-Engineered App Profiles (100% Fast-Path)
-          </h4>
-          <span id="re-status-badge" class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono">REA 6.5.0 Active</span>
-        </div>
-        <p class="text-[11px] text-slate-400 mb-3">
-          AI stores UI Automation maps & keyboard shortcuts so future tasks on these apps run with 100% accuracy and 0 latency.
-        </p>
-
-        <!-- Quick Analyze Box -->
-        <div class="flex gap-2 mb-3">
-          <input id="input-re-target" type="text" placeholder="Target app, process, or URL (e.g. Notepad, calc, code.exe)" class="flex-1 bg-slate-900 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
-          <button id="btn-trigger-re" class="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-lg text-xs font-semibold flex items-center gap-1">
-            <i data-lucide="scan" class="w-3.5 h-3.5"></i> Analyze
-          </button>
-        </div>
-
-        <!-- App Profiles List -->
-        <div id="app-memory-cards-container" class="max-h-48 overflow-y-auto space-y-2 pr-1 text-xs">
-          <div class="text-slate-500 text-center py-2">Loading remembered applications...</div>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-between pt-4 border-t border-white/10 mt-4">
-        <button id="btn-reset-memory-modal" class="px-3.5 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 font-semibold text-xs border border-red-500/30">
-          Clear & Reset Log
-        </button>
-        <div class="flex items-center gap-2">
-          <button id="btn-close-memory-btn" class="px-4 py-2 rounded-lg bg-slate-800 text-slate-300 text-xs">Close</button>
-          <a href="/api/memory/download" download="agent_memory.md" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5">
-            <i data-lucide="download" class="w-3.5 h-3.5"></i> Download File
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2.5 Connections Diagnostic Modal (Double-Pass Health & Speed) -->
-  <div id="modal-connections" class="modal-backdrop hidden">
     <div class="modal-dialog max-w-2xl">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i data-lucide="activity" class="w-5 h-5 text-emerald-400"></i> Double-Pass Connection Diagnostics
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="brain" class="w-4 h-4 text-pink-400"></i> Persistent Agent Memory (`agent_memory.md`)
         </h3>
-        <button id="btn-close-connections-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button id="btn-close-memory-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
-
-      <div class="flex items-center justify-between bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3 mb-4">
-        <div>
-          <div class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Stability Score</div>
-          <div class="text-2xl font-extrabold text-white" id="conn-stability-score">100.0%</div>
+      <div class="space-y-3 text-xs">
+        <p class="text-zinc-400">
+          Helper-AI automatically records learnings, pinned facts, reflections, and verified actions to persistent memory.
+        </p>
+        <div id="memory-content-box" class="bg-zinc-950 border border-zinc-800 p-3 rounded-lg font-mono text-[11px] max-h-96 overflow-y-auto whitespace-pre-wrap text-zinc-300">
+          Loading memory...
         </div>
-        <div class="text-right">
-          <div class="text-xs text-slate-400" id="conn-duration-text">Pass 1: ~1000ms | Pass 2: ~900ms</div>
-          <button id="btn-rerun-conn-check" class="mt-1 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold transition">
-            ⚡ Re-Check Twice
+        <div class="flex items-center justify-between pt-2">
+          <button id="btn-download-memory" class="px-3 py-1.5 rounded bg-zinc-800 hover:bg-zinc-700 text-white flex items-center gap-1.5">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Memory File
+          </button>
+          <button id="btn-clear-memory" class="px-3 py-1.5 rounded bg-red-900/30 hover:bg-red-900/60 text-red-300 border border-red-800/40">
+            Clear Memory
           </button>
         </div>
-      </div>
-
-      <div class="terminal-box text-xs max-h-80 overflow-y-auto" id="connections-report-display">
-        Running connection diagnostics across all subsystems...
       </div>
     </div>
   </div>
 
-  <!-- 3. Metrics Modal -->
+  <!-- Metrics Modal -->
   <div id="modal-metrics" class="modal-backdrop hidden">
     <div class="modal-dialog">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i data-lucide="bar-chart-3" class="w-5 h-5 text-amber-400"></i> Operational Telemetry
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i> Agent Telemetry & Tool Usage
         </h3>
-        <button id="btn-close-metrics-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button id="btn-close-metrics-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
-
-      <div class="terminal-box text-xs max-h-72" id="metrics-json-display">
-        Loading metrics telemetry...
+      <div id="metrics-content-box" class="space-y-3 text-xs">
+        Loading telemetry metrics...
       </div>
     </div>
   </div>
 
-  <!-- 4. Permission Authorization Modal (Human-in-the-Loop) -->
-  <div id="modal-permission" class="modal-backdrop hidden">
-    <div class="modal-dialog border-2 border-amber-500/40">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-        <h3 class="text-base font-bold text-amber-400 flex items-center gap-2">
-          <i data-lucide="shield-alert" class="w-5 h-5"></i> Authorization Request
+  <!-- Connections Check Modal -->
+  <div id="modal-connections" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i> System Diagnostics & Connections Check
         </h3>
-        <span class="text-xs bg-amber-500/15 text-amber-300 px-2.5 py-0.5 rounded-full font-semibold">1-Click Approval</span>
+        <button id="btn-close-connections-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
-
-      <p class="text-xs text-slate-300 mb-3" id="permission-modal-desc">
-        Helper-AI has paused to request your explicit approval for this action:
-      </p>
-
-      <div class="terminal-box text-xs max-h-36 mb-4 text-slate-300" id="permission-modal-details">
-        Action details loading...
-      </div>
-
-      <div class="flex items-center justify-end gap-3 pt-2">
-        <button id="btn-deny-permission" class="px-4 py-2 rounded-lg bg-red-600/20 text-red-300 hover:bg-red-600/30 font-semibold text-xs border border-red-500/30">
-          ✕ Deny Action
-        </button>
-        <button id="btn-approve-permission" class="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-lg shadow-emerald-500/20">
-          ✓ One-Click Approve
-        </button>
+      <div id="connections-content-box" class="space-y-3 text-xs">
+        Running connection check...
       </div>
     </div>
   </div>
 
-  <!-- 5. LiveKit Voice & Vision Studio Modal -->
-  <div id="modal-livekit" class="modal-backdrop hidden">
-    <div class="modal-dialog max-w-2xl border border-purple-500/30 shadow-2xl shadow-purple-500/10">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i data-lucide="mic" class="w-5 h-5 text-purple-400"></i> LiveKit WebRTC Voice & Vision Studio
+  <!-- Dolphin Setup Modal -->
+  <div id="modal-dolphin-setup" class="modal-backdrop hidden">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <span>🐬</span> Dolphin-2.9-Llama3 Compulsory Setup
         </h3>
-        <button id="btn-close-livekit-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button id="btn-close-dolphin-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
-
-      <!-- Live Voice Orb Visualizer -->
-      <div class="flex flex-col items-center justify-center p-6 bg-gradient-to-b from-purple-950/20 to-slate-900/60 rounded-2xl border border-purple-500/20 mb-4 relative overflow-hidden">
-        <div id="livekit-orb" class="w-20 h-20 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-400 shadow-lg shadow-purple-500/50 flex items-center justify-center transition-all duration-300">
-          <i data-lucide="radio" class="w-9 h-9 text-white animate-pulse"></i>
-        </div>
-        <div class="mt-4 text-center">
-          <div class="text-sm font-bold text-white" id="livekit-session-state">Standby • Ready to Connect</div>
-          <div class="text-xs text-purple-300 font-mono mt-0.5" id="livekit-room-display">Room: helper-ai-room</div>
-        </div>
-
-        <!-- Latency & Tool Bridging Badge -->
-        <div class="flex items-center gap-3 mt-3 text-[11px] text-slate-300">
-          <span class="px-2.5 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 font-mono">
-            ⚡ WebRTC Full-Duplex
-          </span>
-          <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-mono" id="livekit-tools-badge">
-            37 PC Tools Bridged
-          </span>
-        </div>
-      </div>
-
-      <!-- Neural Voice Persona Selector -->
-      <div class="flex items-center justify-between w-full max-w-md mx-auto mb-3 bg-slate-950/60 p-2 rounded-xl border border-white/5 text-xs">
-        <span class="text-slate-400 font-medium flex items-center gap-1.5">
-          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400"></i> Neural Voice Persona:
-        </span>
-        <select id="livekit-voice-select" class="bg-slate-900 border border-white/10 rounded-lg px-2.5 py-1 text-white text-xs font-mono">
-          <option value="en-US-AriaNeural">Aria (US Female - Crisp)</option>
-          <option value="en-US-GuyNeural">Guy (US Male - Natural)</option>
-          <option value="en-US-JennyNeural">Jenny (Conversational)</option>
-          <option value="hi-IN-SwaraNeural">Swara (Hindi / Indian English)</option>
-          <option value="gu-IN-DhwaniNeural">Dhwani (Gujarati Female)</option>
-          <option value="gu-IN-NiranjanNeural">Niranjan (Gujarati Male)</option>
-        </select>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex flex-wrap items-center justify-center gap-3 mb-4">
-        <button id="btn-livekit-connect" class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-purple-500/20 transition">
-          <i data-lucide="phone-call" class="w-4 h-4"></i>
-          <span id="btn-livekit-connect-text">Start Live Voice Session</span>
+      <div class="space-y-3 text-xs text-zinc-300">
+        <p>Helper-AI requires Dolphin-2.9-Llama3 for 100% offline, uncensored autonomous execution.</p>
+        <button id="btn-trigger-ollama-setup" class="w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 font-bold text-white flex items-center justify-center gap-2">
+          <span>🐬</span> Auto-Download & Configure Dolphin AI
         </button>
-
-        <button id="btn-livekit-screen-share" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-2 border border-white/10 transition">
-          <i data-lucide="monitor" class="w-4 h-4 text-cyan-400"></i>
-          <span>Share Desktop Screen</span>
-        </button>
-
-        <button id="btn-livekit-test-tool" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-2 border border-white/10 transition" title="Voice simulates 'Check PC health'">
-          <i data-lucide="zap" class="w-4 h-4 text-amber-400"></i>
-          <span>Test PC Tool via Voice</span>
-        </button>
-      </div>
-
-      <!-- Live Voice Transcripts Feed -->
-      <div class="mb-3">
-        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center justify-between">
-          <span>Live Conversation Transcripts</span>
-          <span class="text-purple-400 font-normal">Sub-second TTS</span>
-        </div>
-        <div id="livekit-transcripts" class="terminal-box text-xs max-h-40 overflow-y-auto space-y-2 p-3 bg-slate-950/80 border border-white/10 rounded-xl">
-          <div class="text-slate-500 italic">No voice conversation yet. Click 'Start Live Voice Session' or speak.</div>
+        <div id="ollama-setup-feedback" class="p-2.5 rounded bg-zinc-950 font-mono text-[11px] text-zinc-400 min-h-[50px]">
+          Ready.
         </div>
       </div>
+    </div>
+  </div>
 
-      <!-- LiveKit Configuration Accordion -->
-      <details class="bg-slate-900/60 rounded-xl border border-white/5 p-3 text-xs">
-        <summary class="font-semibold text-slate-300 cursor-pointer flex items-center justify-between">
-          <span>⚙️ LiveKit Connection Credentials</span>
-          <span class="text-[10px] text-purple-400">Configure Cloud or Local Server</span>
-        </summary>
-        <div class="mt-3 space-y-2.5 pt-2 border-t border-white/5">
-          <div>
-            <label class="block text-[11px] text-slate-400 mb-1">LiveKit WebRTC Server URL</label>
-            <input type="text" id="input-livekit-url" placeholder="wss://your-project.livekit.cloud" value="wss://helper-ai-local.livekit.cloud" class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
-          </div>
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-[11px] text-slate-400 mb-1">LiveKit API Key</label>
-              <input type="text" id="input-livekit-key" placeholder="API..." class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
-            </div>
-            <div>
-              <label class="block text-[11px] text-slate-400 mb-1">LiveKit API Secret</label>
-              <input type="password" id="input-livekit-secret" placeholder="Secret..." class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
-            </div>
-          </div>
-          <button id="btn-save-livekit-settings" class="mt-1 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-xs font-semibold">
-            Save LiveKit Credentials
+  <!-- Playwright CRM Studio Modal -->
+  <div id="modal-playwright-crm" class="modal-backdrop hidden">
+    <div class="modal-dialog max-w-3xl">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="play-circle" class="w-4 h-4 text-emerald-400"></i> Playwright CRM Recorder & Batch Form Studio
+        </h3>
+        <button id="btn-close-playwright-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+      </div>
+      <div class="space-y-3 text-xs text-zinc-300">
+        <p>Record user workflows and re-execute batch form fillings across CRM portals with 100% accuracy.</p>
+        <div class="flex items-center gap-2">
+          <input type="text" id="input-crm-url" placeholder="https://mycrm.example.com/leads/new" class="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg p-2 text-white font-mono">
+          <button id="btn-start-crm-recorder" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg flex items-center gap-1.5">
+            <i data-lucide="video" class="w-3.5 h-3.5"></i> Record Workflow
           </button>
         </div>
-      </details>
-    </div>
-  </div>
-
-  <!-- 6. Playwright CRM & Form Automation Studio Modal -->
-  <div id="modal-playwright" class="modal-backdrop hidden">
-    <div class="modal-dialog max-w-3xl border border-emerald-500/30 shadow-2xl shadow-emerald-500/10">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i data-lucide="play" class="w-5 h-5 text-emerald-400"></i> Playwright CRM & Web Automation Studio
-        </h3>
-        <button id="btn-close-playwright-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-      </div>
-
-      <!-- Quick Preset & Recorder Section -->
-      <div class="p-4 bg-slate-900/70 rounded-2xl border border-emerald-500/20 mb-4">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-bold text-emerald-300 flex items-center gap-1.5 uppercase tracking-wide">
-            ⚡ 1. Live Codegen Recorder (Watch & Record in Chrome)
-          </span>
-          <span id="playwright-codegen-state-badge" class="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">Idle</span>
-        </div>
-        <p class="text-xs text-slate-400 mb-3">
-          Opens a real Google Chrome browser and the Playwright Inspector. Any form you fill (Tata CRM, Salesforce, Google Forms) is recorded live into an automation Python script!
-        </p>
-
-        <!-- Presets -->
-        <div class="flex flex-wrap items-center gap-1.5 mb-3">
-          <span class="text-[11px] text-slate-400">Quick URL:</span>
-          <button type="button" class="btn-crm-url-preset px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-mono" data-url="https://tatamotorscrm.example.com">Tata Motors CRM</button>
-          <button type="button" class="btn-crm-url-preset px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-mono" data-url="https://login.salesforce.com">Salesforce</button>
-          <button type="button" class="btn-crm-url-preset px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-mono" data-url="https://crm.zoho.com">Zoho CRM</button>
-          <button type="button" class="btn-crm-url-preset px-2 py-0.5 rounded-md bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-mono" data-url="https://docs.google.com/forms">Google Forms</button>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-          <div class="sm:col-span-2">
-            <label class="block text-[11px] text-slate-400 mb-1">Target CRM / Web Portal URL</label>
-            <input type="text" id="playwright-input-url" placeholder="https://your-crm-url.com" value="https://tatamotorscrm.example.com" class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
-          </div>
-          <div>
-            <label class="block text-[11px] text-slate-400 mb-1">Workflow Script Name</label>
-            <input type="text" id="playwright-input-name" placeholder="tata_crm_lead_entry" value="tata_crm_lead_entry" class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
-          <div class="flex items-center gap-4 text-xs text-slate-300">
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="checkbox" id="playwright-check-chrome" checked class="rounded border-white/20 bg-slate-950 text-emerald-500">
-              <span>Use Real Google Chrome</span>
-            </label>
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="checkbox" id="playwright-check-save-session" checked class="rounded border-white/20 bg-slate-950 text-emerald-500">
-              <span>Save Login Session</span>
-            </label>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <button id="btn-playwright-launch-codegen" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition">
-              <i data-lucide="video" class="w-4 h-4"></i>
-              <span>⚡ Start Recording in Chrome</span>
-            </button>
-            <button id="btn-playwright-stop-codegen" class="px-3 py-2 bg-red-600/30 hover:bg-red-600/50 text-red-300 border border-red-500/30 rounded-xl text-xs font-semibold hidden">
-              Stop Recorder
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Section 2: Replay & Batch Execution Engine -->
-      <div class="p-4 bg-slate-900/70 rounded-2xl border border-white/10 mb-3">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-bold text-cyan-300 flex items-center gap-1.5 uppercase tracking-wide">
-            🔁 2. Batch Automation & Lead Data Runner (Excel / CSV Replay)
-          </span>
-          <button id="btn-playwright-refresh-workflows" class="text-xs text-slate-400 hover:text-white flex items-center gap-1">
-            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Refresh Workflows
-          </button>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-          <div>
-            <label class="block text-[11px] text-slate-400 mb-1">Select Workflow Script</label>
-            <select id="playwright-select-workflow" class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs">
-              <option value="tata_crm_template.py">tata_crm_template.py (Built-in Starter)</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[11px] text-slate-400 mb-1">Execution Mode</label>
-            <div class="flex items-center gap-3 pt-2 text-xs">
-              <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="radio" name="playwright-exec-mode" value="batch" checked class="text-emerald-500">
-                <span>Batch Leads (CSV/JSON)</span>
-              </label>
-              <label class="flex items-center gap-1.5 cursor-pointer">
-                <input type="radio" name="playwright-exec-mode" value="standalone" class="text-emerald-500">
-                <span>Single Test Run</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <div id="playwright-batch-data-container" class="mb-3">
-          <div class="flex items-center justify-between mb-1">
-            <label class="block text-[11px] text-slate-400">Leads Data (JSON Array or CSV with name, mobile, city):</label>
-            <span class="text-[10px] text-emerald-400">Parameterizes {{name}}, {{mobile}}, {{city}}</span>
-          </div>
-          <textarea id="playwright-batch-input" rows="3" class="w-full bg-slate-950 border border-white/10 rounded-lg p-2 text-white font-mono text-xs" placeholder='[{"name": "Rajesh Patel", "mobile": "9898012345", "city": "Ahmedabad"}, {"name": "Amit Shah", "mobile": "9825098765", "city": "Surat"}]'>[
-  {"name": "Rajesh Patel", "mobile": "9898012345", "city": "Ahmedabad"},
-  {"name": "Priya Sharma", "mobile": "9825011223", "city": "Vadodara"}
-]</textarea>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2 text-xs text-slate-400">
-            <label class="flex items-center gap-1.5 cursor-pointer">
-              <input type="checkbox" id="playwright-check-headless" class="rounded border-white/20 bg-slate-950 text-emerald-500">
-              <span>Run Headless (Hidden Background)</span>
-            </label>
-          </div>
-          <button id="btn-playwright-run-workflow" class="px-5 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-cyan-500/20 transition">
-            <i data-lucide="play" class="w-4 h-4"></i>
-            <span>▶ Run Automation Now</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Execution Console Output -->
-      <div>
-        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
-          <span>Execution Console</span>
-          <span id="playwright-run-status" class="text-slate-400 font-mono text-[10px]">Ready</span>
-        </div>
-        <div id="playwright-console-output" class="terminal-box text-xs max-h-36 overflow-y-auto space-y-1 p-2.5 bg-slate-950/90 border border-white/10 rounded-xl font-mono text-slate-300">
-          <div class="text-slate-500 italic">Playwright ready. Record in Chrome or run lead workflows.</div>
+        <div id="crm-workflow-list" class="max-h-60 overflow-y-auto space-y-1.5 p-2 bg-zinc-950 rounded-lg border border-zinc-800">
+          <div class="text-zinc-500 text-center py-4">No recorded workflows found.</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 7. Job Portals & CV Automation Studio Modal -->
+  <!-- Job Portals Modal -->
   <div id="modal-jobportals" class="modal-backdrop hidden">
-    <div class="modal-dialog max-w-4xl border border-cyan-500/30 shadow-2xl shadow-cyan-500/10">
-      <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-        <h3 class="text-base font-bold text-white flex items-center gap-2">
-          <i data-lucide="briefcase" class="w-5 h-5 text-cyan-400"></i> 10 Job Portals Registration & CV Upload Studio
+    <div class="modal-dialog max-w-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <i data-lucide="briefcase" class="w-4 h-4 text-cyan-400"></i> 10 Job Portals Registration & CV Upload Studio
         </h3>
-        <button id="btn-close-jobportals-modal" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button id="btn-close-jobportals-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
-
-      <!-- Candidate Profile & CV Card -->
-      <div class="p-4 bg-slate-900/80 rounded-2xl border border-cyan-500/20 mb-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 mb-2">
-          <div class="flex items-center gap-2">
-            <span class="text-lg">👤</span>
-            <div>
-              <h4 id="candidate-name" class="text-sm font-bold text-white">Jignesh J. Kariya</h4>
-              <p id="candidate-title" class="text-xs text-cyan-300 font-mono">Infrastructure Engineer / Systems Administrator (22+ Years Exp)</p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2 text-xs">
-            <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold" id="candidate-phone">📞 +91 9898048483</span>
-            <span class="px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono" id="candidate-email">✉️ oo71097145198@gmail.com</span>
-          </div>
-        </div>
-
-        <div class="mt-2 pt-2 border-t border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div class="text-slate-400 flex items-center gap-1.5 font-mono">
-            <i data-lucide="file-text" class="w-4 h-4 text-amber-400"></i>
-            <span>Active CV: <strong id="candidate-cv-path" class="text-slate-200">C:\Users\DELL\Downloads\Jignesh_Kariya_CV.pdf</strong></span>
-          </div>
-          <button id="btn-run-all-jobportals" class="px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-cyan-500/20 transition">
-            <i data-lucide="rocket" class="w-4 h-4"></i>
-            <span>⚡ Process All 10 Portals & Upload CV</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 10 Portals Grid -->
-      <div class="mb-4">
-        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-          <span>Target Job Portals (10 Sites Configured)</span>
-          <span id="jobportals-summary-count" class="text-cyan-400 font-mono text-[10px]">10 / 10 Active</span>
-        </div>
-        <div id="jobportals-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
-          <!-- Dynamically populated or static starter list -->
-          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">🎓</span>
-              <div>
-                <strong class="text-white block">1. Internshala</strong>
-                <span class="text-[10px] text-slate-400">Internships & WFH Fresher Jobs</span>
-              </div>
-            </div>
-            <a href="https://internshala.com/registration/student" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
-          </div>
-          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">💼</span>
-              <div>
-                <strong class="text-white block">2. Indeed India</strong>
-                <span class="text-[10px] text-slate-400">Remote & Work From Home Jobs</span>
-              </div>
-            </div>
-            <a href="https://secure.indeed.com/account/register" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
-          </div>
-          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">🇮🇳</span>
-              <div>
-                <strong class="text-white block">3. Naukri.com</strong>
-                <span class="text-[10px] text-slate-400">India's #1 Leading Job Portal</span>
-              </div>
-            </div>
-            <a href="https://www.naukri.com/registration/createAccount" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
-          </div>
-          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">🌐</span>
-              <div>
-                <strong class="text-white block">4. Foundit (Monster India)</strong>
-                <span class="text-[10px] text-slate-400">IT & Infrastructure Roles</span>
-              </div>
-            </div>
-            <a href="https://www.foundit.in/seeker/registration" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
-          </div>
-          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">🚀</span>
-              <div>
-                <strong class="text-white block">5. Upwork</strong>
-                <span class="text-[10px] text-slate-400">Global Freelancer & Remote Contracts</span>
-              </div>
-            </div>
-            <a href="https://www.upwork.com/nx/signup/" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
-          </div>
-          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">💻</span>
-              <div>
-                <strong class="text-white block">6. Freelancer.com</strong>
-                <span class="text-[10px] text-slate-400">90M+ Professionals Freelance Work</span>
-              </div>
-            </div>
-            <a href="https://www.freelancer.com/signup" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
-          </div>
-          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">🦄</span>
-              <div>
-                <strong class="text-white block">7. Wellfound (AngelList)</strong>
-                <span class="text-[10px] text-slate-400">Top Tech Startups & Remote Jobs</span>
-              </div>
-            </div>
-            <a href="https://wellfound.com/jobs" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
-          </div>
-          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">🔗</span>
-              <div>
-                <strong class="text-white block">8. LinkedIn Jobs</strong>
-                <span class="text-[10px] text-slate-400">Global Professional Network</span>
-              </div>
-            </div>
-            <a href="https://www.linkedin.com/jobs/" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
-          </div>
-          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">🎯</span>
-              <div>
-                <strong class="text-white block">9. Truelancer</strong>
-                <span class="text-[10px] text-slate-400">India & Worldwide Freelancing</span>
-              </div>
-            </div>
-            <a href="https://www.truelancer.com/signup" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
-          </div>
-          <div class="p-2.5 bg-slate-950/70 rounded-xl border border-white/10 flex items-center justify-between text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-sm">📱</span>
-              <div>
-                <strong class="text-white block">10. Apna</strong>
-                <span class="text-[10px] text-slate-400">Direct Recruiter Hiring & Fast Track</span>
-              </div>
-            </div>
-            <a href="https://apna.co/jobs" target="_blank" class="text-cyan-400 hover:underline text-[11px]">Open ↗</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Execution Console Output -->
-      <div>
-        <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
-          <span>Automation Log & Desktop Report</span>
-          <span id="jobportals-run-status" class="text-slate-400 font-mono text-[10px]">Ready</span>
-        </div>
-        <div id="jobportals-console-output" class="terminal-box text-xs max-h-32 overflow-y-auto space-y-1 p-2.5 bg-slate-950/90 border border-white/10 rounded-xl font-mono text-slate-300">
-          <div class="text-slate-500 italic">Job Portals Engine ready. Click 'Process All 10 Portals & Upload CV' to begin.</div>
+      <div class="space-y-3 text-xs text-zinc-300">
+        <p>Automate registration and resume upload across Freelancer, Upwork, Indeed, LinkedIn, Naukri, Monster, and more.</p>
+        <div id="jobportals-status-container" class="space-y-1.5 max-h-64 overflow-y-auto p-2 bg-zinc-950 rounded-lg border border-zinc-800 font-mono text-[11px]">
+          Loading portal status...
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Hidden Google Translate Element Engine -->
-  <div id="google_translate_element" style="display:none;"></div>
-  <script type="text/javascript">
-    function googleTranslateElementInit() {
-      new google.translate.TranslateElement({
-        pageLanguage: 'en',
-        autoDisplay: false
-      }, 'google_translate_element');
-    }
-  </script>
-  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+  <!-- Permission Modal -->
+  <div id="modal-permission" class="modal-backdrop hidden">
+    <div class="modal-dialog max-w-md">
+      <div class="flex items-center gap-2.5 text-amber-400 font-bold pb-2 border-b border-zinc-800 mb-3">
+        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+        <span>Permission Required</span>
+      </div>
+      <p id="permission-prompt-text" class="text-xs text-zinc-300 mb-4 leading-relaxed">
+        The agent is requesting permission to execute an action.
+      </p>
+      <div class="flex items-center justify-end gap-2">
+        <button id="btn-deny-permission" class="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs">Deny</button>
+        <button id="btn-grant-permission" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-xs">Approve Action</button>
+      </div>
+    </div>
+  </div>
 
-  <!-- Floating Side Space Dock with Hands-Free Voice Agent Trigger -->
-  <aside class="pro-buttons-side-container fixed bottom-3 right-3 sm:bottom-4 sm:right-4 z-40 flex flex-col sm:flex-row items-end sm:items-center gap-2 p-1.5 sm:p-2 bg-slate-900/90 backdrop-blur-md rounded-2xl border border-white/10 shadow-2xl" aria-label="Official Links">
-    <button id="btn-floating-voice-orb" class="pro-btn bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold flex items-center gap-1.5 shadow-lg shadow-purple-500/30 transition transform hover:scale-105">
-      <i data-lucide="mic" class="w-3.5 h-3.5 text-cyan-300"></i>
-      <span>🎙️ HANDS-FREE VOICE AGENT</span>
-    </button>
-    <button class="pro-btn btn-buy-pro" onclick="window.open('https://wa.me/919898048483', '_blank')">⚡ BUY NOW PRO (APPOINTMENT)</button>
-    <button class="pro-btn btn-donate" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScJ7WjuxEXqdoSlUtxN7NQ8UeKpbEAeA9iIO-IXOmBmYzlLHQ/viewform?usp=sharing&ouid=116676179363878319046', '_blank')">🪙 DONATION SYSTEM</button>
-    <button class="pro-btn btn-store" onclick="window.open('https://wa.me/c/919898048483', '_blank')">🛒 OFFICIAL DIGITAL STORE</button>
-  </aside>
+  <!-- Google Translate Language Selector Floating Dropdown Container -->
+  <div id="lang-dropdown-menu" class="hidden absolute right-6 top-14 w-72 bg-[#1e1e22] border border-[#2e2e34] rounded-xl shadow-2xl z-50 flex-col overflow-hidden text-xs">
+    <div class="p-2.5 border-b border-zinc-800 flex items-center justify-between">
+      <span class="font-semibold text-zinc-300 flex items-center gap-1.5">
+        <i data-lucide="globe" class="w-3.5 h-3.5 text-cyan-400"></i> Google Translate
+      </span>
+      <span id="lang-count-badge" class="text-[10px] bg-blue-500/20 text-blue-400 font-mono px-1.5 py-0.5 rounded">133+ Langs</span>
+    </div>
+    <div class="p-2 border-b border-zinc-800">
+      <input type="text" id="lang-search-box" placeholder="Search language (Gujarati, Hindi, Spanish...)" 
+        class="w-full bg-zinc-900 text-xs px-2.5 py-1.5 rounded-lg border border-zinc-700 text-white focus:outline-none focus:border-blue-500">
+    </div>
+    <div class="max-h-60 overflow-y-auto divide-y divide-zinc-800/50 py-1" id="lang-items-container"></div>
+  </div>
 
-  <!-- Application Logic -->
+  <!-- Main Application Script -->
   <script src="/static/js/app.js"></script>
+
+  <!-- Lucide Icon Initializer & UI Bindings -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+
+      // Sidebar Toggle
+      const sidebar = document.getElementById('dsh-sidebar');
+      const btnToggle = document.getElementById('btn-toggle-sidebar');
+      const btnReopen = document.getElementById('btn-sidebar-reopen');
+
+      btnToggle?.addEventListener('click', () => {
+        sidebar?.classList.add('collapsed');
+        btnReopen?.classList.remove('hidden');
+      });
+
+      btnReopen?.addEventListener('click', () => {
+        sidebar?.classList.remove('collapsed');
+        btnReopen?.classList.add('hidden');
+      });
+
+      // Chat vs Trajectory Tabs
+      const tabChat = document.getElementById('tab-chat');
+      const tabTrajectory = document.getElementById('tab-trajectory');
+      const viewChat = document.getElementById('view-chat');
+      const viewTrajectory = document.getElementById('view-trajectory');
+
+      tabChat?.addEventListener('click', () => {
+        tabChat.classList.add('active');
+        tabTrajectory?.classList.remove('active');
+        viewChat?.classList.remove('hidden');
+        viewTrajectory?.classList.add('hidden');
+      });
+
+      tabTrajectory?.addEventListener('click', () => {
+        tabTrajectory.classList.add('active');
+        tabChat?.classList.remove('active');
+        viewTrajectory?.classList.remove('hidden');
+        viewChat?.classList.add('hidden');
+      });
+
+      // More Menu Toggle
+      const btnMoreMenu = document.getElementById('btn-more-menu');
+      const moreDropdown = document.getElementById('more-dropdown-menu');
+      btnMoreMenu?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        moreDropdown?.classList.toggle('hidden');
+      });
+
+      document.addEventListener('click', () => {
+        moreDropdown?.classList.add('hidden');
+        document.getElementById('lang-dropdown-menu')?.classList.add('hidden');
+      });
+
+      // Bonus Alert Dismiss
+      document.getElementById('btn-close-bonus')?.addEventListener('click', () => {
+        document.getElementById('bonus-credited-card')?.remove();
+      });
+
+      // New Session Clear
+      document.getElementById('btn-new-session')?.addEventListener('click', () => {
+        const chatContainer = document.getElementById('chat-messages-container');
+        if (chatContainer) chatContainer.innerHTML = '';
+        const goalInput = document.getElementById('goal-input');
+        if (goalInput) {
+          goalInput.value = '';
+          goalInput.focus();
+        }
+      });
+
+      // Scroll to bottom
+      document.getElementById('btn-scroll-bottom')?.addEventListener('click', () => {
+        viewChat?.scrollTo({ top: viewChat.scrollHeight, behavior: 'smooth' });
+      });
+
+      // Auto-expanding textarea
+      const goalTextarea = document.getElementById('goal-input');
+      goalTextarea?.addEventListener('input', () => {
+        goalTextarea.style.height = 'auto';
+        goalTextarea.style.height = Math.min(goalTextarea.scrollHeight, 180) + 'px';
+      });
+
+      // Model Selector Pill Shortcut to Settings
+      document.getElementById('btn-model-selector-pill')?.addEventListener('click', () => {
+        document.getElementById('modal-settings')?.classList.remove('hidden');
+      });
+
+      // Sidebar Plugins Button -> Open Settings & AI Model / Plugins Inventory
+      document.getElementById('btn-sidebar-plugins')?.addEventListener('click', () => {
+        document.getElementById('modal-settings')?.classList.remove('hidden');
+      });
+
+      // Sidebar Automation Tasks Button -> Open Playwright CRM Studio & Workflows
+      document.getElementById('btn-sidebar-automation')?.addEventListener('click', () => {
+        const crmModal = document.getElementById('modal-playwright-crm');
+        if (crmModal) {
+          crmModal.classList.remove('hidden');
+          if (typeof loadRecordedPlaywrightWorkflows === 'function') {
+            loadRecordedPlaywrightWorkflows();
+          }
+        }
+      });
+    });
+  </script>
 </body>
 </html>

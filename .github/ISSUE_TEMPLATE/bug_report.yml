@@ -48,6 +48,7 @@ body:
       label: "LLM Provider"
       description: "Which LLM provider was active when the issue occurred?"
       options:
+        - Anthropic (claude-3-5-sonnet / claude-3-5-haiku / claude-3-7)
         - Gemini (gemini-flash-latest)
         - Groq (llama-3.3-70b-versatile)
         - OpenAI (gpt-4o / gpt-4o-mini)

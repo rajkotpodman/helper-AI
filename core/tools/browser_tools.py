@@ -718,13 +718,34 @@ class BrowserAutomationTool(BaseTool):
 
         while time.time() - start_wait < 25:
             time.sleep(1.0)
-            # Check for error banners
+            # Check for real error banners (excluding benign audience/footer notices)
             for err_el in driver.find_elements(By.XPATH, "//*[@role='alert'] | //div[contains(text(), 'Something went wrong') or contains(text(), 'temporarily blocked') or contains(text(), 'community standards')]"):
-                if err_el.is_displayed():
-                    error_detected = err_el.text
-                    break
+                try:
+                    if err_el.is_displayed():
+                        raw_err = (err_el.text or "").strip()
+                        low_err = raw_err.lower()
+                        # Ignore harmless audience/footer notices
+                        if any(ign in low_err for ign in ["default audience", "audience", "checkbox in the footer", "manage who can see"]):
+                            continue
+                        if any(bad in low_err for bad in ["something went wrong", "temporarily blocked", "couldn't post", "could not post", "community standards", "violates", "spam", "restricted"]):
+                            error_detected = raw_err
+                            break
+                except Exception:
+                    continue
             if error_detected:
                 break
+
+            # Handle secondary confirmation popups (e.g. audience prompt or confirmation buttons)
+            for conf_btn in driver.find_elements(By.XPATH, "//*[@role='dialog']//button | //*[@role='dialog']//*[@role='button']"):
+                try:
+                    if conf_btn.is_displayed():
+                        c_txt = (conf_btn.text or "").strip().lower()
+                        if c_txt in ["save", "done", "next", "confirm", "post", "done"]:
+                            driver.execute_script("arguments[0].click();", conf_btn)
+                            time.sleep(1.0)
+                            break
+                except Exception:
+                    pass
 
             # Check if modal closed
             if target_dlg:
@@ -738,6 +759,7 @@ class BrowserAutomationTool(BaseTool):
             else:
                 dialog_closed = True
                 break
+
 
         if error_detected:
             return {
@@ -1314,18 +1336,33 @@ class BrowserAutomationTool(BaseTool):
             except Exception:
                 pass
 
-        # 3. Clean search keywords
+        # 3. Clean search keywords and candidate query queue
         clean_kw = (keywords or "").strip()
         if "http" in clean_kw:
-            clean_kw = "Technical Support"
+            clean_kw = "System Administrator"
         import re
-        role_match = re.search(r'\b(technical support|system administrator|infrastructure engineer|manager|engineer|developer|analyst)\b', clean_kw, re.IGNORECASE)
+        role_match = re.search(r'\b(technical support|system administrator|infrastructure engineer|network engineer|desktop support|system admin|it administrator|manager|engineer|developer|analyst)\b', clean_kw, re.IGNORECASE)
         if role_match:
             clean_kw = role_match.group(1).title()
         elif len(clean_kw) > 35 or not clean_kw:
-            clean_kw = "Technical Support"
+            clean_kw = "System Administrator"
 
-        search_url = f"https://www.linkedin.com/jobs/search/?keywords={urllib.parse.quote(clean_kw)}&f_AL=true"
+        candidate_queries = [clean_kw]
+        for fallback_kw in ["System Administrator", "Technical Support", "Desktop Support", "IT Administrator", "Network Support"]:
+            if fallback_kw.lower() not in [q.lower() for q in candidate_queries]:
+                candidate_queries.append(fallback_kw)
+
+        query_idx = 0
+        current_kw = candidate_queries[query_idx]
+        page_offset = 0
+
+        def get_search_url(kw: str, offset: int = 0) -> str:
+            url = f"https://www.linkedin.com/jobs/search/?keywords={urllib.parse.quote(kw)}&location=India&f_AL=true"
+            if offset > 0:
+                url += f"&start={offset}"
+            return url
+
+        search_url = get_search_url(current_kw, page_offset)
         logger.info(f"Navigating to LinkedIn jobs search: {search_url}")
         driver.get(search_url)
         time.sleep(3.5)
@@ -1344,9 +1381,8 @@ class BrowserAutomationTool(BaseTool):
 
         applied_jobs = []
         attempted_titles = set()
-        page_offset = 0
 
-        max_rounds = max(count * 6, 30)
+        max_rounds = max(count * 8, 40)
         consecutive_no_candidates = 0
 
         for round_idx in range(max_rounds):
@@ -1364,35 +1400,32 @@ class BrowserAutomationTool(BaseTool):
                 const toasts = document.querySelectorAll('.artdeco-toast, [data-test-artdeco-toast]');
                 toasts.forEach(t => { try { t.remove(); } catch(e) {} });
             """)
-            time.sleep(0.8)
+            time.sleep(0.6)
 
             # 2. Find next eligible candidate job card
             candidate = driver.execute_script("""
-                let listContainer = Array.from(document.querySelectorAll('div, ul')).find(d => 
-                    (d.scrollHeight > 1500 || d.getAttribute('data-view-name')?.includes('job-search-results')) &&
-                    d.getBoundingClientRect().left < 450 &&
-                    d.children.length > 5
-                );
-                
-                let items = [];
-                let isContainer = false;
-                if (listContainer) {
-                    items = Array.from(listContainer.children);
-                    isContainer = true;
-                } else {
-                    items = Array.from(document.querySelectorAll('li[data-occludable-job-id], div.job-card-container, li.jobs-search-results__list-item'));
-                }
+                const cards = Array.from(document.querySelectorAll(
+                    'li[data-occludable-job-id], ' +
+                    'div.job-card-container, ' +
+                    'li.jobs-search-results__list-item, ' +
+                    'div.jobs-search-results-list li, ' +
+                    'div[data-job-id], ' +
+                    'li.scaffold-layout__list-item, ' +
+                    'div.job-card-job-posting'
+                )).filter(c => {
+                    const txt = (c.innerText || '').trim();
+                    const isAttempted = c.getAttribute('data-helper-attempted') === 'true';
+                    const isApplied = txt.includes('Applied');
+                    return txt.length > 10 && !isApplied && !isAttempted;
+                });
 
-                for (let i = 0; i < items.length; i++) {
-                    const it = items[i];
-                    const itText = it.innerText || '';
-                    const title = itText.trim().split('\\n')[0];
-                    const hasEasyApply = itText.includes('Easy Apply');
-                    const isApplied = itText.includes('Applied');
-                    const isAttempted = it.getAttribute('data-helper-attempted') === 'true';
-
-                    if (title && hasEasyApply && !isApplied && !isAttempted) {
-                        return { found: true, idx: i, title: title, isContainer: isContainer };
+                for (let i = 0; i < cards.length; i++) {
+                    const c = cards[i];
+                    const txt = c.innerText.trim();
+                    const titleEl = c.querySelector('a.job-card-list__title, [data-control-name="job_card_title"], strong');
+                    const title = (titleEl?.innerText || txt.split('\\n')[0]).trim();
+                    if (title) {
+                        return { found: true, idx: i, title: title };
                     }
                 }
                 return { found: false };
@@ -1400,12 +1433,11 @@ class BrowserAutomationTool(BaseTool):
 
             if not candidate or not candidate.get("found"):
                 consecutive_no_candidates += 1
-                logger.info(f"No more visible unattempted candidate jobs on page. Scrolling down ({consecutive_no_candidates}/3)...")
-                # Scroll container
+                logger.info(f"No unattempted candidate jobs visible on page. Scrolling job list ({consecutive_no_candidates}/3)...")
+                # Scroll the jobs list container
                 driver.execute_script("""
-                    let listContainer = Array.from(document.querySelectorAll('div, ul')).find(d => 
-                        (d.scrollHeight > 1500 || d.getAttribute('data-view-name')?.includes('job-search-results')) &&
-                        d.getBoundingClientRect().left < 450
+                    const listContainer = document.querySelector(
+                        '.jobs-search-results-list, .scaffold-layout__list, [data-view-name*="job-search-results"]'
                     );
                     if (listContainer) {
                         listContainer.scrollTop += 800;
@@ -1413,78 +1445,101 @@ class BrowserAutomationTool(BaseTool):
                         window.scrollBy(0, 800);
                     }
                 """)
-                time.sleep(2.0)
+                time.sleep(1.8)
 
                 if consecutive_no_candidates >= 3:
-                    # Try navigating to next pagination page
-                    page_offset += 25
                     consecutive_no_candidates = 0
-                    paged_url = f"{search_url}&start={page_offset}"
-                    logger.info(f"Navigating to next search page: {paged_url}")
-                    driver.get(paged_url)
-                    time.sleep(3.5)
+                    page_offset += 25
+                    if page_offset <= 75:
+                        paged_url = get_search_url(current_kw, page_offset)
+                        logger.info(f"Navigating to next search page: {paged_url}")
+                        driver.get(paged_url)
+                        time.sleep(3.5)
+                    else:
+                        # Rotate to next candidate query if available
+                        query_idx += 1
+                        if query_idx < len(candidate_queries):
+                            current_kw = candidate_queries[query_idx]
+                            page_offset = 0
+                            rotated_url = get_search_url(current_kw, page_offset)
+                            logger.info(f"Rotating to next search keyword '{current_kw}': {rotated_url}")
+                            driver.get(rotated_url)
+                            time.sleep(3.5)
+                        else:
+                            logger.info("All query variations and pages evaluated.")
+                            break
                 continue
 
             consecutive_no_candidates = 0
             job_title = candidate.get("title", "").strip()
 
             if job_title in attempted_titles:
-                # Mark in DOM as attempted
+                # Mark card as attempted
                 driver.execute_script("""
-                    let listContainer = Array.from(document.querySelectorAll('div, ul')).find(d => 
-                        (d.scrollHeight > 1500 || d.getAttribute('data-view-name')?.includes('job-search-results')) &&
-                        d.getBoundingClientRect().left < 450
-                    );
-                    if (arguments[1] && listContainer && listContainer.children[arguments[0]]) {
-                        listContainer.children[arguments[0]].setAttribute('data-helper-attempted', 'true');
+                    const cards = Array.from(document.querySelectorAll(
+                        'li[data-occludable-job-id], ' +
+                        'div.job-card-container, ' +
+                        'li.jobs-search-results__list-item, ' +
+                        'div.jobs-search-results-list li, ' +
+                        'div[data-job-id], ' +
+                        'li.scaffold-layout__list-item'
+                    )).filter(c => {
+                        const txt = (c.innerText || '').trim();
+                        return txt.length > 10 && !txt.includes('Applied') && c.getAttribute('data-helper-attempted') !== 'true';
+                    });
+                    if (cards[arguments[0]]) {
+                        cards[arguments[0]].setAttribute('data-helper-attempted', 'true');
                     }
-                """, candidate["idx"], candidate.get("isContainer", False))
+                """, candidate["idx"])
                 continue
 
             attempted_titles.add(job_title)
             logger.info(f"Inspecting job {len(applied_jobs) + 1}/{count}: '{job_title}'")
 
-            # 3. Click card to open in details pane
+            # 3. Click card to display details pane
             driver.execute_script("""
-                let target;
-                if (arguments[1]) {
-                    let listContainer = Array.from(document.querySelectorAll('div, ul')).find(d => 
-                        (d.scrollHeight > 1500 || d.getAttribute('data-view-name')?.includes('job-search-results')) &&
-                        d.getBoundingClientRect().left < 450
-                    );
-                    target = listContainer ? listContainer.children[arguments[0]] : null;
-                } else {
-                    let items = Array.from(document.querySelectorAll('li[data-occludable-job-id], div.job-card-container, li.jobs-search-results__list-item'));
-                    target = items[arguments[0]];
-                }
+                const cards = Array.from(document.querySelectorAll(
+                    'li[data-occludable-job-id], ' +
+                    'div.job-card-container, ' +
+                    'li.jobs-search-results__list-item, ' +
+                    'div.jobs-search-results-list li, ' +
+                    'div[data-job-id], ' +
+                    'li.scaffold-layout__list-item'
+                )).filter(c => {
+                    const txt = (c.innerText || '').trim();
+                    return txt.length > 10 && !txt.includes('Applied') && c.getAttribute('data-helper-attempted') !== 'true';
+                });
+                const target = cards[arguments[0]];
                 if (target) {
                     target.setAttribute('data-helper-attempted', 'true');
                     target.scrollIntoView({block: 'center'});
-                    target.click();
+                    const link = target.querySelector('a.job-card-list__title, a[data-control-id], a');
+                    if (link) { link.click(); } else { target.click(); }
                 }
-            """, candidate["idx"], candidate.get("isContainer", False))
+            """, candidate["idx"])
             time.sleep(2.5)
 
-            # Get company name
+            # Get company name from details pane
             company_name = ""
             try:
-                comp_el = driver.find_elements(By.XPATH, "//*[contains(@class, 'company-name') or contains(@class, 'employer')]")
+                comp_el = driver.find_elements(By.XPATH, "//*[contains(@class, 'company-name') or contains(@class, 'employer') or contains(@class, 'top-card__company')]")
                 if comp_el:
                     company_name = comp_el[0].text.strip()
             except Exception:
                 pass
 
-            # 4. Check for Easy Apply button on details pane (rect.left > 450)
+            # 4. Check for Easy Apply button on details pane
             has_apply = False
             for _ in range(3):
                 has_apply = driver.execute_script("""
-                    const btn = Array.from(document.querySelectorAll('button, [role="button"]')).find(b => {
+                    const detailsPane = document.querySelector('.jobs-search__job-details, .scaffold-layout__detail, .job-view-layout') || document.body;
+                    const btn = Array.from(detailsPane.querySelectorAll('button, [role="button"]')).find(b => {
                         const txt = (b.innerText || '').trim();
                         const aria = (b.getAttribute('aria-label') || '').trim();
-                        return (txt.includes('Easy Apply') || aria.includes('Easy Apply')) && 
-                               !txt.includes('Applied') && 
-                               b.getBoundingClientRect().left > 450 &&
-                               b.offsetParent !== null;
+                        const isApply = txt.includes('Easy Apply') || aria.includes('Easy Apply') || b.classList.contains('jobs-apply-button');
+                        const isApplied = txt.includes('Applied') || aria.includes('Applied');
+                        const inJobList = b.closest('.jobs-search-results-list, .scaffold-layout__list');
+                        return isApply && !isApplied && !inJobList && b.offsetParent !== null;
                     });
                     if (btn) {
                         btn.scrollIntoView({block: 'center'});
@@ -1498,24 +1553,25 @@ class BrowserAutomationTool(BaseTool):
                 time.sleep(1.0)
 
             if not has_apply:
-                logger.info(f"No active Easy Apply button on details pane for '{job_title}'. Skipping.")
+                logger.info(f"No Easy Apply button available on details pane for '{job_title}'. Skipping.")
                 continue
 
             logger.info(f"Clicked Easy Apply for '{job_title}'. Navigating application modal...")
             time.sleep(2.0)
 
-            # 5. Modal flow with full form filling & popup handling
+            # 5. Modal flow with full form filling & submission
             modal_applied = False
             for step in range(12):
                 time.sleep(1.2)
 
-                # Check for 'Submit application' button
+                # Check for 'Submit application' button in modal
                 submitted = driver.execute_script("""
-                    const submitBtn = Array.from(document.querySelectorAll('button')).find(b => 
-                        b.innerText.trim() === 'Submit application' && 
-                        b.getBoundingClientRect().left > 450 &&
-                        b.offsetParent !== null
-                    );
+                    const modal = document.querySelector('div[role="dialog"], .jobs-easy-apply-modal, .artdeco-modal, [data-test-modal]') || document.body;
+                    const submitBtn = Array.from(modal.querySelectorAll('button')).find(b => {
+                        const txt = (b.innerText || '').trim();
+                        const aria = (b.getAttribute('aria-label') || '').trim();
+                        return (txt === 'Submit application' || txt === 'Submit' || aria.includes('Submit application')) && b.offsetParent !== null;
+                    });
                     if (submitBtn) {
                         submitBtn.scrollIntoView({block: 'center'});
                         submitBtn.click();
@@ -1542,7 +1598,7 @@ class BrowserAutomationTool(BaseTool):
                     break
 
                 # Resume upload handling
-                file_inputs = driver.find_elements(By.XPATH, "//input[@type='file']")
+                file_inputs = driver.find_elements(By.XPATH, "//div[@role='dialog']//input[@type='file'] | //input[@type='file']")
                 for fi in file_inputs:
                     try:
                         fi.send_keys(resolved_resume)
@@ -1550,8 +1606,10 @@ class BrowserAutomationTool(BaseTool):
                     except Exception:
                         pass
 
-                # Comprehensive form element filling (dropdowns, comboboxes, radio, inputs, checkboxes)
+                # Form filling inside the modal
                 driver.execute_script("""
+                    const modal = document.querySelector('div[role="dialog"], .jobs-easy-apply-modal, .artdeco-modal, [data-test-modal]') || document.body;
+
                     function setNativeVal(el, val) {
                         try {
                             const setter = Object.getOwnPropertyDescriptor(el.constructor.prototype, 'value')?.set;
@@ -1566,11 +1624,11 @@ class BrowserAutomationTool(BaseTool):
                     }
 
                     // Upload resume button if present
-                    const upBtn = Array.from(document.querySelectorAll('button')).find(b => b.innerText.trim() === 'Upload resume' && b.offsetParent !== null);
+                    const upBtn = Array.from(modal.querySelectorAll('button')).find(b => b.innerText.trim() === 'Upload resume' && b.offsetParent !== null);
                     if (upBtn) upBtn.click();
 
                     // 1. <select> Dropdowns
-                    const selects = Array.from(document.querySelectorAll('select')).filter(s => s.offsetParent !== null);
+                    const selects = Array.from(modal.querySelectorAll('select')).filter(s => s.offsetParent !== null);
                     selects.forEach(sel => {
                         if (!sel.value || sel.selectedIndex <= 0) {
                             for (let i = 1; i < sel.options.length; i++) {
@@ -1587,7 +1645,7 @@ class BrowserAutomationTool(BaseTool):
                     });
 
                     // 2. Comboboxes & Autocompletes
-                    const comboboxes = Array.from(document.querySelectorAll('input[role="combobox"], [role="combobox"]')).filter(c => c.offsetParent !== null);
+                    const comboboxes = Array.from(modal.querySelectorAll('input[role="combobox"], [role="combobox"]')).filter(c => c.offsetParent !== null);
                     comboboxes.forEach(cb => {
                         if (cb.tagName === 'INPUT' && !cb.value) {
                             cb.focus();
@@ -1601,7 +1659,7 @@ class BrowserAutomationTool(BaseTool):
 
                     // 3. Radio Buttons (grouped by name, default to Yes or first option)
                     const radioGroups = {};
-                    document.querySelectorAll('input[type="radio"]').forEach(r => {
+                    modal.querySelectorAll('input[type="radio"]').forEach(r => {
                         if (r.offsetParent !== null) {
                             const name = r.name || 'default';
                             if (!radioGroups[name]) radioGroups[name] = [];
@@ -1621,18 +1679,18 @@ class BrowserAutomationTool(BaseTool):
                     });
 
                     // 4. Inputs and Textareas
-                    const inps = Array.from(document.querySelectorAll('input[type="text"], input[type="number"], textarea')).filter(i => i.offsetParent !== null);
+                    const inps = Array.from(modal.querySelectorAll('input[type="text"], input[type="number"], textarea')).filter(i => i.offsetParent !== null);
                     inps.forEach(i => {
                         if (!i.value) {
                             const pText = (i.closest('div')?.innerText || '').toLowerCase();
                             if (pText.includes('notice')) {
-                                setNativeVal(i, '30');
+                                setNativeVal(i, '15');
                             } else if (pText.includes('fixed') || pText.includes('ctc') || pText.includes('salary') || pText.includes('compensation')) {
-                                setNativeVal(i, '500000');
+                                setNativeVal(i, '600000');
                             } else if (pText.includes('experience') || pText.includes('year')) {
-                                setNativeVal(i, '5');
+                                setNativeVal(i, '22');
                             } else if (pText.includes('phone') || pText.includes('mobile')) {
-                                setNativeVal(i, '9876543210');
+                                setNativeVal(i, '9898048483');
                             } else if (pText.includes('city') || pText.includes('location')) {
                                 setNativeVal(i, 'Rajkot');
                             } else {
@@ -1642,19 +1700,21 @@ class BrowserAutomationTool(BaseTool):
                     });
 
                     // 5. Checkboxes (terms / agreement / consent)
-                    document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+                    modal.querySelectorAll('input[type="checkbox"]').forEach(cb => {
                         if (cb.offsetParent !== null && !cb.checked) cb.click();
                     });
                 """)
 
                 # Advance modal with 'Next' or 'Review'
                 advanced = driver.execute_script("""
-                    const nextModal = Array.from(document.querySelectorAll('button')).find(b => 
-                        (b.innerText.trim() === 'Next' || b.innerText.trim() === 'Review') &&
-                        !b.getAttribute('data-testid')?.includes('pagination') &&
-                        b.getBoundingClientRect().left > 450 &&
-                        b.offsetParent !== null
-                    );
+                    const modal = document.querySelector('div[role="dialog"], .jobs-easy-apply-modal, .artdeco-modal, [data-test-modal]') || document.body;
+                    const nextModal = Array.from(modal.querySelectorAll('button')).find(b => {
+                        const txt = (b.innerText || '').trim();
+                        const aria = (b.getAttribute('aria-label') || '').trim();
+                        return (txt === 'Next' || txt === 'Review' || aria === 'Continue to next step') &&
+                               !b.getAttribute('data-testid')?.includes('pagination') &&
+                               b.offsetParent !== null;
+                    });
                     if (nextModal) {
                         nextModal.click();
                         return true;
@@ -1665,11 +1725,12 @@ class BrowserAutomationTool(BaseTool):
                 if not advanced:
                     time.sleep(1.0)
                     check_sub = driver.execute_script("""
-                        const sub = Array.from(document.querySelectorAll('button')).find(b => 
-                            b.innerText.trim() === 'Submit application' && 
-                            b.getBoundingClientRect().left > 450 &&
-                            b.offsetParent !== null
-                        );
+                        const modal = document.querySelector('div[role="dialog"], .jobs-easy-apply-modal, .artdeco-modal, [data-test-modal]') || document.body;
+                        const sub = Array.from(modal.querySelectorAll('button')).find(b => {
+                            const txt = (b.innerText || '').trim();
+                            const aria = (b.getAttribute('aria-label') || '').trim();
+                            return (txt === 'Submit application' || txt === 'Submit' || aria.includes('Submit application')) && b.offsetParent !== null;
+                        });
                         if (sub) { sub.click(); return true; }
                         return false;
                     """)
@@ -1695,17 +1756,15 @@ class BrowserAutomationTool(BaseTool):
             if not modal_applied:
                 logger.info(f"Could not complete modal for '{job_title}'. Discarding application to proceed to next listing.")
                 driver.execute_script("""
-                    const dismiss = Array.from(document.querySelectorAll('button')).find(b => 
-                        b.getAttribute('aria-label') === 'Dismiss' && 
-                        b.getBoundingClientRect().left > 450 &&
-                        b.offsetParent !== null
-                    );
+                    const modal = document.querySelector('div[role="dialog"], .jobs-easy-apply-modal, .artdeco-modal, [data-test-modal]') || document.body;
+                    const dismiss = modal.querySelector('button[aria-label="Dismiss"], button[aria-label="Close"], button.artdeco-modal__dismiss') ||
+                        Array.from(document.querySelectorAll('button')).find(b => (b.getAttribute('aria-label') === 'Dismiss' || b.innerText.trim() === 'Cancel') && b.offsetParent !== null);
                     if (dismiss) dismiss.click();
                 """)
                 time.sleep(1.0)
                 driver.execute_script("""
                     const discard = Array.from(document.querySelectorAll('button')).find(b => 
-                        (b.innerText.trim() === 'Discard' || b.innerText.trim() === 'Discard draft') && 
+                        (b.innerText.trim() === 'Discard' || b.innerText.trim() === 'Discard draft' || b.getAttribute('data-control-name') === 'discard_application_confirm_btn') && 
                         b.offsetParent !== null
                     );
                     if (discard) discard.click();

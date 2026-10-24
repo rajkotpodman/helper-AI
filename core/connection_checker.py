@@ -20,7 +20,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 logger = logging.getLogger("ConnectionChecker")
 
@@ -200,6 +200,7 @@ class ConnectionChecker:
         tasks = {
             "internet": lambda: self.check_internet(timeout=timeout),
             "google_translate": lambda: self.check_translation(timeout=timeout),
+            "anthropic_api": lambda: self.check_llm("anthropic"),
             "gemini_api": lambda: self.check_llm("gemini"),
             "deepseek_api": lambda: self.check_llm("deepseek"),
             "groq_api": lambda: self.check_llm("groq"),

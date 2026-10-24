@@ -129,40 +129,41 @@ class GroundTruthEvaluator:
             if m:
                 repo_name = m.group(1)
 
-        # Check browser driver state directly
+        # Check browser driver state directly only if driver is alive and actually on facebook.com
         try:
             browser = ProjectBrowser.get_instance()
-            driver = browser.get_driver()
-            current_url = (driver.current_url or "").lower()
-            page_src = (driver.page_source or "").lower()
+            if browser.is_alive():
+                driver = browser.get_driver()
+                current_url = (driver.current_url or "").lower()
+                page_src = (driver.page_source or "").lower()
 
-            # A. Authentication Ground Truth
-            if "login" in current_url or any(term in page_src for term in ["log into facebook", "sign up for facebook", "input name=\"email\""]):
-                res = EvaluationResult(
-                    is_verified=False,
-                    ground_truth_evidence="Current browser state is on Facebook login page. Session is unauthenticated.",
-                    failure_reason="FACEBOOK_NOT_LOGGED_IN",
-                    suggested_fix="User must log into Facebook once in Project Browser (Chrome) so cookies are persisted."
-                )
-                self.memory.record_reflection("publish_facebook_post", repo_name or "facebook", False, res.ground_truth_evidence, res.failure_reason, res.suggested_fix)
-                return res
+                if "facebook.com" in current_url:
+                    # A. Authentication Ground Truth
+                    if "login" in current_url or any(term in page_src for term in ["log into facebook", "sign up for facebook", "input name=\"email\""]):
+                        res = EvaluationResult(
+                            is_verified=False,
+                            ground_truth_evidence="Current browser state is on Facebook login page. Session is unauthenticated.",
+                            failure_reason="FACEBOOK_NOT_LOGGED_IN",
+                            suggested_fix="User must log into Facebook once in Project Browser (Chrome) so cookies are persisted."
+                        )
+                        self.memory.record_reflection("publish_facebook_post", repo_name or "facebook", False, res.ground_truth_evidence, res.failure_reason, res.suggested_fix)
+                        return res
 
-            # B. Facebook rejection / error banners
-            error_patterns = [
-                "something went wrong", "temporarily blocked", "action blocked",
-                "community standards", "you can't post right now"
-            ]
-            for pat in error_patterns:
-                if pat in page_src:
-                    res = EvaluationResult(
-                        is_verified=False,
-                        ground_truth_evidence=f"Facebook displayed an active rejection banner containing '{pat}'.",
-                        failure_reason="FACEBOOK_REJECTED_POST",
-                        suggested_fix="Wait for Facebook rate limit to clear or post manually."
-                    )
-                    self.memory.record_reflection("publish_facebook_post", repo_name or "facebook", False, res.ground_truth_evidence, res.failure_reason, res.suggested_fix)
-                    return res
-
+                    # B. Facebook rejection / error banners
+                    error_patterns = [
+                        "something went wrong", "temporarily blocked", "action blocked",
+                        "community standards", "you can't post right now"
+                    ]
+                    for pat in error_patterns:
+                        if pat in page_src:
+                            res = EvaluationResult(
+                                is_verified=False,
+                                ground_truth_evidence=f"Facebook displayed an active rejection banner containing '{pat}'.",
+                                failure_reason="FACEBOOK_REJECTED_POST",
+                                suggested_fix="Wait for Facebook rate limit to clear or post manually."
+                            )
+                            self.memory.record_reflection("publish_facebook_post", repo_name or "facebook", False, res.ground_truth_evidence, res.failure_reason, res.suggested_fix)
+                            return res
         except Exception as e:
             logger.warning(f"Could not inspect live browser DOM for Facebook verification: {e}")
 
@@ -209,19 +210,21 @@ class GroundTruthEvaluator:
         from core.browser_driver import ProjectBrowser
         try:
             browser = ProjectBrowser.get_instance()
-            driver = browser.get_driver()
-            current_url = (driver.current_url or "").lower()
-            page_src = (driver.page_source or "").lower()
+            if browser.is_alive():
+                driver = browser.get_driver()
+                current_url = (driver.current_url or "").lower()
+                page_src = (driver.page_source or "").lower()
 
-            if "login" in current_url or any(term in page_src for term in ["sign in to linkedin", "join linkedin"]):
-                res = EvaluationResult(
-                    is_verified=False,
-                    ground_truth_evidence="Browser redirected to LinkedIn sign-in page.",
-                    failure_reason="LINKEDIN_NOT_LOGGED_IN",
-                    suggested_fix="Log in to LinkedIn in Project Browser window."
-                )
-                self.memory.record_reflection("publish_linkedin_post", repo_name or "linkedin", False, res.ground_truth_evidence, res.failure_reason, res.suggested_fix)
-                return res
+                if "linkedin.com" in current_url:
+                    if "login" in current_url or any(term in page_src for term in ["sign in to linkedin", "join linkedin"]):
+                        res = EvaluationResult(
+                            is_verified=False,
+                            ground_truth_evidence="Browser redirected to LinkedIn sign-in page.",
+                            failure_reason="LINKEDIN_NOT_LOGGED_IN",
+                            suggested_fix="Log in to LinkedIn in Project Browser window."
+                        )
+                        self.memory.record_reflection("publish_linkedin_post", repo_name or "linkedin", False, res.ground_truth_evidence, res.failure_reason, res.suggested_fix)
+                        return res
         except Exception:
             pass
 
@@ -256,19 +259,21 @@ class GroundTruthEvaluator:
         from core.browser_driver import ProjectBrowser
         try:
             browser = ProjectBrowser.get_instance()
-            driver = browser.get_driver()
-            current_url = (driver.current_url or "").lower()
-            page_src = (driver.page_source or "").lower()
+            if browser.is_alive():
+                driver = browser.get_driver()
+                current_url = (driver.current_url or "").lower()
+                page_src = (driver.page_source or "").lower()
 
-            if "accounts.google.com" in current_url or "create your blog" in page_src:
-                res = EvaluationResult(
-                    is_verified=False,
-                    ground_truth_evidence="Blogger requires Google account login.",
-                    failure_reason="BLOGGER_AUTH_REQUIRED",
-                    suggested_fix="Sign in to your Google Account in Project Browser."
-                )
-                self.memory.record_reflection("publish_blog_post", title, False, res.ground_truth_evidence, res.failure_reason, res.suggested_fix)
-                return res
+                if any(domain in current_url for domain in ["blogger.com", "google.com"]):
+                    if "accounts.google.com" in current_url or "create your blog" in page_src:
+                        res = EvaluationResult(
+                            is_verified=False,
+                            ground_truth_evidence="Blogger requires Google account login.",
+                            failure_reason="BLOGGER_AUTH_REQUIRED",
+                            suggested_fix="Sign in to your Google Account in Project Browser."
+                        )
+                        self.memory.record_reflection("publish_blog_post", title, False, res.ground_truth_evidence, res.failure_reason, res.suggested_fix)
+                        return res
         except Exception:
             pass
 

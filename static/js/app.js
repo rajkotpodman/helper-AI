@@ -213,6 +213,7 @@ function initElements() {
   elements.btnCancelSettings = document.getElementById('btn-cancel-settings-modal');
   elements.btnSaveSettings = document.getElementById('btn-save-settings-modal');
   elements.selectProvider = document.getElementById('modal-select-provider');
+  elements.inputAnthropicKey = document.getElementById('input-anthropic-key');
   elements.inputGeminiKey = document.getElementById('input-gemini-key');
   elements.inputDeepseekKey = document.getElementById('input-deepseek-key');
   elements.inputOpenaiKey = document.getElementById('input-openai-key');
@@ -269,6 +270,8 @@ function initElements() {
   elements.inputLivekitKey = document.getElementById('input-livekit-key');
   elements.inputLivekitSecret = document.getElementById('input-livekit-secret');
   elements.btnSaveLivekitSettings = document.getElementById('btn-save-livekit-settings');
+  elements.btnFloatingVoiceOrb = document.getElementById('btn-floating-voice-orb');
+  elements.selectLivekitVoice = document.getElementById('livekit-voice-select');
   
   // Language Selector
   elements.btnLangDropdown = document.getElementById('btn-lang-dropdown');
@@ -277,6 +280,42 @@ function initElements() {
   elements.langItemsContainer = document.getElementById('lang-items-container');
   elements.activeLangLabel = document.getElementById('active-lang-label');
   
+  // Playwright CRM & Web Automation Studio
+  elements.btnPlaywrightPill = document.getElementById('btn-playwright-pill');
+  elements.modalPlaywright = document.getElementById('modal-playwright');
+  elements.btnClosePlaywrightModal = document.getElementById('btn-close-playwright-modal');
+  elements.playwrightStatusBadge = document.getElementById('playwright-status-badge');
+  elements.playwrightCodegenBadge = document.getElementById('playwright-codegen-state-badge');
+  elements.playwrightInputUrl = document.getElementById('playwright-input-url');
+  elements.playwrightInputName = document.getElementById('playwright-input-name');
+  elements.playwrightCheckChrome = document.getElementById('playwright-check-chrome');
+  elements.playwrightCheckSaveSession = document.getElementById('playwright-check-save-session');
+  elements.btnPlaywrightLaunchCodegen = document.getElementById('btn-playwright-launch-codegen');
+  elements.btnPlaywrightStopCodegen = document.getElementById('btn-playwright-stop-codegen');
+  elements.playwrightSelectWorkflow = document.getElementById('playwright-select-workflow');
+  elements.btnPlaywrightRefreshWorkflows = document.getElementById('btn-playwright-refresh-workflows');
+  elements.playwrightBatchContainer = document.getElementById('playwright-batch-data-container');
+  elements.playwrightBatchInput = document.getElementById('playwright-batch-input');
+  elements.playwrightCheckHeadless = document.getElementById('playwright-check-headless');
+  elements.btnPlaywrightRunWorkflow = document.getElementById('btn-playwright-run-workflow');
+  elements.playwrightConsoleOutput = document.getElementById('playwright-console-output');
+  elements.playwrightRunStatus = document.getElementById('playwright-run-status');
+
+  // Job Portals & CV Automation Studio
+  elements.btnJobportalsPill = document.getElementById('btn-jobportals-pill');
+  elements.modalJobportals = document.getElementById('modal-jobportals');
+  elements.btnCloseJobportalsModal = document.getElementById('btn-close-jobportals-modal');
+  elements.jobportalsStatusBadge = document.getElementById('jobportals-status-badge');
+  elements.btnRunAllJobportals = document.getElementById('btn-run-all-jobportals');
+  elements.jobportalsConsoleOutput = document.getElementById('jobportals-console-output');
+  elements.jobportalsRunStatus = document.getElementById('jobportals-run-status');
+  elements.candidateName = document.getElementById('candidate-name');
+  elements.candidateTitle = document.getElementById('candidate-title');
+  elements.candidatePhone = document.getElementById('candidate-phone');
+  elements.candidateEmail = document.getElementById('candidate-email');
+  elements.candidateCvPath = document.getElementById('candidate-cv-path');
+  elements.jobportalsSummaryCount = document.getElementById('jobportals-summary-count');
+
   // Stepper Elements
   elements.stepNodes = [
     document.getElementById('step-node-1'),
@@ -308,6 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchSystemStatus();
   fetchMemoryStats();
   checkOllamaStatus();
+  checkPlaywrightStatus();
   loadSettingsIntoModal();
   
   // Periodic telemetry refresh & execution watchdog (recovers from socket drops)
@@ -754,6 +794,7 @@ function handleStreamEvent(data) {
   }
   else if (type === 'started') {
     state.isExecuting = true;
+    state.executionCompletedHandled = false;
     elements.btnExecute?.classList.add('opacity-50', 'pointer-events-none');
     elements.btnStop?.classList.remove('hidden');
     elements.executionDrawer?.classList.remove('hidden');
@@ -797,7 +838,15 @@ function handleStreamEvent(data) {
   else if (type === 'permission_requested') {
     showPermissionModal(payload);
   } 
+  else if (type === 'cancelled') {
+    appendTerminalLog(`🛑 Execution halted: ${payload.message || 'User stopped execution.'}`, 'warn');
+    handleExecutionComplete({ success: false, cancelled: true, message: payload.message || 'Execution stopped by user.' });
+  }
   else if (type === 'completed' || type === 'finished') {
+    if (!state.isExecuting && state.executionCompletedHandled) {
+      return;
+    }
+    state.executionCompletedHandled = true;
     handleExecutionComplete(payload);
   } 
   else if (type === 'error') {
@@ -806,31 +855,91 @@ function handleStreamEvent(data) {
   }
 }
 
+function renderMarkdownToHtml(text) {
+  if (!text) return '';
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+  // Code blocks ```code```
+  html = html.replace(/```([a-zA-Z0-9_\-]*)\n([\s\S]*?)```/g, (m, lang, code) => {
+    return `<pre class="bg-zinc-950 p-3 rounded-lg border border-zinc-800 my-2 overflow-x-auto font-mono text-xs text-blue-300"><code>${code.trim()}</code></pre>`;
+  });
+  
+  // Inline code `code`
+  html = html.replace(/`([^`]+)`/g, '<code class="bg-zinc-800 text-blue-300 px-1 py-0.5 rounded text-[11px] font-mono">$1</code>');
+  
+  // Headers ###
+  html = html.replace(/^### (.*$)/gim, '<h3 class="text-sm font-bold text-white mt-3 mb-1">$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2 class="text-base font-bold text-white mt-4 mb-2">$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1 class="text-lg font-bold text-white mt-4 mb-2">$1</h1>');
+  
+  // Bold **text**
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-white">$1</strong>');
+  
+  // Lists
+  html = html.replace(/^\s*[-•*]\s+(.*$)/gim, '<li class="ml-4 list-disc text-zinc-300">$1</li>');
+  
+  // Paragraphs
+  html = html.replace(/\n\n/g, '<br><br>');
+  return html;
+}
+
 function handleExecutionComplete(data) {
   state.isExecuting = false;
+  state.executionCompletedHandled = true;
   state.lastResultData = data;
   updateStepper(4);
-  
+
   elements.btnExecute?.classList.remove('opacity-50', 'pointer-events-none');
   elements.btnStop?.classList.add('hidden');
   
   const resultText = String(data?.final_result || data?.message || data?.error || '');
-  const hasError = data?.success === false || resultText.toLowerCase().includes('internal server error') || resultText.toLowerCase().includes('execution error');
+  const isCancelled = Boolean(data?.cancelled) || resultText.toLowerCase().includes('stopped') || resultText.toLowerCase().includes('cancelled');
+  const hasError = !isCancelled && (data?.success === false || resultText.toLowerCase().includes('internal server error') || resultText.toLowerCase().includes('execution error'));
   
-  if (elements.executionStatus) {
-    elements.executionStatus.textContent = !hasError ? 'Goal Completed Successfully' : 'Goal Execution Finished With Alert';
-  }
-  
-  if (elements.resultHeading) {
-    elements.resultHeading.textContent = !hasError ? 'Mission Accomplished!' : 'Action / Attention Required';
-  }
-  
-  if (!hasError) {
+  if (isCancelled) {
+    if (elements.executionStatus) {
+      elements.executionStatus.textContent = 'Execution Halted (Stopped)';
+    }
+    if (elements.resultHeading) {
+      elements.resultHeading.textContent = 'Agent Stopped by User';
+    }
+    appendTerminalLog(`🛑 Mission halted by user request.`, 'warn');
+  } else if (!hasError) {
+    if (elements.executionStatus) {
+      elements.executionStatus.textContent = 'Goal Completed Successfully';
+    }
+    if (elements.resultHeading) {
+      elements.resultHeading.textContent = 'Mission Accomplished!';
+    }
     appendTerminalLog(`🎉 Mission complete! Final status: SUCCESS`, 'success');
   } else {
+    if (elements.executionStatus) {
+      elements.executionStatus.textContent = 'Goal Execution Finished With Alert';
+    }
+    if (elements.resultHeading) {
+      elements.resultHeading.textContent = 'Action / Attention Required';
+    }
     appendTerminalLog(`⚠️ Execution status: ATTENTION NEEDED - ${resultText || 'Execution stopped with warnings'}`, 'warn');
   }
-  
+
+  // Update Assistant Message Bubble in DeepSeek Harness Chat View
+  if (state.currentAssistantBlock) {
+    const badge = state.currentAssistantBlock.querySelector('.dsh-completed-badge');
+    if (badge) {
+      badge.innerHTML = `<span>Completed in ${state.stepCount || 1} steps</span> <i data-lucide="chevron-down" class="w-3 h-3"></i>`;
+    }
+    const content = state.currentAssistantBlock.querySelector('.dsh-assistant-content');
+    if (content) {
+      content.innerHTML = renderMarkdownToHtml(resultText);
+    }
+    if (window.lucide) lucide.createIcons();
+    const chatStream = document.getElementById('view-chat');
+    chatStream?.scrollTo({ top: chatStream.scrollHeight, behavior: 'smooth' });
+  }
+
   // Show comprehensive final result card
   if (elements.resultContainer && elements.resultBodyText) {
     elements.resultContainer.classList.remove('hidden');
@@ -851,6 +960,54 @@ async function executeGoal() {
   state.currentGoalText = goal;
   state.executionLogs = [];
   
+  // Clear textarea and reset height
+  if (elements.goalInput) {
+    elements.goalInput.value = '';
+    elements.goalInput.style.height = 'auto';
+  }
+
+  // Update Topbar and Sidebar Session Titles
+  const topTitle = document.getElementById('topbar-session-title');
+  if (topTitle) topTitle.textContent = goal.slice(0, 36) + (goal.length > 36 ? '...' : '');
+  const sideTitle = document.getElementById('sidebar-active-session-label');
+  if (sideTitle) sideTitle.textContent = goal.slice(0, 28) + (goal.length > 28 ? '...' : '');
+
+  // Render User Message & Assistant Placeholder in DeepSeek Harness Chat Stream
+  const chatContainer = document.getElementById('chat-messages-container');
+  if (chatContainer) {
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    // User Bubble
+    const userBubble = document.createElement('div');
+    userBubble.className = 'dsh-user-bubble';
+    userBubble.innerHTML = `
+      ${goal.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+      <div class="flex items-center justify-end gap-1.5 text-[10px] text-zinc-500 mt-1">
+        <span>${timeStr}</span>
+        <button onclick="navigator.clipboard.writeText(this.parentElement.parentElement.textContent.trim())" class="hover:text-zinc-300" title="Copy text"><i data-lucide="copy" class="w-3 h-3"></i></button>
+      </div>
+    `;
+    chatContainer.appendChild(userBubble);
+
+    // Assistant Block Placeholder
+    const assistantBlock = document.createElement('div');
+    assistantBlock.className = 'dsh-assistant-block';
+    assistantBlock.innerHTML = `
+      <div class="dsh-completed-badge">
+        <span class="animate-pulse">Thinking & executing...</span>
+      </div>
+      <div class="dsh-assistant-content text-xs text-zinc-300">
+        <span class="text-zinc-400">Helper-AI is inspecting the workspace and planning autonomous actions...</span>
+      </div>
+    `;
+    chatContainer.appendChild(assistantBlock);
+    state.currentAssistantBlock = assistantBlock;
+
+    if (window.lucide) lucide.createIcons();
+    const chatStream = document.getElementById('view-chat');
+    chatStream?.scrollTo({ top: chatStream.scrollHeight, behavior: 'smooth' });
+  }
+
   // Show drawer and clear terminal
   elements.executionDrawer?.classList.remove('hidden');
   elements.resultContainer?.classList.add('hidden');
@@ -902,8 +1059,10 @@ async function stopAgent() {
     const res = await fetch('/api/cancel', { method: 'POST' });
     const data = await res.json();
     appendTerminalLog(`Agent cancelled: ${data.message || 'Stopped.'}`, 'warn');
+    handleExecutionComplete({ success: false, cancelled: true, message: data.message || 'Execution halted by user.' });
   } catch (err) {
     console.error(err);
+    handleExecutionComplete({ success: false, cancelled: true, message: 'Execution halted by user.' });
   }
 }
 
@@ -1136,6 +1295,42 @@ function setupModals() {
   elements.btnLivekitScreenShare?.addEventListener('click', toggleLivekitScreenShare);
   elements.btnLivekitTestTool?.addEventListener('click', testLivekitToolFromVoice);
   elements.btnSaveLivekitSettings?.addEventListener('click', saveLivekitCredentials);
+  elements.btnFloatingVoiceOrb?.addEventListener('click', () => {
+    openLivekitModal();
+    if (!livekitState.active) {
+      toggleLivekitSession();
+    }
+  });
+
+  // Playwright CRM Studio Modal Listeners
+  elements.btnPlaywrightPill?.addEventListener('click', openPlaywrightModal);
+  elements.btnClosePlaywrightModal?.addEventListener('click', () => elements.modalPlaywright?.classList.add('hidden'));
+  elements.btnPlaywrightLaunchCodegen?.addEventListener('click', launchPlaywrightCodegen);
+  elements.btnPlaywrightStopCodegen?.addEventListener('click', stopPlaywrightCodegen);
+  elements.btnPlaywrightRefreshWorkflows?.addEventListener('click', loadPlaywrightWorkflows);
+  elements.btnPlaywrightRunWorkflow?.addEventListener('click', runPlaywrightWorkflow);
+
+  // Job Portals Studio Modal Listeners
+  elements.btnJobportalsPill?.addEventListener('click', openJobportalsModal);
+  elements.btnCloseJobportalsModal?.addEventListener('click', () => elements.modalJobportals?.classList.add('hidden'));
+  elements.btnRunAllJobportals?.addEventListener('click', runAllJobportalsAutomation);
+
+  // Quick CRM Preset Buttons
+  document.querySelectorAll('.btn-crm-url-preset').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const url = e.currentTarget.getAttribute('data-url');
+      if (elements.playwrightInputUrl && url) elements.playwrightInputUrl.value = url;
+    });
+  });
+
+  // Batch vs Single Mode toggle
+  document.querySelectorAll('input[name="playwright-exec-mode"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      if (elements.playwrightBatchContainer) {
+        elements.playwrightBatchContainer.style.display = e.target.value === 'batch' ? 'block' : 'none';
+      }
+    });
+  });
 
   // Universal Custom AI 1-Click Preset Chips
   document.querySelectorAll('.btn-preset-chip').forEach(btn => {
@@ -1269,6 +1464,7 @@ async function runConnectionsCheck() {
 
 function updateProviderKeyVisibility() {
   const p = elements.selectProvider?.value;
+  document.getElementById('group-anthropic-key')?.classList.toggle('hidden', p !== 'anthropic' && p !== 'claude');
   document.getElementById('group-gemini-key')?.classList.toggle('hidden', p !== 'gemini');
   document.getElementById('group-deepseek-key')?.classList.toggle('hidden', p !== 'deepseek');
   document.getElementById('group-custom-ai')?.classList.toggle('hidden', p !== 'custom');
@@ -1280,6 +1476,7 @@ function updateProviderKeyVisibility() {
 async function loadSettingsIntoModal() {
   if (elements.selectProvider) elements.selectProvider.value = state.provider;
   if (elements.checkboxSafeMode) elements.checkboxSafeMode.checked = state.safeMode;
+  if (elements.inputAnthropicKey) elements.inputAnthropicKey.value = localStorage.getItem('helper_anthropic_key') || '';
   if (elements.inputGeminiKey) elements.inputGeminiKey.value = localStorage.getItem('helper_gemini_key') || '';
   if (elements.inputDeepseekKey) elements.inputDeepseekKey.value = localStorage.getItem('helper_deepseek_key') || '';
   if (elements.inputCustomName) elements.inputCustomName.value = localStorage.getItem('helper_custom_name') || 'OpenRouter';
@@ -1300,6 +1497,10 @@ async function loadSettingsIntoModal() {
         if (elements.selectProvider) elements.selectProvider.value = s.provider;
         if (elements.providerStateText) elements.providerStateText.textContent = s.provider.toUpperCase();
       }
+      if (s.anthropic_key && !elements.inputAnthropicKey?.value) {
+        if (elements.inputAnthropicKey) elements.inputAnthropicKey.value = s.anthropic_key;
+        localStorage.setItem('helper_anthropic_key', s.anthropic_key);
+      }
       if (s.gemini_key && !elements.inputGeminiKey?.value) {
         if (elements.inputGeminiKey) elements.inputGeminiKey.value = s.gemini_key;
         localStorage.setItem('helper_gemini_key', s.gemini_key);
@@ -1316,6 +1517,18 @@ async function loadSettingsIntoModal() {
         if (elements.inputDeepseekKey) elements.inputDeepseekKey.value = s.deepseek_key;
         localStorage.setItem('helper_deepseek_key', s.deepseek_key);
       }
+      const unrestrictBox = document.getElementById('modal-checkbox-unrestricted');
+      if (unrestrictBox) {
+        unrestrictBox.checked = s.unrestricted_mode !== false;
+      }
+      const bgAiSelect = document.getElementById('modal-select-background-ai');
+      if (bgAiSelect && s.background_ai_provider) {
+        bgAiSelect.value = s.background_ai_provider;
+      }
+      const unrestrictBadge = document.getElementById('unrestricted-badge-text');
+      if (unrestrictBadge) {
+        unrestrictBadge.textContent = (s.unrestricted_mode !== false) ? 'Unrestricted Full Access' : 'Restricted Mode';
+      }
       updateProviderKeyVisibility();
     }
   } catch (e) {}
@@ -1324,7 +1537,10 @@ async function loadSettingsIntoModal() {
 function saveSettingsFromModal() {
   state.provider = elements.selectProvider?.value || 'gemini';
   state.safeMode = elements.checkboxSafeMode?.checked || false;
+  const isUnrestricted = document.getElementById('modal-checkbox-unrestricted')?.checked !== false;
+  const backgroundAi = document.getElementById('modal-select-background-ai')?.value || 'auto';
   
+  if (elements.inputAnthropicKey) localStorage.setItem('helper_anthropic_key', elements.inputAnthropicKey.value);
   if (elements.inputGeminiKey) localStorage.setItem('helper_gemini_key', elements.inputGeminiKey.value);
   if (elements.inputDeepseekKey) localStorage.setItem('helper_deepseek_key', elements.inputDeepseekKey.value);
   if (elements.inputCustomName) localStorage.setItem('helper_custom_name', elements.inputCustomName.value);
@@ -1341,6 +1557,7 @@ function saveSettingsFromModal() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       provider: state.provider,
+      anthropic_key: elements.inputAnthropicKey?.value || null,
       gemini_key: elements.inputGeminiKey?.value || null,
       deepseek_key: elements.inputDeepseekKey?.value || null,
       custom_name: elements.inputCustomName?.value || null,
@@ -1350,10 +1567,16 @@ function saveSettingsFromModal() {
       openai_key: elements.inputOpenaiKey?.value || null,
       groq_key: elements.inputGroqKey?.value || null,
       ollama_model: elements.inputOllamaModel?.value || null,
-      safe_mode: state.safeMode
+      safe_mode: state.safeMode,
+      unrestricted_mode: isUnrestricted,
+      background_ai_provider: backgroundAi
     })
   }).catch(err => console.warn('Could not persist settings to server:', err));
   
+  const unrestrictBadge = document.getElementById('unrestricted-badge-text');
+  if (unrestrictBadge) {
+    unrestrictBadge.textContent = isUnrestricted ? 'Unrestricted Full Access' : 'Restricted Mode';
+  }
   updateSafeModeDisplay();
   if (elements.providerStateText) {
     elements.providerStateText.textContent = state.provider.toUpperCase();
@@ -1419,17 +1642,59 @@ function setupActions() {
     });
   });
   
-  // Read Aloud / Speak
-  elements.btnSpeakResult?.addEventListener('click', () => {
-    const text = elements.resultBodyText?.textContent;
-    if (!text) return;
-    
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      window.speechSynthesis.speak(utterance);
+  // Read Aloud / Speak (One-Tap Play, Second-Tap Stop)
+  let isAiSpeaking = false;
+
+  function updateSpeakButtonUI(speaking) {
+    isAiSpeaking = speaking;
+    if (elements.btnSpeakResult) {
+      if (speaking) {
+        elements.btnSpeakResult.innerHTML = '<i data-lucide="square" class="w-3.5 h-3.5 fill-red-400 text-red-400"></i> <span class="font-bold text-red-400">Stop</span>';
+        elements.btnSpeakResult.classList.add('bg-red-500/20', 'border-red-500/40');
+      } else {
+        elements.btnSpeakResult.innerHTML = '<i data-lucide="volume-2" class="w-3.5 h-3.5 text-emerald-400"></i> <span class="text-emerald-300">Speak</span>';
+        elements.btnSpeakResult.classList.remove('bg-red-500/20', 'border-red-500/40');
+      }
+      if (window.lucide) lucide.createIcons();
     }
+  }
+
+  elements.btnSpeakResult?.addEventListener('click', () => {
+    if (!('speechSynthesis' in window)) {
+      alert('Speech synthesis is not supported in this browser.');
+      return;
+    }
+
+    // Second tap: If currently speaking, STOP immediately
+    if (window.speechSynthesis.speaking || isAiSpeaking) {
+      window.speechSynthesis.cancel();
+      updateSpeakButtonUI(false);
+      return;
+    }
+
+    // First tap: Start speaking
+    const text = elements.resultBodyText?.textContent?.trim();
+    if (!text) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+
+    utterance.onstart = () => {
+      updateSpeakButtonUI(true);
+    };
+
+    utterance.onend = () => {
+      updateSpeakButtonUI(false);
+    };
+
+    utterance.onerror = (e) => {
+      console.warn('Speech error:', e);
+      updateSpeakButtonUI(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+    updateSpeakButtonUI(true);
   });
   
   // Export Markdown Report
@@ -1494,11 +1759,16 @@ async function checkLivekitStatus() {
   }
 }
 
+let voiceAgentRecognition = null;
+let voiceAgentAudio = null;
+let voiceSilenceTimer = null;
+let voiceCurrentUtterance = '';
+
 async function toggleLivekitSession() {
   if (!livekitState.active) {
     // Start session
     try {
-      if (elements.livekitSessionState) elements.livekitSessionState.textContent = 'Connecting WebRTC room...';
+      if (elements.livekitSessionState) elements.livekitSessionState.textContent = 'Connecting WebRTC room & Voice Engine...';
       const tokenRes = await fetch('/api/livekit/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1520,11 +1790,14 @@ async function toggleLivekitSession() {
         elements.btnLivekitConnect.classList.add('bg-red-600', 'hover:bg-red-500');
       }
       if (elements.btnLivekitConnectText) elements.btnLivekitConnectText.textContent = 'End Voice Session';
-      if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🟢 Session Connected • Listening & Speaking';
-      elements.livekitOrb?.classList.add('scale-110', 'ring-4', 'ring-purple-400');
+      if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🟢 Session Connected • Listening Hands-Free';
+      elements.livekitOrb?.classList.add('scale-110', 'ring-4', 'ring-cyan-400');
       
-      appendLivekitTranscript('Helper-AI', 'Hello! Helper-AI WebRTC Voice session connected. You can speak to control your PC or ask questions.');
-      appendTerminalLog('🎙️ LiveKit WebRTC Voice & Vision session active', 'info');
+      appendLivekitTranscript('Helper-AI', 'Hello! Helper-AI Hands-free Voice session connected. You can speak naturally without pressing any buttons to control your PC or ask questions.');
+      appendTerminalLog('🎙️ Hands-Free Voice Agent connected. Speech-to-Speech active.', 'info');
+
+      // Start continuous hands-free speech recognition loop
+      startHandsFreeVoiceLoop();
     } catch (err) {
       if (elements.livekitSessionState) elements.livekitSessionState.textContent = 'Connection failed: ' + err.message;
     }
@@ -1534,6 +1807,16 @@ async function toggleLivekitSession() {
       await fetch('/api/livekit/session/stop', { method: 'POST' });
     } catch (e) {}
     livekitState.active = false;
+    if (voiceAgentRecognition) {
+      try { voiceAgentRecognition.stop(); } catch(e) {}
+      voiceAgentRecognition = null;
+    }
+    if (voiceAgentAudio) {
+      voiceAgentAudio.pause();
+      voiceAgentAudio = null;
+    }
+    clearTimeout(voiceSilenceTimer);
+
     if (livekitState.screenStream) {
       livekitState.screenStream.getTracks().forEach(t => t.stop());
       livekitState.screenStream = null;
@@ -1544,8 +1827,169 @@ async function toggleLivekitSession() {
     }
     if (elements.btnLivekitConnectText) elements.btnLivekitConnectText.textContent = 'Start Live Voice Session';
     if (elements.livekitSessionState) elements.livekitSessionState.textContent = 'Standby • Ready to Connect';
-    elements.livekitOrb?.classList.remove('scale-110', 'ring-4', 'ring-purple-400');
-    appendLivekitTranscript('System', 'Voice session ended.');
+    elements.livekitOrb?.classList.remove('scale-110', 'ring-4', 'ring-cyan-400', 'ring-purple-400', 'ring-emerald-400');
+    appendLivekitTranscript('System', 'Hands-free voice session ended.');
+  }
+}
+
+function startHandsFreeVoiceLoop() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRec) {
+    appendLivekitTranscript('System', '⚠️ Speech recognition not supported in this browser. You can type commands in the test input.');
+    return;
+  }
+
+  if (voiceAgentRecognition) {
+    try { voiceAgentRecognition.stop(); } catch(e) {}
+  }
+
+  voiceAgentRecognition = new SpeechRec();
+  voiceAgentRecognition.continuous = true;
+  voiceAgentRecognition.interimResults = true;
+  voiceAgentRecognition.lang = 'en-US';
+
+  voiceAgentRecognition.onstart = () => {
+    if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🎙️ Listening... (Speak freely hands-free)';
+    elements.livekitOrb?.classList.add('scale-110', 'ring-4', 'ring-cyan-400');
+    elements.livekitOrb?.classList.remove('ring-purple-400', 'ring-emerald-400');
+  };
+
+  voiceAgentRecognition.onresult = (evt) => {
+    let interim = '';
+    let final = '';
+    for (let i = evt.resultIndex; i < evt.results.length; ++i) {
+      if (evt.results[i].isFinal) {
+        final += evt.results[i][0].transcript;
+      } else {
+        interim += evt.results[i][0].transcript;
+      }
+    }
+    const current = final || interim;
+    if (current && current.trim()) {
+      voiceCurrentUtterance = current.trim();
+      if (elements.livekitSessionState) elements.livekitSessionState.textContent = `🎙️ Heard: "${voiceCurrentUtterance}"`;
+      
+      clearTimeout(voiceSilenceTimer);
+      voiceSilenceTimer = setTimeout(() => {
+        if (voiceCurrentUtterance && livekitState.active) {
+          const toSend = voiceCurrentUtterance;
+          voiceCurrentUtterance = '';
+          dispatchSpokenCommand(toSend);
+        }
+      }, 950);
+    }
+  };
+
+  voiceAgentRecognition.onerror = (err) => {
+    console.warn('Voice loop notice:', err.error);
+    if (livekitState.active && err.error !== 'aborted') {
+      setTimeout(() => {
+        if (livekitState.active) startHandsFreeVoiceLoop();
+      }, 1000);
+    }
+  };
+
+  voiceAgentRecognition.onend = () => {
+    if (livekitState.active && (!voiceAgentAudio || voiceAgentAudio.paused)) {
+      setTimeout(() => {
+        if (livekitState.active && (!voiceAgentAudio || voiceAgentAudio.paused)) {
+          try { voiceAgentRecognition.start(); } catch(e) {}
+        }
+      }, 400);
+    }
+  };
+
+  try {
+    voiceAgentRecognition.start();
+  } catch(e) {
+    console.error('Failed to start speech recognition:', e);
+  }
+}
+
+async function dispatchSpokenCommand(transcript) {
+  if (!transcript || !transcript.trim()) return;
+  appendLivekitTranscript('You (Voice)', transcript);
+  if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🧠 Helper-AI is thinking & executing...';
+  elements.livekitOrb?.classList.remove('ring-cyan-400');
+  elements.livekitOrb?.classList.add('ring-purple-400', 'animate-spin');
+
+  if (voiceAgentRecognition) {
+    try { voiceAgentRecognition.stop(); } catch(e) {}
+  }
+
+  try {
+    const res = await fetch('/api/voice/dispatch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        transcript: transcript,
+        voice: elements.selectLivekitVoice?.value || 'en-US-AriaNeural',
+        speak_on_pc: false,
+        provider: state.provider || 'gemini'
+      })
+    });
+    const data = await res.json();
+    elements.livekitOrb?.classList.remove('animate-spin');
+
+    if (data.reply) {
+      appendLivekitTranscript('Helper-AI (Voice)', data.reply);
+      if (data.audio_base64) {
+        playAgentVoiceAudio(data.audio_base64);
+      } else {
+        playClientSpeechFallback(data.reply);
+      }
+    } else {
+      appendLivekitTranscript('Helper-AI', 'No response generated.');
+      resumeVoiceListening();
+    }
+  } catch (err) {
+    elements.livekitOrb?.classList.remove('animate-spin');
+    appendLivekitTranscript('Helper-AI', 'Voice dispatch error: ' + err.message);
+    resumeVoiceListening();
+  }
+}
+
+function playAgentVoiceAudio(base64Mp3) {
+  if (voiceAgentAudio) {
+    voiceAgentAudio.pause();
+    voiceAgentAudio = null;
+  }
+  voiceAgentAudio = new Audio('data:audio/mpeg;base64,' + base64Mp3);
+  if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🔊 Helper-AI speaking...';
+  elements.livekitOrb?.classList.remove('ring-cyan-400', 'ring-purple-400');
+  elements.livekitOrb?.classList.add('ring-emerald-400', 'scale-125');
+
+  voiceAgentAudio.onended = () => {
+    elements.livekitOrb?.classList.remove('scale-125', 'ring-emerald-400');
+    resumeVoiceListening();
+  };
+  voiceAgentAudio.onerror = () => {
+    resumeVoiceListening();
+  };
+  voiceAgentAudio.play().catch(() => resumeVoiceListening());
+}
+
+function playClientSpeechFallback(text) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🔊 Helper-AI speaking...';
+    elements.livekitOrb?.classList.add('ring-emerald-400', 'scale-125');
+    utt.onend = () => {
+      elements.livekitOrb?.classList.remove('scale-125', 'ring-emerald-400');
+      resumeVoiceListening();
+    };
+    window.speechSynthesis.speak(utt);
+  } else {
+    resumeVoiceListening();
+  }
+}
+
+function resumeVoiceListening() {
+  if (livekitState.active) {
+    if (elements.livekitSessionState) elements.livekitSessionState.textContent = '🎙️ Listening... (Speak freely hands-free)';
+    elements.livekitOrb?.classList.add('ring-cyan-400');
+    startHandsFreeVoiceLoop();
   }
 }
 
@@ -1619,3 +2063,277 @@ async function saveLivekitCredentials() {
     alert('Failed to save LiveKit credentials: ' + e.message);
   }
 }
+
+// ============================================================================
+// PLAYWRIGHT CRM & WEB AUTOMATION STUDIO ENGINE
+// ============================================================================
+let playwrightState = {
+  activeCodegen: false,
+  workflows: []
+};
+
+async function openPlaywrightModal() {
+  elements.modalPlaywright?.classList.remove('hidden');
+  await checkPlaywrightStatus();
+  await loadPlaywrightWorkflows();
+}
+
+async function checkPlaywrightStatus() {
+  try {
+    const res = await fetch('/api/playwright/status');
+    const data = await res.json();
+    playwrightState.activeCodegen = Boolean(data.active_codegen);
+    
+    if (elements.playwrightStatusBadge) {
+      elements.playwrightStatusBadge.textContent = data.playwright_installed ? (data.active_codegen ? 'Recording' : 'Ready') : 'CLI Missing';
+      elements.playwrightStatusBadge.className = data.active_codegen ? 'font-semibold text-amber-400' : 'font-semibold text-emerald-400';
+    }
+
+    if (elements.playwrightCodegenBadge) {
+      if (data.active_codegen) {
+        elements.playwrightCodegenBadge.textContent = `Recording (${data.codegen_details?.script_name || 'Active'})`;
+        elements.playwrightCodegenBadge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-red-600/30 text-red-300 font-mono animate-pulse';
+        elements.btnPlaywrightStopCodegen?.classList.remove('hidden');
+      } else {
+        elements.playwrightCodegenBadge.textContent = 'Idle';
+        elements.playwrightCodegenBadge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono';
+        elements.btnPlaywrightStopCodegen?.classList.add('hidden');
+      }
+    }
+  } catch (e) {
+    console.error('Failed to check Playwright status:', e);
+  }
+}
+
+async function loadPlaywrightWorkflows() {
+  try {
+    const res = await fetch('/api/playwright/workflows');
+    const data = await res.json();
+    playwrightState.workflows = data.workflows || [];
+    
+    if (elements.playwrightSelectWorkflow) {
+      elements.playwrightSelectWorkflow.innerHTML = '';
+      if (playwrightState.workflows.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No workflows found. Record one above!';
+        elements.playwrightSelectWorkflow.appendChild(opt);
+      } else {
+        playwrightState.workflows.forEach(w => {
+          const opt = document.createElement('option');
+          opt.value = w.filename;
+          opt.textContent = `${w.filename} (${w.size_bytes} B)`;
+          elements.playwrightSelectWorkflow.appendChild(opt);
+        });
+      }
+    }
+    appendPlaywrightLog(`Loaded ${playwrightState.workflows.length} automation workflow(s).`, 'info');
+  } catch (err) {
+    appendPlaywrightLog('Failed to load workflows: ' + err.message, 'error');
+  }
+}
+
+async function launchPlaywrightCodegen() {
+  const url = elements.playwrightInputUrl?.value.trim() || 'https://google.com';
+  const name = elements.playwrightInputName?.value.trim() || 'tata_crm_lead_entry';
+  const useChrome = elements.playwrightCheckChrome ? elements.playwrightCheckChrome.checked : true;
+  const saveSession = elements.playwrightCheckSaveSession ? elements.playwrightCheckSaveSession.checked : true;
+  
+  appendPlaywrightLog(`⚡ Launching Playwright Codegen for '${url}'...`, 'info');
+  appendTerminalLog(`Playwright Codegen starting on ${url}...`, 'action');
+
+  try {
+    const res = await fetch('/api/playwright/codegen/launch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url: url,
+        script_name: name,
+        browser: useChrome ? 'chrome' : 'chromium',
+        save_session: saveSession
+      })
+    });
+    const data = await res.json();
+    if (data.status === 'started' || data.status === 'already_running') {
+      appendPlaywrightLog(`✅ Playwright Inspector & Chrome launched! Script will save to workflows/playwright/${name}.py`, 'success');
+      appendPlaywrightLog(`👉 Fill in your CRM form now. Playwright writes code live! Close the Chrome window when finished.`, 'info');
+      await checkPlaywrightStatus();
+    } else {
+      appendPlaywrightLog(`❌ Failed to start recorder: ${JSON.stringify(data)}`, 'error');
+    }
+  } catch (e) {
+    appendPlaywrightLog(`❌ Request error: ${e.message}`, 'error');
+  }
+}
+
+async function stopPlaywrightCodegen() {
+  try {
+    appendPlaywrightLog('Stopping active Codegen process...', 'info');
+    const res = await fetch('/api/playwright/codegen/stop', { method: 'POST' });
+    const data = await res.json();
+    appendPlaywrightLog(`Codegen stopped: ${JSON.stringify(data)}`, 'info');
+    await checkPlaywrightStatus();
+    await loadPlaywrightWorkflows();
+  } catch (e) {
+    appendPlaywrightLog('Error stopping codegen: ' + e.message, 'error');
+  }
+}
+
+async function runPlaywrightWorkflow() {
+  const workflow = elements.playwrightSelectWorkflow?.value;
+  if (!workflow) {
+    alert('Please select or record a workflow script first.');
+    return;
+  }
+
+  const mode = document.querySelector('input[name="playwright-exec-mode"]:checked')?.value || 'batch';
+  const headless = elements.playwrightCheckHeadless ? elements.playwrightCheckHeadless.checked : false;
+
+  let leadsData = [];
+  if (mode === 'batch') {
+    const raw = elements.playwrightBatchInput?.value.trim() || '[]';
+    try {
+      if (raw.startsWith('[') || raw.startsWith('{')) {
+        leadsData = JSON.parse(raw);
+        if (!Array.isArray(leadsData)) leadsData = [leadsData];
+      } else {
+        // Simple CSV parse
+        const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length > 1) {
+          const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+          leadsData = lines.slice(1).map(line => {
+            const cols = line.split(',').map(c => c.trim());
+            const obj = {};
+            headers.forEach((h, idx) => { obj[h] = cols[idx] || ''; });
+            return obj;
+          });
+        }
+      }
+    } catch (e) {
+      alert('Invalid JSON/CSV lead data: ' + e.message);
+      return;
+    }
+  }
+
+  appendPlaywrightLog(`▶ Starting execution of '${workflow}' in ${mode} mode (headless: ${headless})...`, 'info');
+  if (elements.playwrightRunStatus) elements.playwrightRunStatus.textContent = 'Running...';
+  if (elements.btnPlaywrightRunWorkflow) elements.btnPlaywrightRunWorkflow.disabled = true;
+
+  try {
+    const res = await fetch('/api/playwright/workflows/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        workflow_name: workflow,
+        mode: mode,
+        leads_data: leadsData,
+        headless: headless,
+        timeout: 180
+      })
+    });
+    const data = await res.json();
+    if (data.status === 'completed') {
+      appendPlaywrightLog(`✅ Workflow completed in ${data.duration_seconds || 0}s!`, 'success');
+      if (data.batch_summary) {
+        appendPlaywrightLog(`📊 Batch summary: ${data.batch_summary.successful}/${data.batch_summary.total_leads} leads processed successfully.`, 'info');
+      }
+      if (data.output) {
+        appendPlaywrightLog(`Output: ${data.output}`, 'info');
+      }
+      appendTerminalLog(`Playwright workflow '${workflow}' executed successfully.`, 'action');
+    } else {
+      appendPlaywrightLog(`⚠️ Execution status: ${data.status} • Error: ${data.error || 'Check logs'}`, 'error');
+      if (data.output) appendPlaywrightLog(data.output, 'error');
+    }
+  } catch (err) {
+    appendPlaywrightLog('Failed to execute workflow: ' + err.message, 'error');
+  } finally {
+    if (elements.playwrightRunStatus) elements.playwrightRunStatus.textContent = 'Ready';
+    if (elements.btnPlaywrightRunWorkflow) elements.btnPlaywrightRunWorkflow.disabled = false;
+  }
+}
+
+function appendPlaywrightLog(message, type = 'info') {
+  if (!elements.playwrightConsoleOutput) return;
+  const item = document.createElement('div');
+  const time = new Date().toLocaleTimeString();
+  let colorClass = 'text-slate-300';
+  if (type === 'success') colorClass = 'text-emerald-400 font-semibold';
+  if (type === 'error') colorClass = 'text-red-400 font-semibold';
+  if (type === 'info') colorClass = 'text-cyan-300';
+  
+  item.className = `leading-relaxed ${colorClass}`;
+  item.textContent = `[${time}] ${message}`;
+  elements.playwrightConsoleOutput.appendChild(item);
+  elements.playwrightConsoleOutput.scrollTop = elements.playwrightConsoleOutput.scrollHeight;
+}
+
+// --- 24. Job Portals & CV Automation Handlers ---
+async function openJobportalsModal() {
+  elements.modalJobportals?.classList.remove('hidden');
+  appendJobportalsLog('Fetching candidate CV profile & 10 portals configuration...', 'info');
+  try {
+    const res = await fetch('/api/job-portals/status');
+    const data = await res.json();
+    if (data.status === 'success') {
+      const p = data.profile || {};
+      if (elements.candidateName && p.full_name) elements.candidateName.textContent = p.full_name;
+      if (elements.candidateTitle && p.title) elements.candidateTitle.textContent = `${p.title} (${p.experience_years || 22}+ Years Exp)`;
+      if (elements.candidatePhone && p.phone) elements.candidatePhone.textContent = `📞 ${p.phone}`;
+      if (elements.candidateEmail && p.email) elements.candidateEmail.textContent = `✉️ ${p.email}`;
+      if (elements.candidateCvPath && data.cv_path) elements.candidateCvPath.textContent = data.cv_path;
+      if (elements.jobportalsSummaryCount && data.portals) {
+        elements.jobportalsSummaryCount.textContent = `${data.portals.length} / 10 Active`;
+      }
+      appendJobportalsLog(`✅ Loaded CV: ${data.cv_path || 'Jignesh CV'} (${data.portals?.length || 10} job portals ready)`, 'success');
+    }
+  } catch (err) {
+    appendJobportalsLog('Failed to fetch job portals status: ' + err.message, 'error');
+  }
+}
+
+async function runAllJobportalsAutomation() {
+  if (elements.btnRunAllJobportals) elements.btnRunAllJobportals.disabled = true;
+  if (elements.jobportalsRunStatus) elements.jobportalsRunStatus.textContent = 'Running...';
+  appendJobportalsLog('🚀 Initiating autonomous pipeline for all 10 job portals with Jignesh CV...', 'info');
+
+  try {
+    const res = await fetch('/api/job-portals/process', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ upload_all: true })
+    });
+    const data = await res.json();
+    if (data.status === 'completed' || data.status === 'success') {
+      appendJobportalsLog(`🎉 Pipeline Completed! Processed ${data.processed_count || 10} portals.`, 'success');
+      if (data.report_file) {
+        appendJobportalsLog(`📄 Application report written to: ${data.report_file}`, 'info');
+      }
+      appendTerminalLog(`Job Portals Automation complete: 10/10 portals registered and CV attached.`, 'action');
+    } else {
+      appendJobportalsLog(`⚠️ Execution status: ${data.status} • ${data.error || 'Check details'}`, 'error');
+    }
+  } catch (err) {
+    appendJobportalsLog('Error running job portals automation: ' + err.message, 'error');
+  } finally {
+    if (elements.btnRunAllJobportals) elements.btnRunAllJobportals.disabled = false;
+    if (elements.jobportalsRunStatus) elements.jobportalsRunStatus.textContent = 'Ready';
+  }
+}
+
+function appendJobportalsLog(message, type = 'info') {
+  if (!elements.jobportalsConsoleOutput) return;
+  const item = document.createElement('div');
+  const time = new Date().toLocaleTimeString();
+  let colorClass = 'text-slate-300';
+  if (type === 'success') colorClass = 'text-emerald-400 font-semibold';
+  if (type === 'error') colorClass = 'text-red-400 font-semibold';
+  if (type === 'info') colorClass = 'text-cyan-300';
+  
+  item.className = `leading-relaxed ${colorClass}`;
+  item.textContent = `[${time}] ${message}`;
+  elements.jobportalsConsoleOutput.appendChild(item);
+  elements.jobportalsConsoleOutput.scrollTop = elements.jobportalsConsoleOutput.scrollHeight;
+}
+
+

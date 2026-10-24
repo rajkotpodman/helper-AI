@@ -13,9 +13,46 @@ from typing import Dict, Any, List, Optional
 import xml.etree.ElementTree as ET
 import zipfile
 
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 from core.browser_driver import ProjectBrowser
 
 logger = logging.getLogger("JobPortalAutomation")
+
+
+def _safe_type(driver, element, text: str):
+    """Types text into an input field using Selenium send_keys and reactive JS events."""
+    try:
+        driver.execute_script("arguments[0].scrollIntoView({behavior: 'instant', block: 'center'});", element)
+        time.sleep(0.05)
+    except Exception:
+        pass
+    try:
+        element.click()
+        time.sleep(0.05)
+    except Exception:
+        pass
+    try:
+        element.clear()
+    except Exception:
+        pass
+    try:
+        element.send_keys(text)
+    except Exception:
+        pass
+    try:
+        driver.execute_script("""
+            arguments[0].value = arguments[1];
+            arguments[0].dispatchEvent(new Event('input', { bubbles: true }));
+            arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
+            arguments[0].dispatchEvent(new Event('blur', { bubbles: true }));
+        """, element, text)
+    except Exception:
+        pass
+
 
 PROJECT_ROOT = Path(__file__).parent.parent
 STATUS_FILE = PROJECT_ROOT / "jignesh_job_portals_status.json"
@@ -137,6 +174,13 @@ class JobPortalAutomation:
     def __init__(self):
         self.browser = ProjectBrowser.get_instance()
         self._parsed_cv: Optional[Dict[str, Any]] = None
+        self._cancelled = False
+
+    def cancel(self):
+        """Signals the automation engine to halt between portal steps."""
+        self._cancelled = True
+        logger.info("JobPortalAutomation: Cancel signal activated.")
+
 
     def locate_cv_files(self) -> List[Path]:
         """Finds any CV/resume files for Jignesh in Downloads or Documents."""
@@ -275,6 +319,9 @@ class JobPortalAutomation:
         Name, Mobile (+91 9898048483), Email, Password, Experience, City, and CV file.
         Detects if Mobile OTP verification screen is triggered.
         """
+        if self._cancelled:
+            return {"actions_taken": ["Operation cancelled by user."], "otp_needed": False, "cv_attached": False, "submit_clicked": False}
+
         try:
             driver = self.browser.get_driver()
         except Exception as e:
@@ -297,6 +344,8 @@ class JobPortalAutomation:
         try:
             name_inputs = driver.find_elements(By.XPATH, "//input[@type='text' or not(@type)]")
             for inp in name_inputs:
+                if self._cancelled:
+                    break
                 try:
                     if not inp.is_displayed():
                         continue
@@ -311,33 +360,34 @@ class JobPortalAutomation:
                     ]).lower()
 
                     if any(k in attrs for k in ["fname", "first_name", "firstname", "first name"]):
-                        inp.clear()
-                        inp.send_keys(first_name)
+                        _safe_type(driver, inp, first_name)
                         actions_taken.append(f"Filled First Name: {first_name}")
                     elif any(k in attrs for k in ["lname", "last_name", "lastname", "last name"]):
-                        inp.clear()
-                        inp.send_keys(last_name)
+                        _safe_type(driver, inp, last_name)
                         actions_taken.append(f"Filled Last Name: {last_name}")
                     elif any(k in attrs for k in ["fullname", "full_name", "full name", "your name", "name", "candidate_name"]):
-                        inp.clear()
-                        inp.send_keys(full_name)
+                        _safe_type(driver, inp, full_name)
                         actions_taken.append(f"Filled Full Name: {full_name}")
                 except Exception:
                     continue
         except Exception as e:
             logger.debug(f"Name fill error: {e}")
 
+        if self._cancelled:
+            return {"actions_taken": actions_taken, "otp_needed": False, "cv_attached": False, "submit_clicked": False}
+
         # 2. Fill Email fields
         try:
-            email_inputs = driver.find_elements(By.XPATH, "//input[@type='email'] | //input[contains(translate(@name, 'EMAIL', 'email'), 'email') or contains(translate(@placeholder, 'EMAIL', 'email'), 'email')]")
+            email_inputs = driver.find_elements(By.XPATH, "//input[@type='email'] | //input[contains(translate(@name, 'EMAIL', 'email'), 'email') or contains(translate(@placeholder, 'EMAIL', 'email'), 'email') or contains(translate(@id, 'EMAIL', 'email'), 'email')]")
             for inp in email_inputs:
+                if self._cancelled:
+                    break
                 try:
                     if not inp.is_displayed():
                         continue
                     val = inp.get_attribute("value") or ""
                     if not val.strip():
-                        inp.clear()
-                        inp.send_keys(email)
+                        _safe_type(driver, inp, email)
                         actions_taken.append(f"Filled Email: {email}")
                         break
                 except Exception:
@@ -345,17 +395,21 @@ class JobPortalAutomation:
         except Exception as e:
             logger.debug(f"Email fill error: {e}")
 
+        if self._cancelled:
+            return {"actions_taken": actions_taken, "otp_needed": False, "cv_attached": False, "submit_clicked": False}
+
         # 3. Fill Mobile / Phone fields
         try:
-            phone_inputs = driver.find_elements(By.XPATH, "//input[@type='tel'] | //input[contains(translate(@name, 'MOBILEPHONE', 'mobilephone'), 'mobile') or contains(translate(@name, 'MOBILEPHONE', 'mobilephone'), 'phone') or contains(translate(@placeholder, 'MOBILEPHONE', 'mobilephone'), 'mobile') or contains(translate(@placeholder, 'MOBILEPHONE', 'mobilephone'), 'phone') or contains(translate(@placeholder, 'MOBILEPHONE', 'mobilephone'), 'number')]")
+            phone_inputs = driver.find_elements(By.XPATH, "//input[@type='tel'] | //input[contains(translate(@name, 'MOBILEPHONE', 'mobilephone'), 'mobile') or contains(translate(@name, 'MOBILEPHONE', 'mobilephone'), 'phone') or contains(translate(@placeholder, 'MOBILEPHONE', 'mobilephone'), 'mobile') or contains(translate(@placeholder, 'MOBILEPHONE', 'mobilephone'), 'phone') or contains(translate(@id, 'MOBILEPHONE', 'mobilephone'), 'mobile') or contains(translate(@id, 'MOBILEPHONE', 'mobilephone'), 'phone') or contains(translate(@placeholder, 'MOBILEPHONE', 'mobilephone'), 'number')]")
             for inp in phone_inputs:
+                if self._cancelled:
+                    break
                 try:
                     if not inp.is_displayed():
                         continue
                     val = inp.get_attribute("value") or ""
                     if not val.strip():
-                        inp.clear()
-                        inp.send_keys(phone_digits)
+                        _safe_type(driver, inp, phone_digits)
                         actions_taken.append(f"Filled Mobile Number: {phone_digits}")
                         break
                 except Exception:
@@ -367,13 +421,14 @@ class JobPortalAutomation:
         try:
             pwd_inputs = driver.find_elements(By.XPATH, "//input[@type='password']")
             for inp in pwd_inputs:
+                if self._cancelled:
+                    break
                 try:
                     if not inp.is_displayed():
                         continue
                     val = inp.get_attribute("value") or ""
                     if not val.strip():
-                        inp.clear()
-                        inp.send_keys(password)
+                        _safe_type(driver, inp, password)
                         actions_taken.append("Filled secure password")
                 except Exception:
                     continue
@@ -384,6 +439,8 @@ class JobPortalAutomation:
         try:
             radios = driver.find_elements(By.XPATH, "//input[@type='radio'] | //label[contains(translate(., 'EXPERIENCEDFRESHER', 'experiencedfresher'), 'experienced') or contains(translate(., 'EXPERIENCEDFRESHER', 'experiencedfresher'), 'freelancer') or contains(translate(., 'EXPERIENCEDFRESHER', 'experiencedfresher'), 'fresher')]")
             for r in radios:
+                if self._cancelled:
+                    break
                 try:
                     if r.is_displayed():
                         txt = (r.text or r.get_attribute("value") or "").lower()
@@ -400,6 +457,8 @@ class JobPortalAutomation:
         try:
             checkboxes = driver.find_elements(By.XPATH, "//input[@type='checkbox']")
             for cb in checkboxes:
+                if self._cancelled:
+                    break
                 try:
                     if cb.is_displayed() and not cb.is_selected():
                         cb.click()
@@ -410,7 +469,7 @@ class JobPortalAutomation:
             pass
 
         # 7. Check if CV can be attached right on current page
-        if actual_cv and Path(actual_cv).exists():
+        if not self._cancelled and actual_cv and Path(actual_cv).exists():
             up_res = self.browser.upload_file(actual_cv)
             if up_res.get("success"):
                 cv_attached = True
@@ -418,16 +477,20 @@ class JobPortalAutomation:
 
         # 8. Submit form button (Send OTP, Register, Sign Up, Continue, Next)
         submit_clicked = False
-        for btn_text in ["Register now", "Register", "Create account", "Sign up", "Continue", "Next", "Send OTP", "Get OTP", "Submit"]:
-            try:
-                sub_res = self.browser.click(btn_text)
-                if sub_res.get("success"):
-                    submit_clicked = True
-                    actions_taken.append(f"Clicked '{btn_text}'")
-                    time.sleep(2.5)
+        has_filled_inputs = any(a.startswith("Filled") for a in actions_taken)
+        if not self._cancelled and has_filled_inputs:
+            for btn_text in ["Register now", "Register", "Create account", "Sign up", "Continue", "Next", "Send OTP", "Get OTP", "Submit"]:
+                if self._cancelled:
                     break
-            except Exception:
-                continue
+                try:
+                    sub_res = self.browser.click(btn_text)
+                    if sub_res.get("success"):
+                        submit_clicked = True
+                        actions_taken.append(f"Clicked '{btn_text}'")
+                        time.sleep(2.0)
+                        break
+                except Exception:
+                    continue
 
         # 9. Detect OTP / Verification Screen
         try:
@@ -441,7 +504,7 @@ class JobPortalAutomation:
             pass
 
         # 10. Secondary CV upload attempt after form submit (if not yet attached)
-        if not cv_attached and actual_cv and Path(actual_cv).exists():
+        if not self._cancelled and not cv_attached and actual_cv and Path(actual_cv).exists():
             up_res2 = self.browser.upload_file(actual_cv)
             if up_res2.get("success"):
                 cv_attached = True
@@ -459,6 +522,9 @@ class JobPortalAutomation:
         Navigates to the portal, fills registration fields, clicks Google OAuth/Sign Up,
         attaches the CV, and handles confirmation & OTP detection.
         """
+        if self._cancelled:
+            return {"success": False, "portal": portal_id, "status": "Cancelled", "cv_uploaded": False, "awaiting_otp": False, "notes": ["Cancelled by user."]}
+
         portal = next((p for p in DEFAULT_PORTALS if p["id"] == portal_id), None)
         if not portal:
             return {"success": False, "error": f"Unknown portal ID: {portal_id}"}
@@ -470,7 +536,10 @@ class JobPortalAutomation:
         
         # 1. Navigate to signup page
         nav_res = self.browser.navigate(portal["signup_url"])
-        time.sleep(2.0)
+        time.sleep(2.5)
+
+        if self._cancelled:
+            return {"success": False, "portal": portal["name"], "status": "Cancelled", "cv_uploaded": False, "awaiting_otp": False, "notes": ["Cancelled by user."]}
 
         notes_log = []
         notes_log.append(f"Navigated to {portal['name']} ({nav_res.get('title', '')})")
@@ -480,49 +549,58 @@ class JobPortalAutomation:
         if fill_res["actions_taken"]:
             notes_log.extend(fill_res["actions_taken"])
 
+        if self._cancelled:
+            return {"success": False, "portal": portal["name"], "status": "Cancelled", "cv_uploaded": False, "awaiting_otp": False, "notes": notes_log}
+
         cv_success = fill_res.get("cv_attached", False)
         is_awaiting_otp = fill_res.get("otp_needed", False)
 
         # 3. If native form was not submitted or OAuth is preferred, try OAuth button
-        if not fill_res["submit_clicked"] and not is_awaiting_otp:
+        if not self._cancelled and not fill_res["submit_clicked"] and not is_awaiting_otp:
             oauth_target = portal.get("oauth_button", "Continue with Google")
             click_res = self.browser.click(oauth_target)
             if click_res.get("success"):
                 notes_log.append(f"Clicked '{oauth_target}' successfully")
-                time.sleep(2.5)
+                time.sleep(2.0)
             else:
                 # Fallback button tries
                 fallback_clicked = False
                 for fb in ["Google", "Sign up with Google", "Continue with Google", "Candidate sign up", "Freelancer"]:
+                    if self._cancelled:
+                        break
                     r = self.browser.click(fb)
                     if r.get("success"):
                         notes_log.append(f"Clicked fallback button '{fb}'")
                         fallback_clicked = True
-                        time.sleep(2.0)
+                        time.sleep(1.5)
                         break
 
-            # Re-check form & OTP after clicking OAuth
-            fill_res2 = self.auto_fill_form(profile, portal)
-            if fill_res2["actions_taken"]:
-                notes_log.extend(fill_res2["actions_taken"])
-            if fill_res2.get("cv_attached"):
-                cv_success = True
-            if fill_res2.get("otp_needed"):
-                is_awaiting_otp = True
+            if not self._cancelled:
+                # Re-check form & OTP after clicking OAuth
+                fill_res2 = self.auto_fill_form(profile, portal)
+                if fill_res2["actions_taken"]:
+                    notes_log.extend(fill_res2["actions_taken"])
+                if fill_res2.get("cv_attached"):
+                    cv_success = True
+                if fill_res2.get("otp_needed"):
+                    is_awaiting_otp = True
 
         # 4. If CV still not attached, try direct profile/resume upload page
-        if not cv_success and actual_cv and Path(actual_cv).exists() and not is_awaiting_otp:
+        if not self._cancelled and not cv_success and actual_cv and Path(actual_cv).exists() and not is_awaiting_otp:
             if portal.get("profile_url"):
                 time.sleep(1.0)
                 self.browser.navigate(portal["profile_url"])
                 time.sleep(2.0)
-                up_res2 = self.browser.upload_file(actual_cv)
-                if up_res2.get("success"):
-                    cv_success = True
-                    notes_log.append(f"Attached CV '{Path(actual_cv).name}' via profile resume page")
+                if not self._cancelled:
+                    up_res2 = self.browser.upload_file(actual_cv)
+                    if up_res2.get("success"):
+                        cv_success = True
+                        notes_log.append(f"Attached CV '{Path(actual_cv).name}' via profile resume page")
 
         # Determine true status
-        if cv_success:
+        if self._cancelled:
+            status_label = "Cancelled by User"
+        elif cv_success:
             status_label = "Completed"
         elif is_awaiting_otp:
             status_label = "Awaiting Mobile OTP (+91 9898048483)"
@@ -537,7 +615,7 @@ class JobPortalAutomation:
         )
 
         return {
-            "success": True,
+            "success": True if not self._cancelled else False,
             "portal": portal["name"],
             "status": status_label,
             "cv_uploaded": cv_success,
@@ -564,9 +642,7 @@ class JobPortalAutomation:
         for inp in otp_inputs:
             try:
                 if inp.is_displayed():
-                    inp.click()
-                    inp.clear()
-                    inp.send_keys(clean_otp)
+                    _safe_type(driver, inp, clean_otp)
                     typed = True
                     break
             except Exception:
@@ -579,9 +655,7 @@ class JobPortalAutomation:
             if visible_boxes and len(visible_boxes) >= len(clean_otp):
                 for idx, ch in enumerate(clean_otp):
                     try:
-                        visible_boxes[idx].click()
-                        visible_boxes[idx].clear()
-                        visible_boxes[idx].send_keys(ch)
+                        _safe_type(driver, visible_boxes[idx], ch)
                     except Exception:
                         pass
                 typed = True
@@ -628,11 +702,15 @@ class JobPortalAutomation:
         """
         Executes registration and CV upload across all 10 portals, generating a comprehensive report.
         """
+        self._cancelled = False
         profile = self.parse_cv_details(cv_path)
         actual_cv = profile.get("cv_path")
 
         results = []
         for portal in DEFAULT_PORTALS:
+            if self._cancelled:
+                logger.info("process_all_10_portals: Aborted due to user cancellation.")
+                break
             p_id = portal["id"]
             logger.info(f"Processing Portal [{len(results) + 1}/10]: {portal['name']}...")
             try:
@@ -647,19 +725,23 @@ class JobPortalAutomation:
                     "cv_uploaded": False,
                     "error": str(e)
                 })
+            if self._cancelled:
+                break
             time.sleep(1.5)
 
         # Generate Master Report on Desktop
         report_file = self.generate_report(profile=profile, results=results)
 
         return {
-            "success": True,
+            "success": not self._cancelled,
             "candidate": profile.get("full_name"),
             "cv_path": actual_cv,
             "portals_processed": len(results),
             "results": results,
-            "report_path": str(report_file)
+            "report_path": str(report_file),
+            "cancelled": self._cancelled
         }
+
 
     def generate_report(self, profile: Optional[Dict[str, Any]] = None, results: Optional[List[Dict[str, Any]]] = None) -> str:
         """Generates or updates the markdown report on Desktop."""

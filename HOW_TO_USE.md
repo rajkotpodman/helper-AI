@@ -12,7 +12,7 @@
 2. [1-Click Setup Guide (Windows, Mac, Linux)](#2-1-click-setup-guide)
 3. [Understanding the Web Dashboard Screen](#3-understanding-the-web-dashboard-screen)
 4. [How to Give Goals to the Agent (Best Prompting Practices)](#4-how-to-give-goals-to-the-agent)
-5. [The Complete 36-Tool Arsenal Explained in Plain English](#5-the-complete-36-tool-arsenal-explained)
+5. [The Complete 38-Tool Arsenal Explained in Plain English](#5-the-complete-38-tool-arsenal-explained)
 6. [🧩 Reverse Engineering Any PC & Web Application (REA & App Memory Store)](#6-reverse-engineering-any-pc--web-application)
 7. [Everyday Practical Recipes & Real-World Examples](#7-everyday-practical-recipes)
    - [A. Cleaning & Organizing Messy Computer Folders](#a-cleaning--organizing-messy-computer-folders)
@@ -35,7 +35,7 @@
 1. [Helper-AI શું છે અને તે કેવી રીતે કામ કરે છે?](#૧-helper-ai-શું-છે)
 2. [૧-ક્લિકમાં ચાલુ કરવાની રીત (Windows, Mac, Linux)](#૨-૧-ક્લિકમાં-ચાલુ-કરવાની-રીત)
 3. [વેબ ડેશબોર્ડનો સરળ ઉપયોગ](#૩-વેબ-ડેશબોર્ડનો-સરળ-ઉપયોગ)
-4. [૩૬ પાવરફુલ ટૂલ્સની યાદી અને સાદી સમજૂતી](#૪-૩૬-પાવરફુલ-ટૂલ્સની-યાદી)
+4. [૩૮ પાવરફુલ ટૂલ્સની યાદી અને સાદી સમજૂતી](#૪-૩૮-પાવરફુલ-ટૂલ્સની-યાદી)
 5. [🧩 કોઈપણ એપનું રિવર્સ એન્જિનિયરિંગ અને એપ મેમરી (REA Guide)](#૫-કોઈપણ-એપનું-રિવર્સ-એન્જિનિયરિંગ-અને-એપ-મેમરી)
 6. [રોજિંદા જીવનમાં ઉપયોગી પ્રોમ્પ્ટ્સ (Ready-Made Goals)](#૬-રોજિંદા-જીવનમાં-ઉપયોગી-પ્રોમ્પ્ટ્સ)
 7. [API Key વગર ૧૦૦% ફ્રી અને ઑફલાઇન ચલાવવાની રીત](#૭-api-key-વગર-૧૦૦-ફ્રી-અને-ઑફલાઇન)
@@ -150,7 +150,7 @@ Helper-AI will automatically check its App Memory Store for pre-learned shortcut
 
 ---
 
-## 5. The Complete 36-Tool Arsenal Explained
+## 5. The Complete 38-Tool Arsenal Explained
 
 Here is what every tool does in simple words:
 
@@ -180,7 +180,7 @@ Here is what every tool does in simple words:
 24. **`system_health`**: Shows CPU usage, RAM memory, and hard drive free space.
 25. **`open_application`**: Opens apps on your computer like Chrome, Notepad, Calculator, or Spotify.
 26. **`manage_ollama`**: Lets you download and run 100% private, free AI models on your own PC.
-27. **`check_connections`**: Tests whether your internet, Google Translate, and local servers are connected.
+27. **`check_connections`**: Tests whether your internet, Google Translate, Anthropic API, and local servers are connected.
 28. **`browser_automation`**: Controls a web browser to log in, fill out forms, or post to social media.
 29. **`desktop_gui_control`**: Moves your mouse cursor, clicks buttons on your screen, and presses keyboard shortcuts (`Ctrl+C`, `Ctrl+V`).
 30. **`text_to_speech`**: Speaks out loud in a natural human voice using Microsoft's neural voice engine.
@@ -190,6 +190,8 @@ Here is what every tool does in simple words:
 34. **`orchestrate_complex_goal`**: Breaks massive directives into a 5-phase verified execution pipeline.
 35. **`code_studio_builder`**: Scaffolds full multi-file projects, websites, or apps in 1 step with automated AST syntax checking and test execution.
 36. **`system_super_optimizer`**: Complete PC performance suite: memory optimization analysis, network latency testing, and junk file scanning.
+37. **`windows_uia`**: Direct Windows UI Automation controls for clicking buttons by text name, filling native fields, and navigating menus.
+38. **`consult_background_ai`**: Dynamically queries background AI models (Anthropic Claude, DeepSeek, Groq, Gemini, Ollama) for advisory, debugging, code synthesis, or multi-AI swarm consensus.
 
 ---
 
@@ -475,45 +477,46 @@ Helper-AI puts your safety first:
 
 ---
 
-408: ## ૪. ૩૭ પાવરફુલ ટૂલ્સની યાદી
-409: 
-410: 1. **`windows_uia`**: (Microsoft UFO પદ્ધતિ) Windows UI Automation વડે કોઈપણ સોફ્ટવેરના બટન ("Save", "OK", "Cancel") પર અંદાજા વગર ૧૦૦% સાચી ક્લિક કરે છે અને મેનૂ નેવિગેટ કરે છે.
-411: 2. **`universal_terminal`**: (Open Interpreter પદ્ધતિ) જીવંત અને સ્ટેટફુલ PowerShell/Bash સેશન ચલાવે છે (ફોલ્ડર અને વેરિયેબલ્સ સ્ટેપ્સ વચ્ચે યાદ રહે છે).
-412: 3. **`reverse_engineer_app`**: કોઈપણ સોફ્ટવેર (Notepad, Calculator, Spotify કે વેબસાઇટ) નું રિવર્સ એન્જિનિયરિંગ કરીને તેના કંટ્રોલ્સ મેમરીમાં સેવ કરે છે.
-413: 4. **`query_app_memory`**: સેવ થયેલી એપ્સના શોર્ટકટ્સ અને ઓટોમેશન આઈડી તરત જ લાવી આપે છે.
-414: 5. **`fast_app_operate`**: યાદ રાખેલા શોર્ટકટ્સ વાપરીને ૧ જ સેકન્ડમાં ૧૦૦% ચોકસાઈથી સોફ્ટવેર ઓપરેટ કરે છે.
-415: 6. **`mcp_rea_call`**: REA ના ૨૦૦ થી વધુ ઊંડાણપૂર્વકના રિવર્સ એન્જિનિયરિંગ ટૂલ્સ ચલાવે છે.
-416: 7. **`synthesize_os_command`**: તમારા સાદા લખાણને તમારી ઓપરેટિંગ સિસ્ટમ માટે યોગ્ય કમાન્ડમાં ફેરવે છે.
-417: 8. **`command_hub`**: કોઈપણ ટૂલ (જેમ કે ffmpeg, docker, powershell) માટે ઉપયોગી ચીટ-શીટ્સ ડાઉનલોડ કરે છે.
-418: 9. **`audit_security_baseline`**: કમ્પ્યુટરનું ફાયરવોલ, ઓપન પોર્ટ્સ અને સિક્યોરિટી ચેક કરે છે.
-419: 10. **`deep_web_crawl`**: આખી વેબસાઇટ કે ડોક્યુમેન્ટ પોર્ટલ વાંચીને ફાઇલ બનાવે છે.
-420: 11. **`batch_fetch_web`**: એકસાથે ઘણી બધી વેબસાઇટ્સમાંથી ડેટા લાવે છે.
-421: 12. **`fetch_github_repo`**: ગિટહબ પરથી કોડ, ફાઈલો અને રિલીઝ લિસ્ટ ડાઉનલોડ કરે છે.
-422: 13. **`fetch_web_content`**: કોઈપણ વેબસાઇટ પરથી જાહેરાત વગર ચોખ્ખી માહિતી વાંચે છે.
-423: 14. **`duckduckgo_search`**: ઈન્ટરનેટ પર તદ્દન ફ્રીમાં લાઈવ સર્ચ કરે છે.
-424: 15. **`download_file`**: ઈન્ટરનેટ પરથી સીધી ફાઈલ ડાઉનલોડ કરે છે.
-425: 16. **`execute_python_code`**: પાયથોન કોડ રન કરે છે અને ખૂટતા પેકેજો જાતે ઇન્સ્ટોલ કરે છે.
-426: 17. **`build_project_files`**: આખો સોફ્ટવેર પ્રોજેક્ટ કે ફોલ્ડર ૧ જ ક્લિકમાં બનાવે છે.
-427: 18. **`execute_powershell`**: વિન્ડોઝ પાવરશેલ કમાન્ડ્સ ચલાવે છે.
-428: 19. **`read_file`**: કમ્પ્યુટરની કોઈપણ ફાઈલ વાંચે છે.
-429: 20. **`write_file`**: નવી ફાઈલ બનાવે છે કે ફાઈલમાં લખે છે.
-430: 21. **`list_directory`**: ફોલ્ડરની અંદર કઈ ફાઈલો છે તે તપાસે છે.
-431: 22. **`search_files`**: આખા કમ્પ્યુટરમાંથી ફાઈલ શોધી આપે છે.
-432: 23. **`move_or_copy_file`**: ફાઈલોને એક જગ્યાએથી બીજી જગ્યાએ ખસેડે છે.
-433: 24. **`process_manager`**: ચાલુ પ્રોગ્રામ્સ તપાસે છે અને હેંગ થયેલી એપ બંધ કરે છે.
-434: 25. **`system_health`**: સીપીયુ, રેમ (મેમરી) અને હાર્ડ ડ્રાઈવની સ્પેસ બતાવે છે.
-435: 26. **`open_application`**: નોટપેડ, ક્રોમ, કેલ્ક્યુલેટર જેવી એપ્સ ખોલે છે.
-436: 27. **`manage_ollama`**: ૧૦૦% ઑફલાઇન ફ્રી AI મોડેલ ચલાવે છે.
-437: 28. **`check_connections`**: ઈન્ટરનેટ અને સર્વર કનેક્શન તપાસે છે.
-438: 29. **`browser_automation`**: (Browser-Use પદ્ધતિ) સોશિયલ મીડિયા પર પોસ્ટ લખવા કે Set-of-Marks નંબર બિલ્લા લગાવી બટન ક્લિક કરવા બ્રાઉઝર કંટ્રોલ કરે છે.
-439: 30. **`desktop_gui_control`**: કમ્પ્યુટર સ્ક્રીન પર માઉસ ક્લિક અને કીબોર્ડ શોર્ટકટ ચલાવે છે.
-440: 31. **`text_to_speech`**: કુદરતી માનવ અવાજમાં લખાણ બોલીને સંભળાવે છે.
-441: 32. **`vision_browser`**: સ્ક્રીનશોટ પાડે છે અને વેબસાઇટનું લેઆઉટ જુએ છે.
-442: 33. **`mcp_tool`**: બહારના ત્રીજા પક્ષના ટૂલ્સ જોડે છે.
-443: 34. **`deep_research_studio`**: ઈન્ટરનેટ પરથી ઊંડાણપૂર્વક સંશોધન કરી ઉચ્ચ ગુણવત્તાવાળો રિપોર્ટ બનાવે છે.
-444: 35. **`orchestrate_complex_goal`**: મોટા અને લાંબા કામોને ૫ સ્ટેપના પ્લાનમાં વહેંચીને સફળતાપૂર્વક પૂરું કરે છે.
-445: 36. **`code_studio_builder`**: કોઈ પણ પ્રોજેક્ટ, વેબસાઇટ કે કોડિંગ ફાઈલો ૧ જ ક્લિકમાં બનાવી ચેક કરે છે.
-446: 37. **`system_super_optimizer`**: કમ્પ્યુટરની સ્પીડ, રેમ, ઈન્ટરનેટ લેટન્સી અને નકામી ફાઈલો સાફ કરે છે.
+## ૪. ૩૮ પાવરફુલ ટૂલ્સની યાદી
+
+1. **`windows_uia`**: (Microsoft UFO પદ્ધતિ) Windows UI Automation વડે કોઈપણ સોફ્ટવેરના બટન ("Save", "OK", "Cancel") પર અંદાજા વગર ૧૦૦% સાચી ક્લિક કરે છે અને મેનૂ નેવિગેટ કરે છે.
+2. **`universal_terminal`**: (Open Interpreter પદ્ધતિ) જીવંત અને સ્ટેટફુલ PowerShell/Bash સેશન ચલાવે છે (ફોલ્ડર અને વેરિયેબલ્સ સ્ટેપ્સ વચ્ચે યાદ રહે છે).
+3. **`reverse_engineer_app`**: કોઈપણ સોફ્ટવેર (Notepad, Calculator, Spotify કે વેબસાઇટ) નું રિવર્સ એન્જિનિયરિંગ કરીને તેના કંટ્રોલ્સ મેમરીમાં સેવ કરે છે.
+4. **`query_app_memory`**: સેવ થયેલી એપ્સના શોર્ટકટ્સ અને ઓટોમેશન આઈડી તરત જ લાવી આપે છે.
+5. **`fast_app_operate`**: યાદ રાખેલા શોર્ટકટ્સ વાપરીને ૧ જ સેકન્ડમાં ૧૦૦% ચોકસાઈથી સોફ્ટવેર ઓપરેટ કરે છે.
+6. **`mcp_rea_call`**: REA ના ૨૦૦ થી વધુ ઊંડાણપૂર્વકના રિવર્સ એન્જિનિયરિંગ ટૂલ્સ ચલાવે છે.
+7. **`synthesize_os_command`**: તમારા સાદા લખાણને તમારી ઓપરેટિંગ સિસ્ટમ માટે યોગ્ય કમાન્ડમાં ફેરવે છે.
+8. **`command_hub`**: કોઈપણ ટૂલ (જેમ કે ffmpeg, docker, powershell) માટે ઉપયોગી ચીટ-શીટ્સ ડાઉનલોડ કરે છે.
+9. **`audit_security_baseline`**: કમ્પ્યુટરનું ફાયરવોલ, ઓપન પોર્ટ્સ અને સિક્યોરિટી ચેક કરે છે.
+10. **`deep_web_crawl`**: આખી વેબસાઇટ કે ડોક્યુમેન્ટ પોર્ટલ વાંચીને ફાઇલ બનાવે છે.
+11. **`batch_fetch_web`**: એકસાથે ઘણી બધી વેબસાઇટ્સમાંથી ડેટા લાવે છે.
+12. **`fetch_github_repo`**: ગિટહબ પરથી કોડ, ફાઈલો અને રિલીઝ લિસ્ટ ડાઉનલોડ કરે છે.
+13. **`fetch_web_content`**: કોઈપણ વેબસાઇટ પરથી જાહેરાત વગર ચોખ્ખી માહિતી વાંચે છે.
+14. **`duckduckgo_search`**: ઈન્ટરનેટ પર તદ્દન ફ્રીમાં લાઈવ સર્ચ કરે છે.
+15. **`download_file`**: ઈન્ટરનેટ પરથી સીધી ફાઈલ ડાઉનલોડ કરે છે.
+16. **`execute_python_code`**: પાયથોન કોડ રન કરે છે અને ખૂટતા પેકેજો જાતે ઇન્સ્ટોલ કરે છે.
+17. **`build_project_files`**: આખો સોફ્ટવેર પ્રોજેક્ટ કે ફોલ્ડર ૧ જ ક્લિકમાં બનાવે છે.
+18. **`execute_powershell`**: વિન્ડોઝ પાવરશેલ કમાન્ડ્સ ચલાવે છે.
+19. **`read_file`**: કમ્પ્યુટરની કોઈપણ ફાઈલ વાંચે છે.
+20. **`write_file`**: નવી ફાઈલ બનાવે છે કે ફાઈલમાં લખે છે.
+21. **`list_directory`**: ફોલ્ડરની અંદર કઈ ફાઈલો છે તે તપાસે છે.
+22. **`search_files`**: આખા કમ્પ્યુટરમાંથી ફાઈલ શોધી આપે છે.
+23. **`move_or_copy_file`**: ફાઈલોને એક જગ્યાએથી બીજી જગ્યાએ ખસેડે છે.
+24. **`process_manager`**: ચાલુ પ્રોગ્રામ્સ તપાસે છે અને હેંગ થયેલી એપ બંધ કરે છે.
+25. **`system_health`**: સીપીયુ, રેમ (મેમરી) અને હાર્ડ ડ્રાઈવની સ્પેસ બતાવે છે.
+26. **`open_application`**: નોટપેડ, ક્રોમ, કેલ્ક્યુલેટર જેવી એપ્સ ખોલે છે.
+27. **`manage_ollama`**: ૧૦૦% ઑફલાઇન ફ્રી AI મોડેલ ચલાવે છે.
+28. **`check_connections`**: ઈન્ટરનેટ અને સર્વર કનેક્શન તપાસે છે.
+29. **`browser_automation`**: (Browser-Use પદ્ધતિ) સોશિયલ મીડિયા પર પોસ્ટ લખવા કે Set-of-Marks નંબર બિલ્લા લગાવી બટન ક્લિક કરવા બ્રાઉઝર કંટ્રોલ કરે છે.
+30. **`desktop_gui_control`**: કમ્પ્યુટર સ્ક્રીન પર માઉસ ક્લિક અને કીબોર્ડ શોર્ટકટ ચલાવે છે.
+31. **`text_to_speech`**: કુદરતી માનવ અવાજમાં લખાણ બોલીને સંભળાવે છે.
+32. **`vision_browser`**: સ્ક્રીનશોટ પાડે છે અને વેબસાઇટનું લેઆઉટ જુએ છે.
+33. **`mcp_tool`**: બહારના ત્રીજા પક્ષના ટૂલ્સ જોડે છે.
+34. **`deep_research_studio`**: ઈન્ટરનેટ પરથી ઊંડાણપૂર્વક સંશોધન કરી ઉચ્ચ ગુણવત્તાવાળો રિપોર્ટ બનાવે છે.
+35. **`orchestrate_complex_goal`**: મોટા અને લાંબા કામોને ૫ સ્ટેપના પ્લાનમાં વહેંચીને સફળતાપૂર્વક પૂરું કરે છે.
+36. **`code_studio_builder`**: કોઈ પણ પ્રોજેક્ટ, વેબસાઇટ કે કોડિંગ ફાઈલો ૧ જ ક્લિકમાં બનાવી ચેક કરે છે.
+37. **`system_super_optimizer`**: કમ્પ્યુટરની સ્પીડ, રેમ, ઈન્ટરનેટ લેટન્સી અને નકામી ફાઈલો સાફ કરે છે.
+38. **`consult_background_ai`**: બેકગ્રાઉન્ડ AI સ્વૉર્મ એડવાઇઝરી પાસેથી વિશેષ સલાહ અને કન્સોર્ટિયમ અભિપ્રાય મેળવે છે.
 
 ---
 
@@ -578,6 +581,18 @@ DeepSeek એ અત્યંત હોંશિયાર અને ખૂબ જ
    DEEPSEEK_MODEL=deepseek-chat
    ```
    *(અઘરા લોજિકલ અને ગણતરી વાળા ટાસ્ક માટે તમે `deepseek-reasoner` પણ વાપરી શકો છો)*
+
+### 🧠 Anthropic Claude (Sonnet 3.5 / Haiku / Opus) નો નેટિવ ઉપયોગ:
+Helper-AI હવે Anthropic Claude ને સીધું નેટિવ પ્રોવાઈડર તરીકે સપોર્ટ કરે છે:
+1. વેબ ડેશબોર્ડમાં **Settings (સેટિંગ્સ)** ખોલો અને **Anthropic Claude** પસંદ કરો.
+2. તમારી `sk-ant-...` API Key દાખલ કરો અને મોડેલ પસંદ કરો (દા.ત. `claude-3-5-sonnet-20241022` કે `claude-3-5-haiku-20241022`).
+3. અથવા તમારી `.env` ફાઈલમાં ઉમેરો:
+   ```ini
+   LLM_PROVIDER=anthropic
+   ANTHROPIC_API_KEY=sk-ant-તમારી_કી
+   ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
+   ```
+4. **Save Settings** કરો અથવા સર્વર રીસ્ટાર્ટ કરો. Helper-AI નેટિવ ક્લાઉડ એન્ડપોઈન્ટથી સુપરફાસ્ટ સ્પીડે કોડિંગ અને ટૂલ્સ ચલાવશે!
 
 ### 🐬 ફરજિયાત લોકલ મોડેલ: Dolphin-2.9-Llama3 અને ૧-ક્લિક ઓટો સેટઅપ:
 Helper-AI ને કોઈ પણ જાતના ઇનકાર કે અટકાવ વગર ૧૦૦% સ્વાયત્ત (Uncensored) રીતે કમ્પ્યુટર ચલાવવા માટે **Dolphin-2.9-Llama3 (8B)** મોડેલ સાથે સજ્જ કરવામાં આવ્યું છે:

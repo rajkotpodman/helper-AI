@@ -22,7 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 # Load environment configuration
-load_dotenv()
+load_dotenv(override=True)
 
 # Setup logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
@@ -69,6 +69,14 @@ TEMPLATES_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 app.mount("/screenshots", StaticFiles(directory=str(SCREENSHOTS_DIR)), name="screenshots")
 
+# Mount AI 2026 Biological Wetware & Superintelligence Hub
+WETWARE_DIST_DIR = BASE_DIR / "ai_2026_hub" / "dist"
+WETWARE_ASSETS_DIR = WETWARE_DIST_DIR / "assets"
+if WETWARE_ASSETS_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=str(WETWARE_ASSETS_DIR)), name="wetware-assets")
+if WETWARE_DIST_DIR.exists():
+    app.mount("/wetware-hub", StaticFiles(directory=str(WETWARE_DIST_DIR), html=True), name="wetware-hub")
+
 # Global State Management
 permission_manager = PermissionManager()
 memory_recorder = MarkdownMemoryRecorder()
@@ -106,6 +114,8 @@ class ApprovePermissionRequest(BaseModel):
 
 class SettingsUpdateRequest(BaseModel):
     provider: Optional[str] = "gemini"
+    anthropic_key: Optional[str] = None
+    anthropic_model: Optional[str] = None
     gemini_key: Optional[str] = None
     openai_key: Optional[str] = None
     groq_key: Optional[str] = None
@@ -162,6 +172,16 @@ async def serve_index_page():
     if index_file.exists():
         return FileResponse(str(index_file))
     return JSONResponse(status_code=404, content={"error": "index.html template not found in web/templates"})
+
+
+@app.get("/wetware")
+async def serve_wetware_hub():
+    """Serves the AI 2026: Biological Wetware & Superintelligence Hub."""
+    if WETWARE_DIST_DIR.exists():
+        index_f = WETWARE_DIST_DIR / "index.html"
+        if index_f.exists():
+            return FileResponse(str(index_f))
+    return JSONResponse(status_code=404, content={"message": "AI 2026 Wetware Hub build not found."})
 
 
 # --- WebSocket Endpoint for Telemetry Stream ---
@@ -433,7 +453,12 @@ async def cancel_running_agent():
     """Immediately halts any running autonomous agent task."""
     global active_agent, active_task, current_goal_info
     permission_manager.cancel_all()
-    if active_agent and current_goal_info["is_running"]:
+    try:
+        from core.job_portal_automation import job_portal_automation
+        job_portal_automation.cancel()
+    except Exception:
+        pass
+    if active_agent:
         active_agent.cancel()
     if active_task and not active_task.done():
         active_task.cancel()
@@ -447,6 +472,8 @@ async def cancel_running_agent():
 async def get_settings():
     return {
         "provider": os.getenv("LLM_PROVIDER", "gemini").strip("'\""),
+        "anthropic_key": os.getenv("ANTHROPIC_API_KEY", "").strip("'\""),
+        "anthropic_model": os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022").strip("'\""),
         "gemini_key": os.getenv("GEMINI_API_KEY", "").strip("'\""),
         "groq_key": os.getenv("GROQ_API_KEY", "").strip("'\""),
         "openai_key": os.getenv("OPENAI_API_KEY", "").strip("'\""),
@@ -469,6 +496,12 @@ async def update_settings(req: SettingsUpdateRequest):
     if req.provider:
         os.environ["LLM_PROVIDER"] = req.provider
         set_key(str(env_file), "LLM_PROVIDER", req.provider)
+    if req.anthropic_key is not None:
+        os.environ["ANTHROPIC_API_KEY"] = req.anthropic_key
+        set_key(str(env_file), "ANTHROPIC_API_KEY", req.anthropic_key)
+    if req.anthropic_model is not None:
+        os.environ["ANTHROPIC_MODEL"] = req.anthropic_model
+        set_key(str(env_file), "ANTHROPIC_MODEL", req.anthropic_model)
     if req.gemini_key is not None:
         os.environ["GEMINI_API_KEY"] = req.gemini_key
         set_key(str(env_file), "GEMINI_API_KEY", req.gemini_key)

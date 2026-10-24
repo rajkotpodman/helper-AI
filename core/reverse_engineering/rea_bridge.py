@@ -53,7 +53,7 @@ class REABridge:
                 prefix + ["--version"],
                 capture_output=True,
                 text=True,
-                timeout=8
+                timeout=20
             )
             return res.returncode == 0
         except Exception as e:
@@ -68,7 +68,7 @@ class REABridge:
                 prefix + ["--version"],
                 capture_output=True,
                 text=True,
-                timeout=8
+                timeout=20
             )
             return res.stdout.strip() if res.returncode == 0 else "unknown"
         except Exception:
@@ -190,7 +190,7 @@ class REABridge:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def list_mcp_tools(self, timeout: int = 15) -> List[Dict[str, Any]]:
+    def list_mcp_tools(self, timeout: int = 30) -> List[Dict[str, Any]]:
         """Lists all advertised REA MCP tools."""
         if self._cached_tools is not None:
             return self._cached_tools

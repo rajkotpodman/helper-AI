@@ -83,17 +83,18 @@ helper-AI/
 │   ├── playwright_agent.py    # Playwright DOM and visual analysis
 │   ├── memory_recorder.py     # Markdown interaction logging & 20MB rotation
 │   ├── permissions.py         # Human-in-the-Loop authorization manager
-│   ├── llm.py                 # Multi-provider client (Gemini, OpenAI, Groq, Ollama)
+│   ├── llm.py                 # Multi-provider client (Anthropic Claude, DeepSeek, Gemini, OpenAI, Groq, Ollama)
 │   ├── command_engine/        # Universal cross-platform terminal & cheatsheet engine
-│   └── tools/                 # Native tool definitions (28 tools registered)
+│   └── tools/                 # Native tool definitions (38 tools registered)
 │       ├── system_tools.py    # PowerShell, process, health diagnostics
 │       ├── file_tools.py      # Smart filesystem path resolver
 │       ├── web_tools.py       # DuckDuckGo search & HTTP scraper
 │       ├── browser_tools.py   # Social media & browser automation
 │       ├── desktop_gui_tools.py # PyAutoGUI mouse, keyboard, window control
+│       ├── background_ai_tools.py # Multi-AI swarm advisory & consensus
 │       └── universal_terminal_tools.py # OS-adaptive execution, command hub
 ├── security_toolkit/          # Modular defensive security & FIM toolkit
-└── tests/                     # 153+ automated unit & integration tests
+└── tests/                     # 185+ automated unit & integration tests
 ```
 
 ### 🌟 Non-Technical Contributions (Everyone Can Help!)

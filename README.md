@@ -13,7 +13,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Wetware Hub: Online](https://img.shields.io/badge/Wetware%20Hub-CL--1%20Online-00F2FE.svg)](http://localhost:8000/wetware)
-[![Tests: 175+ Passed](https://img.shields.io/badge/tests-175%2B%20passed-success.svg)]()
+[![Tests: 185+ Passed](https://img.shields.io/badge/tests-185%2B%20passed-success.svg)]()
 
 <br>
 
@@ -255,9 +255,9 @@ Here are real tasks you can copy and paste into Helper-AI right now:
 
 ---
 
-## 🧰 Complete Arsenal: All 37 Registered Tools
+## 🧰 Complete Arsenal: All 38 Registered Tools
 
-Helper-AI comes built-in with **37 specialized tools**. The agent automatically selects the right tool for each step:
+Helper-AI comes built-in with **38 specialized tools**. The agent automatically selects the right tool for each step:
 
 | # | Tool Name | Category | What It Does (Simple Explanation) |
 | :-: | :--- | :--- | :--- |
@@ -298,6 +298,7 @@ Helper-AI comes built-in with **37 specialized tools**. The agent automatically 
 | 35 | **`orchestrate_complex_goal`**| Superpower | Structures massive tasks into 5-phase execution pipelines. |
 | 36 | **`code_studio_builder`** | Superpower | Builds multi-file projects in 1 step with automated AST syntax checking and verification. |
 | 37 | **`system_super_optimizer`** | Superpower | Introspective PC diagnostics, memory optimization analysis, and junk file scanning. |
+| 38 | **`consult_background_ai`** | Background AI / Swarm | Multi-AI background advisory, error debugging, script synthesis, and consensus swarm across Claude, DeepSeek, Groq, Gemini, and Ollama. |
 
 ---
 
@@ -330,6 +331,7 @@ Helper-AI works with **any AI provider** you prefer:
 | Mode / Provider | Internet Needed? | Cost | How to Use |
 | :--- | :---: | :---: | :--- |
 | **Smart Rule Engine** *(Built-in)* | ❌ No | **100% Free** | Default out-of-the-box mode! No API keys or credit card needed. |
+| **Anthropic (Claude 3.5 / 3.7)** | ✅ Yes | Paid API | Add `ANTHROPIC_API_KEY` in `.env`. Supports `claude-3-5-sonnet-20241022`, `claude-3-5-haiku`, etc. |
 | **🌍 Universal / Any AI in the World** | 🌐 Depends | User's Choice | Connect **ANY** model in the world (OpenRouter, Claude, Mistral, Grok, LM Studio, vLLM, Perplexity, etc.) by just entering Name, URL, API Key & Model! |
 | **DeepSeek (V3 / R1)** | ✅ Yes | **Extremely Low Cost** | Get key from [DeepSeek Platform](https://platform.deepseek.com/), set `DEEPSEEK_API_KEY` in `.env`. Supports `deepseek-chat` (V3) and `deepseek-reasoner` (R1). |
 | **Google Gemini** | ✅ Yes | **Free Tier Available** | Get a free key at [Google AI Studio](https://aistudio.google.com/), add `GEMINI_API_KEY` in `.env`. |

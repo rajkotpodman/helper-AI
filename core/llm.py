@@ -6,7 +6,7 @@ from typing import Dict, Any, Optional
 import requests
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=True)
 
 SYSTEM_PROMPT = r"""You are Helper, an autonomous AI assistant with full control of the user's running PC and internet access.
 Your mandate is to accomplish the user's GOAL completely, reliably, and autonomously WITHOUT asking redundant questions.
@@ -181,13 +181,17 @@ class LLMClient:
                 self.base_url = os.getenv("CUSTOM_LLM_URL") or os.getenv("UNIVERSAL_LLM_URL") or ""
             elif self.provider == "deepseek":
                 self.base_url = os.getenv("DEEPSEEK_BASE_URL") or "https://api.deepseek.com"
+            elif self.provider in ["anthropic", "claude"]:
+                self.base_url = os.getenv("ANTHROPIC_BASE_URL") or "https://api.anthropic.com/v1"
             else:
                 self.base_url = None
         else:
             self.base_url = base_url
 
         if not api_key:
-            if self.provider == "groq":
+            if self.provider in ["anthropic", "claude"]:
+                raw_key = os.getenv("ANTHROPIC_API_KEY") or ""
+            elif self.provider == "groq":
                 raw_key = os.getenv("GROQ_API_KEY") or ""
             elif self.provider == "gemini":
                 raw_key = os.getenv("GEMINI_API_KEY") or ""
@@ -198,7 +202,7 @@ class LLMClient:
             elif self.provider in ["custom", "universal", "any"]:
                 raw_key = os.getenv("CUSTOM_LLM_KEY") or os.getenv("UNIVERSAL_LLM_KEY") or ""
             else:
-                raw_key = os.getenv("CUSTOM_LLM_KEY") or os.getenv("DEEPSEEK_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
+                raw_key = os.getenv("ANTHROPIC_API_KEY") or os.getenv("CUSTOM_LLM_KEY") or os.getenv("DEEPSEEK_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY") or ""
         else:
             raw_key = api_key
         self.api_key = raw_key.strip().strip("'").strip('"')
@@ -220,7 +224,9 @@ class LLMClient:
             pass
 
         if not self.model:
-            if self.provider == "gemini":
+            if self.provider in ["anthropic", "claude"]:
+                self.model = os.getenv("ANTHROPIC_MODEL") or "claude-3-5-sonnet-20241022"
+            elif self.provider == "gemini":
                 self.model = os.getenv("GEMINI_MODEL") or "gemini-flash-latest"
             elif self.provider == "openai":
                 self.model = os.getenv("OPENAI_MODEL") or "gpt-4o-mini"
@@ -241,7 +247,50 @@ class LLMClient:
         target_provider = (provider or self.provider).lower().strip()
         start_t = time.perf_counter()
 
-        if target_provider == "gemini":
+        if target_provider in ["anthropic", "claude"]:
+            ant_key = self.api_key if self.provider in ["anthropic", "claude"] else (os.getenv("ANTHROPIC_API_KEY") or "")
+            if not ant_key:
+                return {"provider": "anthropic", "status": "unconfigured", "latency_ms": 0, "message": "ANTHROPIC_API_KEY is not set."}
+            target_model = self.model or os.getenv("ANTHROPIC_MODEL") or "claude-3-5-sonnet-20241022"
+            try:
+                url = "https://api.anthropic.com/v1/messages"
+                headers = {
+                    "x-api-key": ant_key,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json"
+                }
+                body = {
+                    "model": target_model,
+                    "max_tokens": 1,
+                    "messages": [{"role": "user", "content": "ping"}]
+                }
+                resp = self._session.post(url, headers=headers, json=body, timeout=5.0)
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                if resp.status_code == 200:
+                    return {
+                        "provider": "anthropic",
+                        "status": "connected",
+                        "latency_ms": lat,
+                        "model": target_model,
+                        "message": f"Anthropic Claude API connected successfully ({lat}ms)"
+                    }
+                elif resp.status_code == 400 and "credit balance is too low" in resp.text:
+                    return {
+                        "provider": "anthropic",
+                        "status": "connected",
+                        "latency_ms": lat,
+                        "model": target_model,
+                        "message": f"Anthropic API key verified ({lat}ms). Note: Credit balance is too low to complete generations (upgrade at console.anthropic.com/settings/plans)."
+                    }
+                elif resp.status_code == 401:
+                    return {"provider": "anthropic", "status": "error", "latency_ms": lat, "message": "Invalid Anthropic API Key (401 Unauthorized)"}
+                else:
+                    return {"provider": "anthropic", "status": "error", "latency_ms": lat, "message": f"HTTP {resp.status_code}: {resp.text[:120]}"}
+            except Exception as e:
+                lat = round((time.perf_counter() - start_t) * 1000, 1)
+                return {"provider": "anthropic", "status": "error", "latency_ms": lat, "message": str(e)}
+
+        elif target_provider == "gemini":
             gemini_key = self.api_key if self.provider == "gemini" else (os.getenv("GEMINI_API_KEY") or "")
             if not gemini_key:
                 return {"provider": "gemini", "status": "unconfigured", "latency_ms": 0, "message": "GEMINI_API_KEY is not set."}
@@ -444,6 +493,7 @@ class LLMClient:
         # Check if fallback to rule engine is warranted
         has_any_key = bool(
             self.api_key or
+            os.getenv("ANTHROPIC_API_KEY") or
             os.getenv("GEMINI_API_KEY") or
             os.getenv("GROQ_API_KEY") or
             os.getenv("OPENAI_API_KEY") or
@@ -556,9 +606,11 @@ class LLMClient:
 
         # Attempt primary provider first, then seamlessly try alternative configured providers
         candidate_providers = [self.provider]
-        for alt_prov in ["custom", "deepseek", "groq", "gemini", "openai", "ollama"]:
+        for alt_prov in ["anthropic", "custom", "deepseek", "groq", "gemini", "openai", "ollama"]:
             if alt_prov not in candidate_providers:
-                if alt_prov == "custom" and (os.getenv("CUSTOM_LLM_URL") or os.getenv("CUSTOM_LLM_KEY")):
+                if alt_prov == "anthropic" and (os.getenv("ANTHROPIC_API_KEY") or (self.provider in ["anthropic", "claude"] and self.api_key)):
+                    candidate_providers.append(alt_prov)
+                elif alt_prov == "custom" and (os.getenv("CUSTOM_LLM_URL") or os.getenv("CUSTOM_LLM_KEY")):
                     candidate_providers.append(alt_prov)
                 elif alt_prov == "deepseek" and os.getenv("DEEPSEEK_API_KEY"):
                     candidate_providers.append(alt_prov)
@@ -574,7 +626,18 @@ class LLMClient:
         last_err = None
         for prov in candidate_providers:
             try:
-                if prov in ["custom", "universal", "any"]:
+                if prov in ["anthropic", "claude"]:
+                    ant_key = (self.api_key if self.provider in ["anthropic", "claude"] else os.getenv("ANTHROPIC_API_KEY") or "").strip().strip("'").strip('"')
+                    if not ant_key:
+                        continue
+                    prev_prov, prev_key = self.provider, self.api_key
+                    self.provider, self.api_key = "anthropic", ant_key
+                    self.model = self.model if prev_prov in ["anthropic", "claude"] and self.model else (os.getenv("ANTHROPIC_MODEL") or "claude-3-5-sonnet-20241022")
+                    step = self._call_anthropic(sys_prompt, user_content)
+                    if prev_prov not in ["anthropic", "claude"]:
+                        step["thought"] = f"(Failover to Anthropic Claude) " + step.get("thought", "")
+                    return step
+                elif prov in ["custom", "universal", "any"]:
                     custom_url = (self.base_url or os.getenv("CUSTOM_LLM_URL") or os.getenv("UNIVERSAL_LLM_URL") or "").strip().rstrip("/")
                     custom_key = (self.api_key if self.provider in ["custom", "universal"] else os.getenv("CUSTOM_LLM_KEY") or os.getenv("UNIVERSAL_LLM_KEY") or "").strip().strip("'").strip('"')
                     if not custom_url and not custom_key:
@@ -640,6 +703,40 @@ class LLMClient:
         step = self._rule_engine_step(goal, trajectory_summary)
         step["thought"] = f"(Autonomous engine fallback) " + step.get("thought", "")
         return step
+
+    def _call_anthropic(self, system_prompt: str, user_prompt: str) -> Dict[str, Any]:
+        """Direct, high-speed HTTP inference against Anthropic Claude Messages API."""
+        api_key = (self.api_key or os.getenv("ANTHROPIC_API_KEY") or "").strip().strip("'\"")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY is not configured.")
+
+        target_model = self.model or os.getenv("ANTHROPIC_MODEL") or "claude-3-5-sonnet-20241022"
+        endpoint = "https://api.anthropic.com/v1/messages"
+        headers = {
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01",
+            "content-type": "application/json"
+        }
+        body = {
+            "model": target_model,
+            "system": system_prompt,
+            "messages": [{"role": "user", "content": user_prompt}],
+            "max_tokens": 4096,
+            "temperature": 0.2
+        }
+
+        resp = self._session.post(endpoint, json=body, headers=headers, timeout=60)
+        if resp.status_code == 200:
+            data = resp.json()
+            raw_text = ""
+            for block in data.get("content", []):
+                if block.get("type") == "text":
+                    raw_text += block.get("text", "")
+            return self._parse_json_response(raw_text)
+        elif resp.status_code == 400 and "credit balance is too low" in resp.text:
+            raise RuntimeError("Anthropic API error: Your credit balance is too low to access the Anthropic API. Please upgrade or purchase credits at https://console.anthropic.com/settings/plans.")
+        else:
+            raise RuntimeError(f"Anthropic API error {resp.status_code}: {resp.text[:300]}")
 
     def _call_gemini(self, system_instruction: str, user_prompt: str) -> Dict[str, Any]:
         target_model = self.model or "gemini-flash-latest"
@@ -1694,14 +1791,14 @@ class LLMClient:
 
         # 2. Specialized handling for LinkedIn Job Applications with CV
         if re.search(r"\b(linkedin|linked in|linkdin|linkden)\b", lower) and re.search(r"\b(apply|application|applications|cv|resume)\b", lower) and not re.search(r"\b(post|posts|publish|article|articles)\b", lower):
-            # Extract count (e.g. 5 space, 5 jobs, loop 5 times)
-            count = 5
-            count_match = re.search(r'\b(\d+)\s*(?:space|job|jobs|position|positions|opening|openings|times)?\b', lower)
+            # Extract count (e.g. 10 companys, 10 jobs, 5 positions)
+            count = 10 if ("10" in lower) else 5
+            count_match = re.search(r'\b(\d+)\s*(?:space|job|jobs|position|positions|opening|openings|times|company|companys|companies)?\b', lower)
             if count_match:
                 try:
                     count = int(count_match.group(1))
                 except Exception:
-                    count = 5
+                    count = 10 if ("10" in lower) else 5
 
             more_match = re.search(r'more\s*(?:than\s*)?(\d+)', lower)
             if more_match:
@@ -1732,12 +1829,17 @@ class LLMClient:
             if path_match and os.path.exists(path_match.group(1).strip()):
                 cv_path = path_match.group(1).strip()
 
+            target_kw = "System Administrator"
+            role_match = re.search(r'\b(system administrator|technical support|it administrator|network engineer|desktop support|ai engineer|software engineer|developer)\b', lower)
+            if role_match:
+                target_kw = role_match.group(1).title()
+
             return {
-                "thought": f"I will autonomously search and apply to {count} jobs on LinkedIn using Easy Apply and attach the user's CV ({cv_path}).",
+                "thought": f"I will autonomously search and apply to {count} companies on LinkedIn using Easy Apply and attach the user's CV ({cv_path}).",
                 "action": "browser_automation",
                 "action_args": {
                     "action": "apply_linkedin_jobs",
-                    "keywords": "Technical Support",
+                    "keywords": target_kw,
                     "resume_path": cv_path,
                     "count": count
                 },
@@ -1746,7 +1848,11 @@ class LLMClient:
             }
 
         # 1.1 Specialized handling for 10 Job Portals, CV Upload & Work From Home Freelancer Registration
-        if any(k in lower for k in ["job portal", "job portel", "job portals", "job websites", "10 website", "10 account", "cv in each site", "upload cv", "jignesh cv", "freelancer any job"]) and any(k in lower for k in ["job", "freelancer", "cv", "resume", "portel", "portal", "account", "internship", "10"]):
+        is_multi_portal_intent = (
+            not re.search(r"\b(linkedin|linked in|linkdin|linkden)\b", lower) and
+            any(k in lower for k in ["10 job portal", "10 portal", "10 website", "10 account", "cv in each site", "all portals", "all 10"])
+        )
+        if is_multi_portal_intent:
             if "autonomous job portal processing complete" in trajectory_summary.lower() or "report_path" in trajectory_summary.lower() or "report written to" in trajectory_summary.lower():
                 from core.job_portal_automation import job_portal_automation
                 all_p = job_portal_automation.get_portals()

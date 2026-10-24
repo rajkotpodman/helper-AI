@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-load_dotenv()
+load_dotenv(override=True)
 
 from core.agent import HelperAgent
 from core.llm import LLMClient
@@ -68,6 +68,8 @@ class PermissionRespondRequest(BaseModel):
 
 class SettingsRequest(BaseModel):
     provider: str
+    anthropic_key: Optional[str] = None
+    anthropic_model: Optional[str] = None
     gemini_key: Optional[str] = None
     openai_key: Optional[str] = None
     groq_key: Optional[str] = None
@@ -77,6 +79,7 @@ class SettingsRequest(BaseModel):
     custom_key: Optional[str] = None
     custom_model: Optional[str] = None
     ollama_url: Optional[str] = None
+    ollama_model: Optional[str] = None
     safe_mode: bool = False
     unrestricted_mode: Optional[bool] = True
     background_ai_provider: Optional[str] = "auto"
@@ -325,7 +328,13 @@ async def start_goal(req: GoalRequest):
                     current_goal_info["history"].append(data)
 
             result = await active_agent.run(goal_str, on_event=on_event, image_data=req.image_data)
-            await broadcast_event("finished", result or {"success": True, "message": "Goal finished."})
+            if active_agent and active_agent._should_cancel:
+                await broadcast_event("cancelled", {"message": "Goal was stopped by user."})
+            else:
+                await broadcast_event("finished", result or {"success": True, "message": "Goal finished."})
+        except asyncio.CancelledError:
+            logger.info("Agent task was cancelled by user.")
+            await broadcast_event("cancelled", {"message": "Goal was stopped by user."})
         except Exception as e:
             logger.error(f"Exception during agent run: {e}", exc_info=True)
             await broadcast_event("error", {"error": str(e)})
@@ -343,19 +352,33 @@ async def analyze_vision_endpoint(req: VisionAnalyzeRequest):
 
 @app.post("/api/cancel")
 async def cancel_goal():
-    global active_agent, current_goal_info
+    global active_agent, active_task, current_goal_info
     permission_manager.cancel_all()
-    if active_agent and current_goal_info["is_running"]:
+    try:
+        from core.job_portal_automation import job_portal_automation
+        job_portal_automation.cancel()
+    except Exception:
+        pass
+
+    was_running = current_goal_info.get("is_running", False) or (active_task and not active_task.done())
+    if active_agent:
         active_agent.cancel()
-        current_goal_info["is_running"] = False
+    if active_task and not active_task.done():
+        active_task.cancel()
+    current_goal_info["is_running"] = False
+
+    if was_running:
         await broadcast_event("cancelled", {"message": "User stopped execution."})
         return {"success": True, "message": "Agent cancel signal sent."}
     return {"success": False, "message": "No active agent running."}
+
 
 @app.get("/api/settings")
 async def get_settings():
     return {
         "provider": os.getenv("LLM_PROVIDER", "gemini").strip("'\""),
+        "anthropic_key": os.getenv("ANTHROPIC_API_KEY", "").strip("'\""),
+        "anthropic_model": os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022").strip("'\""),
         "gemini_key": os.getenv("GEMINI_API_KEY", "").strip("'\""),
         "groq_key": os.getenv("GROQ_API_KEY", "").strip("'\""),
         "openai_key": os.getenv("OPENAI_API_KEY", "").strip("'\""),
@@ -379,6 +402,12 @@ async def update_settings(req: SettingsRequest):
     if req.provider:
         os.environ["LLM_PROVIDER"] = req.provider
         set_key(str(env_file), "LLM_PROVIDER", req.provider)
+    if req.anthropic_key is not None:
+        os.environ["ANTHROPIC_API_KEY"] = req.anthropic_key
+        set_key(str(env_file), "ANTHROPIC_API_KEY", req.anthropic_key)
+    if req.anthropic_model is not None:
+        os.environ["ANTHROPIC_MODEL"] = req.anthropic_model
+        set_key(str(env_file), "ANTHROPIC_MODEL", req.anthropic_model)
     if req.gemini_key is not None:
         os.environ["GEMINI_API_KEY"] = req.gemini_key
         set_key(str(env_file), "GEMINI_API_KEY", req.gemini_key)

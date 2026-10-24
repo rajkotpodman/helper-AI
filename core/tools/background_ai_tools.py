@@ -29,8 +29,8 @@ class ConsultBackgroundAITool(BaseTool):
             },
             "provider": {
                 "type": "string",
-                "description": "Target AI provider to consult: 'auto' (fastest available), 'groq' (ultra-fast 500 T/s), 'gemini', 'deepseek', 'openai', 'ollama', 'custom', or 'swarm' (parallel multi-AI consensus).",
-                "enum": ["auto", "groq", "gemini", "deepseek", "openai", "ollama", "custom", "swarm"]
+                "description": "Target AI provider to consult: 'auto' (fastest available), 'anthropic' / 'claude' (Claude 3.5 Sonnet / Haiku), 'groq' (ultra-fast 500 T/s), 'gemini', 'deepseek', 'openai', 'ollama', 'custom', or 'swarm' (parallel multi-AI consensus).",
+                "enum": ["auto", "anthropic", "claude", "groq", "gemini", "deepseek", "openai", "ollama", "custom", "swarm"]
             },
             "role": {
                 "type": "string",

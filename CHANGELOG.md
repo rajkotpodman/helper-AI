@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.8.0] - 2026-10-24
+
+### 🧠 Native Anthropic & Claude Integration
+- **Full 1st-Class Anthropic Claude Provider (`core/llm.py`):**
+  - Native support for `anthropic` and `claude` as primary LLM providers.
+  - Supports `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`, and `claude-3-7-sonnet`.
+  - Direct connection-pooled HTTP inference against `https://api.anthropic.com/v1/messages` with structured system prompt formatting and JSON parsing.
+  - Seamless automatic failover to Anthropic Claude when other providers fail or hit rate limits.
+  - Integrated `load_dotenv(override=True)` across core modules so local `.env` settings take immediate priority over stale OS environment variables.
+- **Connection Diagnostics & Billing Status Detection (`core/connection_checker.py`):**
+  - Added live health checks for Anthropic Claude (`anthropic_api`) with sub-second latency tracking.
+  - Differentiates between invalid API keys (`401 Unauthorized`) and low-credit accounts (`400 invalid_request_error`), presenting actionable billing links to users.
+- **Multi-AI Swarm & Background Advisory (`core/background_ai_swarm.py` & `core/tools/background_ai_tools.py`):**
+  - Registered Anthropic Claude in `consult_background_ai` tool for second opinions, automated code synthesis, error debugging, and multi-model consensus swarms.
+- **Web UI & Settings Integration (`web/templates/index.html`, `static/index.html`, `web/static/js/app.js`, `static/js/app.js`):**
+  - Added Anthropic option in the AI Model Provider dropdown.
+  - Dedicated password field for Anthropic Claude API key with automatic local storage and `.env` persistence.
+- **Automated Test Suite (`tests/test_anthropic_claude.py`):**
+  - Added 5 unit and integration tests verifying settings endpoints, LLM initialization, mock inference responses, swarm listing, and tool enums.
+
+### 🎨 DeepSeek Harness Inspired Modern Interface & UI Enhancements
+- **Clean Responsive Redesign:**
+  - Modern glassmorphic sidebar with quick access to Sessions, Automation tasks, and Plugins.
+  - Clean Helper-AI logo badge and model selector pill button.
+  - Restored and verified live `/wetware` route and bundle loading.
+- **Audio Speech Output Toggle:**
+  - Added 1-tap play / 2nd-tap immediate stop toggle (`speechSynthesis.cancel()`) for speech synthesis.
+- **Sidebar Shortcuts:**
+  - `Plugins` button opens Settings & AI Models inventory directly.
+  - `Automation tasks` button launches the Playwright CRM Studio modal.
+
 ## [2.7.0] - 2026-10-19
 
 ### ⚡ Playwright CRM & Web Automation Studio (Codegen & Batch Form Automation)

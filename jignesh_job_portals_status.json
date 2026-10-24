@@ -3,60 +3,60 @@
     "status": "Completed",
     "cv_uploaded": true,
     "notes": "Navigated to Internshala (Search Internships, Jobs, & Courses | Hire Candidates | Internshala) \u2022 Clicked fallback button 'Google' \u2022 Attached CV 'Jignesh_Kariya_CV (1).docx' via profile resume page",
-    "last_run": "2026-10-20 13:16:16"
+    "last_run": "2026-10-21 16:39:14"
   },
   "indeed": {
-    "status": "Pending Verification / In Progress",
+    "status": "Form Filled / In Progress",
     "cv_uploaded": false,
-    "notes": "Navigated to Indeed India (Sign In | Indeed Accounts) \u2022 Clicked fallback button 'Google'",
-    "last_run": "2026-10-20 13:16:44"
+    "notes": "Navigated to Indeed India (Sign In | Indeed Accounts) \u2022 Filled Email: oo71097145198@gmail.com \u2022 Clicked 'Continue'",
+    "last_run": "2026-10-21 16:39:46"
   },
   "naukri": {
-    "status": "Pending Verification / In Progress",
+    "status": "Form Filled / In Progress",
     "cv_uploaded": false,
-    "notes": "Navigated to Naukri.com (Register on Naukri.com: Apply to Millions of Jobs Online) \u2022 Clicked fallback button 'Google'",
-    "last_run": "2026-10-20 13:17:17"
+    "notes": "Navigated to Naukri.com (Register on Naukri.com: Apply to Millions of Jobs Online) \u2022 Filled Full Name: Jignesh J. Kariya \u2022 Filled Email: oo71097145198@gmail.com \u2022 Filled Mobile Number: 9898048483 \u2022 Filled secure password \u2022 Clicked 'Register now'",
+    "last_run": "2026-10-21 16:40:12"
   },
   "foundit": {
-    "status": "Pending Verification / In Progress",
+    "status": "Form Filled / In Progress",
     "cv_uploaded": false,
-    "notes": "Navigated to Foundit (Monster) (Foundit - Job Search & Recruitment) \u2022 Clicked 'Google' successfully",
-    "last_run": "2026-10-20 13:17:49"
+    "notes": "Navigated to Foundit (Monster) (Foundit - Job Search & Recruitment) \u2022 Filled Email: oo71097145198@gmail.com \u2022 Filled Mobile Number: 9898048483 \u2022 Clicked 'Continue'",
+    "last_run": "2026-10-21 16:41:01"
   },
   "upwork": {
-    "status": "Pending Verification / In Progress",
+    "status": "Form Filled / In Progress",
     "cv_uploaded": false,
-    "notes": "Navigated to Upwork (Just a moment...) \u2022 Clicked fallback button 'Freelancer'",
-    "last_run": "2026-10-20 13:18:13"
+    "notes": "Navigated to Upwork (Just a moment...)",
+    "last_run": "2026-10-21 16:41:14"
   },
   "freelancer": {
-    "status": "Pending Verification / In Progress",
+    "status": "Form Filled / In Progress",
     "cv_uploaded": false,
-    "notes": "Navigated to Freelancer.com (Join 90.3M+ Professionals | Sign Up Free | Freelancer) \u2022 Clicked fallback button 'Freelancer'",
-    "last_run": "2026-10-20 13:18:32"
+    "notes": "Navigated to Freelancer.com (Join 90.4M+ Professionals | Sign Up Free | Freelancer) \u2022 Filled First Name: Jignesh \u2022 Filled Last Name: Kariya \u2022 Filled Email: oo71097145198@gmail.com \u2022 Filled secure password \u2022 Selected work status: i agree to the freelancer user \u2022 Clicked 'Sign up'",
+    "last_run": "2026-10-21 16:41:38"
   },
   "wellfound": {
-    "status": "Pending Verification / In Progress",
+    "status": "Awaiting Mobile OTP (+91 9898048483)",
     "cv_uploaded": false,
-    "notes": "Navigated to Wellfound (AngelList) (Find Startup Jobs Near You and Remote Jobs | Wellfound) \u2022 Clicked fallback button 'Google'",
-    "last_run": "2026-10-20 13:19:07"
+    "notes": "Navigated to Wellfound (AngelList) (Find Startup Jobs Near You and Remote Jobs | Wellfound) \u2022 Filled Email: oo71097145198@gmail.com \u2022 Clicked 'Sign up' \u2022 Mobile OTP verification screen active (SMS sent to +91 9898048483)",
+    "last_run": "2026-10-21 16:42:09"
   },
   "linkedin": {
-    "status": "Pending Verification / In Progress",
+    "status": "Form Filled / In Progress",
     "cv_uploaded": false,
-    "notes": "Navigated to LinkedIn Jobs (Jobs | LinkedIn) \u2022 OAuth button 'Sign in with Google' not immediately clickable (may require manual OTP)",
-    "last_run": "2026-10-20 13:19:56"
+    "notes": "Navigated to LinkedIn Jobs (Jobs | LinkedIn)",
+    "last_run": "2026-10-21 16:43:04"
   },
   "truelancer": {
-    "status": "Pending Verification / In Progress",
+    "status": "Form Filled / In Progress",
     "cv_uploaded": false,
-    "notes": "Navigated to Truelancer (Freelancer Signup | Employer Signup | Truelancer) \u2022 Clicked fallback button 'Freelancer'",
-    "last_run": "2026-10-20 13:20:17"
+    "notes": "Navigated to Truelancer (Freelancer Signup | Employer Signup | Truelancer) \u2022 Filled First Name: Jignesh \u2022 Filled Last Name: Kariya \u2022 Filled Email: oo71097145198@gmail.com \u2022 Filled secure password \u2022 Filled secure password \u2022 Clicked 'Create account'",
+    "last_run": "2026-10-21 16:43:25"
   },
   "apna": {
-    "status": "Pending Verification / In Progress",
+    "status": "Form Filled / In Progress",
     "cv_uploaded": false,
-    "notes": "Navigated to Apna (80,628 Job Vacancies in India 2026 | Search Jobs in India | apna.co) \u2022 Clicked fallback button 'Google'",
-    "last_run": "2026-10-20 13:20:43"
+    "notes": "Navigated to Apna (0 Job Vacancies in India 2026 | Search Jobs in India | apna.co) \u2022 Accepted Terms & Conditions \u2022 Clicked fallback button 'Google' \u2022 Accepted Terms & Conditions \u2022 Accepted Terms & Conditions",
+    "last_run": "2026-10-21 16:45:12"
   }
 }

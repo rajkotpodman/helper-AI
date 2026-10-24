@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helper-AI: Autonomous PC Control & Internet Agent | Official Blog Showcase</title>
+  <meta name="description" content="Explore Helper-AI by rajkotpodman - The Autonomous PC & Internet Co-Pilot for everyday non-technical users. Features live embedded HOW_TO_USE.md documentation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0a0e17;
+      --bg-secondary: #111827;
+      --bg-card: rgba(17, 24, 39, 0.7);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --accent-cyan: #06b6d4;
+      --accent-blue: #3b82f6;
+      --accent-emerald: #10b981;
+      --accent-purple: #8b5cf6;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --radius-lg: 16px;
+      --radius-md: 10px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: radial-gradient(circle at top right, #1e1b4b 0%, #0a0e17 60%);
+      color: var(--text-main);
+      line-height: 1.7;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+      background: rgba(10, 14, 23, 0.85);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.35rem;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+
+    .header-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      margin-left: 1.5rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+    }
+
+    .header-links a:hover {
+      color: #38bdf8;
+    }
+
+    .btn-github {
+      background: linear-gradient(135deg, #2563eb, #06b6d4);
+      color: white !important;
+      padding: 0.55rem 1.25rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 6rem;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      color: #22d3ee;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-size: clamp(2.2rem, 4vw, 3.8rem);
+      line-height: 1.15;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .lead-text {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 850px;
+      margin-bottom: 2.5rem;
+    }
+
+    .grid-features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin: 3.5rem 0;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      backdrop-filter: blur(8px);
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      display: inline-block;
+    }
+
+    .feature-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-desc {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    /* Embedded Space for HOW_TO_USE.md */
+    .doc-viewer-section {
+      margin-top: 5rem;
+      background: #0d131f;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.7);
+    }
+
+    .doc-viewer-header {
+      background: #111827;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .doc-header-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 10px var(--accent-emerald);
+    }
+
+    .doc-viewer-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: white;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .doc-search-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      color: white;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      width: 200px;
+    }
+
+    .doc-search-input:focus {
+      border-color: var(--accent-cyan);
+    }
+
+    .doc-content-body {
+      padding: 2.5rem;
+      max-height: 800px;
+      overflow-y: auto;
+      font-size: 1rem;
+      line-height: 1.8;
+      color: #cbd5e1;
+      scroll-behavior: smooth;
+    }
+
+    /* Markdown Styling Inside Viewer */
+    .doc-content-body h1, .doc-content-body h2, .doc-content-body h3 {
+      color: #ffffff;
+      margin-top: 2rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 0.4rem;
+    }
+
+    .doc-content-body a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+
+    .doc-content-body a:hover {
+      text-decoration: underline;
+    }
+
+    .doc-content-body pre {
+      background: #090d16;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1.25rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      margin: 1.25rem 0;
+    }
+
+    .doc-content-body code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+
+    .doc-content-body blockquote {
+      border-left: 4px solid var(--accent-cyan);
+      padding-left: 1.2rem;
+      color: #94a3b8;
+      margin: 1.5rem 0;
+      background: rgba(6, 182, 212, 0.05);
+      padding: 1rem;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .doc-content-body ul, .doc-content-body ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    footer {
+      border-top: 1px solid var(--border-color);
+      padding: 3rem 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header>
+    <a href="https://github.com/rajkotpodman/helper-AI" class="brand" target="_blank">
+      ⚡ Helper-AI
+    </a>
+    <div class="header-links">
+      <a href="#overview">Overview</a>
+      <a href="#features">Features</a>
+      <a href="#documentation">HOW_TO_USE Viewer</a>
+      <a href="https://github.com/rajkotpodman/helper-AI" target="_blank" class="btn-github">
+        ⭐ GitHub Repo
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container">
+    <div class="hero-badge">🚀 AUTONOMOUS PC CONTROL & BROWSER CO-PILOT</div>
+    <h1>The AI Agent That Doesn't Just Chat.<br>It Controls Your Computer.</h1>
+    <p class="lead-text">
+      Standard AI chatbots can only give text advice. <strong>Helper-AI</strong> bridges intelligence with direct OS-level execution: 
+      inspecting files, automating browsers, recording repetitive workflows, and listening via hands-free voice.
+    </p>
+
+    <!-- Key Capabilities Grid -->
+    <div class="grid-features" id="features">
+      <div class="feature-card">
+        <span class="feature-icon">🛡️</span>
+        <div class="feature-title">Plan-Act-Verify Engine</div>
+        <div class="feature-desc">Breaks high-level goals into atomic steps with continuous visual & status verification. Safe Mode prevents accidental changes.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🌐</span>
+        <div class="feature-title">Browser & CRM Autopilot</div>
+        <div class="feature-desc">Equipped with Playwright & persistent Chrome sessions. Record a form fill once and replay across hundreds of Excel leads.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🎙️</span>
+        <div class="feature-title">Hands-Free Voice Sidecar</div>
+        <div class="feature-desc">Speaks back aloud via Microsoft Edge-TTS neural voices and captures global push-to-talk commands anywhere on your PC.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <div class="feature-title">100% Free & Local-First</div>
+        <div class="feature-desc">Zero mandatory API subscriptions. Out-of-the-box support for Ollama (dolphin-llama3) running completely offline.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🧩</span>
+        <div class="feature-title">Reverse Engineer Apps (REA)</div>
+        <div class="feature-desc">Discovers fast keyboard shortcuts and optimal UI paths for complex apps like Photoshop, Blender, and Word.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🇮🇳</span>
+        <div class="feature-title">English & ગુજરાતી Bilingual</div>
+        <div class="feature-desc">Tailored for everyday non-technical users with full bilingual prompts, guides, and localized assistance.</div>
+      </div>
+    </div>
+
+    <!-- Live HOW_TO_USE.md Space -->
+    <section class="doc-viewer-section" id="documentation">
+      <div class="doc-viewer-header">
+        <div class="doc-header-info">
+          <div class="status-dot"></div>
+          <strong>Live Repository Space:</strong>
+          <span style="color: var(--accent-cyan); font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
+            HOW_TO_USE.md (English & ગુજરાતી)
+          </span>
+        </div>
+        <div class="doc-viewer-actions">
+          <input type="text" id="docSearch" class="doc-search-input" placeholder="Search in guide..." oninput="filterDocContent()">
+          <button class="btn-action" onclick="copyRawDoc()">📋 Copy Markdown</button>
+          <a href="https://github.com/rajkotpodman/helper-AI/blob/main/HOW_TO_USE.md" target="_blank" class="btn-action">↗ View on GitHub</a>
+        </div>
+      </div>
+      
+      <!-- Content Container -->
+      <div id="docViewer" class="doc-content-body">
+        <p style="text-align: center; color: var(--text-muted); padding: 2rem;">Loading HOW_TO_USE.md content...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Created for <a href="https://github.com/rajkotpodman/helper-AI" style="color: #38bdf8; text-decoration: none;">Helper-AI</a> by rajkotpodman. Open source under the MIT License.</p>
+  </footer>
+
+  <script>
+    let rawMarkdown = "";
+
+    // Load HOW_TO_USE.md directly
+    async function loadGuide() {
+      try {
+        const response = await fetch('./HOW_TO_USE.md');
+        if (!response.ok) throw new Error("Local fetch failed, loading raw GitHub source...");
+        rawMarkdown = await response.text();
+      } catch (err) {
+        try {
+          const githubRes = await fetch('https://raw.githubusercontent.com/rajkotpodman/helper-AI/main/HOW_TO_USE.md');
+          rawMarkdown = await githubRes.text();
+        } catch (fetchErr) {
+          rawMarkdown = "# Error loading HOW_TO_USE.md\\n\\nPlease verify your network connection or view directly on [GitHub](https://github.com/rajkotpodman/helper-AI/blob/main/HOW_TO_USE.md).";
+        }
+      }
+      renderMarkdown(rawMarkdown);
+    }
+
+    function renderMarkdown(md) {
+      const viewer = document.getElementById('docViewer');
+      if (window.marked) {
+        viewer.innerHTML = marked.parse(md);
+      } else {
+        viewer.innerText = md;
+      }
+    }
+
+    function copyRawDoc() {
+      navigator.clipboard.writeText(rawMarkdown).then(() => {
+        alert("HOW_TO_USE.md copied to clipboard!");
+      });
+    }
+
+    function filterDocContent() {
+      const query = document.getElementById('docSearch').value.toLowerCase();
+      if (!query) {
+        renderMarkdown(rawMarkdown);
+        return;
+      }
+      const lines = rawMarkdown.split('\\n');
+      const matched = lines.filter(line => line.toLowerCase().includes(query)).join('\\n\\n');
+      renderMarkdown(matched ? `### Search Results for "${query}":\\n\\n` + matched : `*No matches found for "${query}"*`);
+    }
+
+    window.addEventListener('DOMContentLoaded', loadGuide);
+  </script>
+</body>
+</html>

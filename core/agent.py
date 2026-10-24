@@ -46,10 +46,15 @@ class HelperAgent:
         self._should_cancel = False
 
     def cancel(self):
-        """Signals the agent to stop executing after the current step."""
+        """Signals the agent to stop executing immediately."""
         self._should_cancel = True
         if self.permission_manager:
             self.permission_manager.cancel_all()
+        try:
+            from core.job_portal_automation import job_portal_automation
+            job_portal_automation.cancel()
+        except Exception:
+            pass
         logger.info("Agent received cancel signal.")
 
     async def run(
@@ -285,6 +290,12 @@ class HelperAgent:
                 os_info=memory.system_info
             )
 
+            if self._should_cancel:
+                emit("cancelled", {"message": "Goal was manually stopped by the user."})
+                final_message = "Goal execution was cancelled by user request."
+                metrics.record_goal_complete(success=False)
+                break
+
             thought = step_decision.get("thought", "")
             action = step_decision.get("action", "none")
             action_args = step_decision.get("action_args", {})
@@ -399,11 +410,18 @@ class HelperAgent:
                         })
                         break
 
-                # Prevent premature completion when goal requires job portals or CV upload but portals incomplete
-                is_job_portal_requested = any(w in lower_goal for w in [
-                    "job portal", "job portel", "job releated", "upload cv", "jignesh cv", "create 10 account", "10 website", "freelancer"
-                ])
+                # Prevent premature completion ONLY when goal explicitly requests multi-portal registration
+                is_linkedin_goal = any(w in lower_goal for w in ["linkedin", "linkdin", "linkden"])
+                is_job_portal_requested = (
+                    not is_linkedin_goal and
+                    any(w in lower_goal for w in ["10 job portal", "10 portal", "10 website", "create 10 account", "process all portals", "all 10 portals", "cv in each site"])
+                )
                 if is_job_portal_requested and step_idx <= self.max_steps:
+                    if self._should_cancel:
+                        emit("cancelled", {"message": "Goal was manually stopped by the user."})
+                        final_message = "Goal execution was cancelled by user request."
+                        metrics.record_goal_complete(success=False)
+                        break
                     from core.job_portal_automation import job_portal_automation
                     portals_done = sum(1 for p in job_portal_automation.get_portals() if p.get("cv_uploaded") or p.get("status") in ["Completed", "Pending Verification / In Progress"])
                     if portals_done < 5:
@@ -413,6 +431,11 @@ class HelperAgent:
                             "message": "🛡️ Autonomous Execution Guard: Intercepted premature completion. Executing verified registration and CV upload across all 10 portals..."
                         })
                         portal_res = await asyncio.to_thread(job_portal_automation.process_all_10_portals)
+                        if self._should_cancel:
+                            emit("cancelled", {"message": "Goal was manually stopped by the user."})
+                            final_message = "Goal execution was cancelled by user request."
+                            metrics.record_goal_complete(success=False)
+                            break
                         if portal_res:
                             success = portal_res.get("success", True)
                             final_message = (
@@ -616,6 +639,12 @@ class HelperAgent:
             t_start = time.time()
             tool_result = await asyncio.to_thread(self.tools.execute, action, action_args)
             duration_ms = (time.time() - t_start) * 1000
+
+            if self._should_cancel:
+                emit("cancelled", {"message": "Goal was manually stopped by the user."})
+                final_message = "Goal execution was cancelled by user request."
+                metrics.record_goal_complete(success=False)
+                break
 
             # 4.1 Reflexion Ground-Truth Environmental Verification
             eval_res = self.evaluator.evaluate(action, action_args, tool_result, memory)
@@ -907,6 +936,15 @@ class HelperAgent:
 
         await flush_events()
         self._is_running = False
+        if self._should_cancel:
+            return {
+                "success": False,
+                "goal": goal,
+                "final_message": "Goal execution was cancelled by user request.",
+                "message": "Goal execution was cancelled by user request.",
+                "steps_executed": len(memory.history),
+                "history": [s.to_dict() for s in memory.history]
+            }
         return {
             "success": success,
             "goal": goal,
@@ -1001,8 +1039,78 @@ class HelperAgent:
         elif "blogger" in lower_goal or "blog" in lower_goal:
             target_platform = "blogger"
 
-        # Build master showcase post
-        if repos:
+        # Check user intent and specific requirements
+        is_gujarati = any(k in lower_goal for k in ["gujarati", "ગુજરાતી"])
+        is_job_hire = any(k in lower_goal for k in ["job", "hire", "hire me", "salary", "selary", "engineer", "freelancer", "remote", "office", "cv"])
+        
+        # Parse candidate CV details for accurate profile
+        from core.job_portal_automation import job_portal_automation
+        cand_profile = job_portal_automation.parse_cv_details()
+
+        # Step A: Attempt intelligent dynamic LLM synthesis tailored strictly to the user prompt
+        llm_post = None
+        try:
+            synth_prompt = (
+                f"You are Helper-AI operating with true AGI intelligence. Generate an exhaustive, high-impact, professional social media post for {target_platform.capitalize()} strictly fulfilling the user's instructions:\n"
+                f"User Instructions: \"{goal}\"\n\n"
+                f"Candidate Information from CV:\n"
+                f"• Name: {cand_profile.get('full_name', 'Jignesh J. Kariya')}\n"
+                f"• Experience: {cand_profile.get('experience_years', 22)}+ years in Enterprise Infrastructure, Linux/Windows Administration, Mobile Hardware, and AI Systems\n"
+                f"• Phone / Mobile: {cand_profile.get('phone', '+91 9898048483')}\n"
+                f"• Email: {cand_profile.get('email', 'oo71097145198@gmail.com')}\n"
+                f"• Location: {cand_profile.get('location', 'Rajkot, Gujarat, India')}\n"
+                f"• Primary Repository: https://github.com/rajkotpodman/helper-AI (Autonomous PC Control & Internet Agent)\n\n"
+                f"CRITICAL LANGUAGE RULE:\n"
+                f"{'The user explicitly demanded the post in GUJARATI (ગુજરાતી)! You MUST write the ENTIRE post in fluent, professional, compelling Gujarati (ગુજરાતી)!' if is_gujarati else 'Write in compelling, high-impact language.'}\n"
+                f"Ensure the post:\n"
+                f"1. Deeply explains the architecture and real-world capabilities of Helper-AI (PC control, browser automation, local LLMs, hands-free voice sidecar).\n"
+                f"2. Highlights Jignesh's 22+ years of battle-tested engineering expertise.\n"
+                f"3. States availability for AI Engineer roles (Remote, Office, Freelance) with top compensation.\n"
+                f"4. Includes full contact details and relevant hashtags."
+            )
+            llm_step = self.llm_client.generate_step(
+                goal=synth_prompt,
+                trajectory_summary="",
+                tool_schemas="[]",
+                os_info=memory.system_info
+            )
+            cand_text = llm_step.get("completion_message") or llm_step.get("thought") or ""
+            if len(cand_text.strip()) > 120 and (not is_gujarati or any('\u0A80' <= c <= '\u0AFF' for c in cand_text)):
+                llm_post = cand_text.strip()
+        except Exception as e:
+            logger.warning(f"Could not use LLM for post synthesis: {e}")
+
+        if llm_post:
+            master_post = llm_post
+        elif is_gujarati and is_job_hire:
+            master_post = (
+                f"🚀 ઓપન-સોર્સ AI ક્રાંતિ: Helper-AI પ્રોજેક્ટ અને AI Engineer તરીકે હાયરિંગ માટે ઉપલબ્ધ!\n\n"
+                f"નમસ્કાર! હું જીજ્ઞેશ જે. કારીયા (રાજકોટ, ગુજરાત). આઈટી ઇન્ફ્રાસ્ટ્રક્ચર, લિનક્સ/વિન્ડોઝ સિસ્ટમ્સ એડમિનિસ્ટ્રેશન, મોબાઇલ હાર્ડવેર અને ઓટોનોમસ એઆઈ આર્કિટેક્ચરમાં ૨૨+ વર્ષથી વધુનો બહોળો અનુભવ ધરાવું છું.\n\n"
+                f"🌟 મારું મુખ્ય ઓપન-સોર્સ ઇનોવેશન: Helper-AI (Autonomous PC & Internet Agent)\n"
+                f"🔗 સત્તાવાર GitHub રિપોઝિટરી: https://github.com/rajkotpodman/helper-AI\n\n"
+                f"💡 Helper-AI ની મુખ્ય વિશેષતાઓ અને કાર્યક્ષમતા:\n"
+                f"• સંપૂર્ણ ઓટોનોમસ PC કંટ્રોલ અને લાઇવ બ્રાઉઝર ઓટોમેશન: કોઈપણ વારંવારના સવાલો વગર જટિલ મિશન જાતે પૂર્ણ કરે છે.\n"
+                f"• લોકલ પ્રાઇવેટ LLM સપોર્ટ: ૧૦૦% ઓફલાઇન Ollama, Dolphin Llama-3, DeepSeek, અને Gemini સાથે એકીકરણ.\n"
+                f"• હેન્ડ્સ-ફ્રી રિયલ-ટાઇમ વૉઇસ સાઇડકાર એજન્ટ: અવાજ દ્વારા સંપૂર્ણ સિસ્ટમ કંટ્રોલ.\n"
+                f"• એન્ટરપ્રાઇઝ-ગ્રેડ સેલ્ફ-હીલિંગ અને ગ્રાઉન્ડ-ટ્રુથ એન્વાયર્નમેન્ટલ વેરિફિકેશન.\n\n"
+                f"💼 હું હાલ નીચે મુજબના રોલ માટે ઉચ્ચતમ વળતર (Maximum Competitive Salary) સાથે જોડાવા માટે સંપૂર્ણ તૈયાર છું:\n"
+                f"✅ AI Engineer / Autonomous Agent Specialist\n"
+                f"✅ Remote (વર્ક ફ્રોમ હોમ) | Office (ઓન-સાઇટ) | Freelancer / Contract Engineering\n\n"
+                f"📞 સીધો સંપર્ક કરો:\n"
+                f"• મોબાઈલ / WhatsApp: +91 9898048483\n"
+                f"• ઈમેઇલ: oo71097145198@gmail.com\n"
+                f"• GitHub પ્રોફાઇલ: https://github.com/rajkotpodman\n\n"
+                f"#AI #AIEngineer #HelperAI #OpenSource #AutonomousAgent #GujaratTech #Rajkot #Hiring #MachineLearning #Developer #WorkFromHome #Freelance"
+            )
+        elif is_gujarati:
+            master_post = (
+                f"🚀 Helper-AI: ઓપન-સોર્સ ઓટોનોમસ PC અને ઇન્ટરનેટ એજન્ટ!\n\n"
+                f"GitHub પર મારું નવું ઇનોવેશન એક્સ્પ્લોર કરો: https://github.com/rajkotpodman/helper-AI\n\n"
+                f"આ એજન્ટ તમારા કમ્પ્યુટર અને બ્રાઉઝર પર કોઈપણ જટિલ કાર્ય જાતે જ પૂરું કરે છે. લોકલ LLM (Ollama, Dolphin Llama-3) અને રિયલ-ટાઇમ વૉઇસ સાઇડકાર સાથે સજ્જ!\n\n"
+                f"સંપર્ક: +91 9898048483 | oo71097145198@gmail.com\n"
+                f"#AI #HelperAI #OpenSource #Technology #Gujarat"
+            )
+        elif repos:
             master_post = (
                 f"🚀 Showcasing My Open-Source GitHub Ecosystem ({len(repos)} Repositories)!\n\n"
                 f"As an autonomous systems engineer and open-source builder, here is an executive catalog of my top GitHub innovations:\n\n"
@@ -1022,6 +1130,7 @@ class HelperAgent:
                 f"Check out my open-source autonomous agent Helper-AI on GitHub: https://github.com/rajkotpodman/helper-AI\n\n"
                 f"#OpenSource #AI #Automation #TechCareers"
             )
+
 
         # Execute browser publication tool
         action_name = "browser_automation"

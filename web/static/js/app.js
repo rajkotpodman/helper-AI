@@ -213,6 +213,7 @@ function initElements() {
   elements.btnCancelSettings = document.getElementById('btn-cancel-settings-modal');
   elements.btnSaveSettings = document.getElementById('btn-save-settings-modal');
   elements.selectProvider = document.getElementById('modal-select-provider');
+  elements.inputAnthropicKey = document.getElementById('input-anthropic-key');
   elements.inputGeminiKey = document.getElementById('input-gemini-key');
   elements.inputDeepseekKey = document.getElementById('input-deepseek-key');
   elements.inputOpenaiKey = document.getElementById('input-openai-key');
@@ -793,6 +794,7 @@ function handleStreamEvent(data) {
   }
   else if (type === 'started') {
     state.isExecuting = true;
+    state.executionCompletedHandled = false;
     elements.btnExecute?.classList.add('opacity-50', 'pointer-events-none');
     elements.btnStop?.classList.remove('hidden');
     elements.executionDrawer?.classList.remove('hidden');
@@ -836,7 +838,15 @@ function handleStreamEvent(data) {
   else if (type === 'permission_requested') {
     showPermissionModal(payload);
   } 
+  else if (type === 'cancelled') {
+    appendTerminalLog(`🛑 Execution halted: ${payload.message || 'User stopped execution.'}`, 'warn');
+    handleExecutionComplete({ success: false, cancelled: true, message: payload.message || 'Execution stopped by user.' });
+  }
   else if (type === 'completed' || type === 'finished') {
+    if (!state.isExecuting && state.executionCompletedHandled) {
+      return;
+    }
+    state.executionCompletedHandled = true;
     handleExecutionComplete(payload);
   } 
   else if (type === 'error') {
@@ -845,31 +855,91 @@ function handleStreamEvent(data) {
   }
 }
 
+function renderMarkdownToHtml(text) {
+  if (!text) return '';
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+  // Code blocks ```code```
+  html = html.replace(/```([a-zA-Z0-9_\-]*)\n([\s\S]*?)```/g, (m, lang, code) => {
+    return `<pre class="bg-zinc-950 p-3 rounded-lg border border-zinc-800 my-2 overflow-x-auto font-mono text-xs text-blue-300"><code>${code.trim()}</code></pre>`;
+  });
+  
+  // Inline code `code`
+  html = html.replace(/`([^`]+)`/g, '<code class="bg-zinc-800 text-blue-300 px-1 py-0.5 rounded text-[11px] font-mono">$1</code>');
+  
+  // Headers ###
+  html = html.replace(/^### (.*$)/gim, '<h3 class="text-sm font-bold text-white mt-3 mb-1">$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2 class="text-base font-bold text-white mt-4 mb-2">$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1 class="text-lg font-bold text-white mt-4 mb-2">$1</h1>');
+  
+  // Bold **text**
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-white">$1</strong>');
+  
+  // Lists
+  html = html.replace(/^\s*[-•*]\s+(.*$)/gim, '<li class="ml-4 list-disc text-zinc-300">$1</li>');
+  
+  // Paragraphs
+  html = html.replace(/\n\n/g, '<br><br>');
+  return html;
+}
+
 function handleExecutionComplete(data) {
   state.isExecuting = false;
+  state.executionCompletedHandled = true;
   state.lastResultData = data;
   updateStepper(4);
-  
+
   elements.btnExecute?.classList.remove('opacity-50', 'pointer-events-none');
   elements.btnStop?.classList.add('hidden');
   
   const resultText = String(data?.final_result || data?.message || data?.error || '');
-  const hasError = data?.success === false || resultText.toLowerCase().includes('internal server error') || resultText.toLowerCase().includes('execution error');
+  const isCancelled = Boolean(data?.cancelled) || resultText.toLowerCase().includes('stopped') || resultText.toLowerCase().includes('cancelled');
+  const hasError = !isCancelled && (data?.success === false || resultText.toLowerCase().includes('internal server error') || resultText.toLowerCase().includes('execution error'));
   
-  if (elements.executionStatus) {
-    elements.executionStatus.textContent = !hasError ? 'Goal Completed Successfully' : 'Goal Execution Finished With Alert';
-  }
-  
-  if (elements.resultHeading) {
-    elements.resultHeading.textContent = !hasError ? 'Mission Accomplished!' : 'Action / Attention Required';
-  }
-  
-  if (!hasError) {
+  if (isCancelled) {
+    if (elements.executionStatus) {
+      elements.executionStatus.textContent = 'Execution Halted (Stopped)';
+    }
+    if (elements.resultHeading) {
+      elements.resultHeading.textContent = 'Agent Stopped by User';
+    }
+    appendTerminalLog(`🛑 Mission halted by user request.`, 'warn');
+  } else if (!hasError) {
+    if (elements.executionStatus) {
+      elements.executionStatus.textContent = 'Goal Completed Successfully';
+    }
+    if (elements.resultHeading) {
+      elements.resultHeading.textContent = 'Mission Accomplished!';
+    }
     appendTerminalLog(`🎉 Mission complete! Final status: SUCCESS`, 'success');
   } else {
+    if (elements.executionStatus) {
+      elements.executionStatus.textContent = 'Goal Execution Finished With Alert';
+    }
+    if (elements.resultHeading) {
+      elements.resultHeading.textContent = 'Action / Attention Required';
+    }
     appendTerminalLog(`⚠️ Execution status: ATTENTION NEEDED - ${resultText || 'Execution stopped with warnings'}`, 'warn');
   }
-  
+
+  // Update Assistant Message Bubble in DeepSeek Harness Chat View
+  if (state.currentAssistantBlock) {
+    const badge = state.currentAssistantBlock.querySelector('.dsh-completed-badge');
+    if (badge) {
+      badge.innerHTML = `<span>Completed in ${state.stepCount || 1} steps</span> <i data-lucide="chevron-down" class="w-3 h-3"></i>`;
+    }
+    const content = state.currentAssistantBlock.querySelector('.dsh-assistant-content');
+    if (content) {
+      content.innerHTML = renderMarkdownToHtml(resultText);
+    }
+    if (window.lucide) lucide.createIcons();
+    const chatStream = document.getElementById('view-chat');
+    chatStream?.scrollTo({ top: chatStream.scrollHeight, behavior: 'smooth' });
+  }
+
   // Show comprehensive final result card
   if (elements.resultContainer && elements.resultBodyText) {
     elements.resultContainer.classList.remove('hidden');
@@ -890,6 +960,54 @@ async function executeGoal() {
   state.currentGoalText = goal;
   state.executionLogs = [];
   
+  // Clear textarea and reset height
+  if (elements.goalInput) {
+    elements.goalInput.value = '';
+    elements.goalInput.style.height = 'auto';
+  }
+
+  // Update Topbar and Sidebar Session Titles
+  const topTitle = document.getElementById('topbar-session-title');
+  if (topTitle) topTitle.textContent = goal.slice(0, 36) + (goal.length > 36 ? '...' : '');
+  const sideTitle = document.getElementById('sidebar-active-session-label');
+  if (sideTitle) sideTitle.textContent = goal.slice(0, 28) + (goal.length > 28 ? '...' : '');
+
+  // Render User Message & Assistant Placeholder in DeepSeek Harness Chat Stream
+  const chatContainer = document.getElementById('chat-messages-container');
+  if (chatContainer) {
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    // User Bubble
+    const userBubble = document.createElement('div');
+    userBubble.className = 'dsh-user-bubble';
+    userBubble.innerHTML = `
+      ${goal.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+      <div class="flex items-center justify-end gap-1.5 text-[10px] text-zinc-500 mt-1">
+        <span>${timeStr}</span>
+        <button onclick="navigator.clipboard.writeText(this.parentElement.parentElement.textContent.trim())" class="hover:text-zinc-300" title="Copy text"><i data-lucide="copy" class="w-3 h-3"></i></button>
+      </div>
+    `;
+    chatContainer.appendChild(userBubble);
+
+    // Assistant Block Placeholder
+    const assistantBlock = document.createElement('div');
+    assistantBlock.className = 'dsh-assistant-block';
+    assistantBlock.innerHTML = `
+      <div class="dsh-completed-badge">
+        <span class="animate-pulse">Thinking & executing...</span>
+      </div>
+      <div class="dsh-assistant-content text-xs text-zinc-300">
+        <span class="text-zinc-400">Helper-AI is inspecting the workspace and planning autonomous actions...</span>
+      </div>
+    `;
+    chatContainer.appendChild(assistantBlock);
+    state.currentAssistantBlock = assistantBlock;
+
+    if (window.lucide) lucide.createIcons();
+    const chatStream = document.getElementById('view-chat');
+    chatStream?.scrollTo({ top: chatStream.scrollHeight, behavior: 'smooth' });
+  }
+
   // Show drawer and clear terminal
   elements.executionDrawer?.classList.remove('hidden');
   elements.resultContainer?.classList.add('hidden');
@@ -941,8 +1059,10 @@ async function stopAgent() {
     const res = await fetch('/api/cancel', { method: 'POST' });
     const data = await res.json();
     appendTerminalLog(`Agent cancelled: ${data.message || 'Stopped.'}`, 'warn');
+    handleExecutionComplete({ success: false, cancelled: true, message: data.message || 'Execution halted by user.' });
   } catch (err) {
     console.error(err);
+    handleExecutionComplete({ success: false, cancelled: true, message: 'Execution halted by user.' });
   }
 }
 
@@ -1344,6 +1464,7 @@ async function runConnectionsCheck() {
 
 function updateProviderKeyVisibility() {
   const p = elements.selectProvider?.value;
+  document.getElementById('group-anthropic-key')?.classList.toggle('hidden', p !== 'anthropic' && p !== 'claude');
   document.getElementById('group-gemini-key')?.classList.toggle('hidden', p !== 'gemini');
   document.getElementById('group-deepseek-key')?.classList.toggle('hidden', p !== 'deepseek');
   document.getElementById('group-custom-ai')?.classList.toggle('hidden', p !== 'custom');
@@ -1355,6 +1476,7 @@ function updateProviderKeyVisibility() {
 async function loadSettingsIntoModal() {
   if (elements.selectProvider) elements.selectProvider.value = state.provider;
   if (elements.checkboxSafeMode) elements.checkboxSafeMode.checked = state.safeMode;
+  if (elements.inputAnthropicKey) elements.inputAnthropicKey.value = localStorage.getItem('helper_anthropic_key') || '';
   if (elements.inputGeminiKey) elements.inputGeminiKey.value = localStorage.getItem('helper_gemini_key') || '';
   if (elements.inputDeepseekKey) elements.inputDeepseekKey.value = localStorage.getItem('helper_deepseek_key') || '';
   if (elements.inputCustomName) elements.inputCustomName.value = localStorage.getItem('helper_custom_name') || 'OpenRouter';
@@ -1374,6 +1496,10 @@ async function loadSettingsIntoModal() {
         state.provider = s.provider;
         if (elements.selectProvider) elements.selectProvider.value = s.provider;
         if (elements.providerStateText) elements.providerStateText.textContent = s.provider.toUpperCase();
+      }
+      if (s.anthropic_key && !elements.inputAnthropicKey?.value) {
+        if (elements.inputAnthropicKey) elements.inputAnthropicKey.value = s.anthropic_key;
+        localStorage.setItem('helper_anthropic_key', s.anthropic_key);
       }
       if (s.gemini_key && !elements.inputGeminiKey?.value) {
         if (elements.inputGeminiKey) elements.inputGeminiKey.value = s.gemini_key;
@@ -1414,6 +1540,7 @@ function saveSettingsFromModal() {
   const isUnrestricted = document.getElementById('modal-checkbox-unrestricted')?.checked !== false;
   const backgroundAi = document.getElementById('modal-select-background-ai')?.value || 'auto';
   
+  if (elements.inputAnthropicKey) localStorage.setItem('helper_anthropic_key', elements.inputAnthropicKey.value);
   if (elements.inputGeminiKey) localStorage.setItem('helper_gemini_key', elements.inputGeminiKey.value);
   if (elements.inputDeepseekKey) localStorage.setItem('helper_deepseek_key', elements.inputDeepseekKey.value);
   if (elements.inputCustomName) localStorage.setItem('helper_custom_name', elements.inputCustomName.value);
@@ -1430,6 +1557,7 @@ function saveSettingsFromModal() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       provider: state.provider,
+      anthropic_key: elements.inputAnthropicKey?.value || null,
       gemini_key: elements.inputGeminiKey?.value || null,
       deepseek_key: elements.inputDeepseekKey?.value || null,
       custom_name: elements.inputCustomName?.value || null,
@@ -1514,17 +1642,59 @@ function setupActions() {
     });
   });
   
-  // Read Aloud / Speak
-  elements.btnSpeakResult?.addEventListener('click', () => {
-    const text = elements.resultBodyText?.textContent;
-    if (!text) return;
-    
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.0;
-      window.speechSynthesis.speak(utterance);
+  // Read Aloud / Speak (One-Tap Play, Second-Tap Stop)
+  let isAiSpeaking = false;
+
+  function updateSpeakButtonUI(speaking) {
+    isAiSpeaking = speaking;
+    if (elements.btnSpeakResult) {
+      if (speaking) {
+        elements.btnSpeakResult.innerHTML = '<i data-lucide="square" class="w-3.5 h-3.5 fill-red-400 text-red-400"></i> <span class="font-bold text-red-400">Stop</span>';
+        elements.btnSpeakResult.classList.add('bg-red-500/20', 'border-red-500/40');
+      } else {
+        elements.btnSpeakResult.innerHTML = '<i data-lucide="volume-2" class="w-3.5 h-3.5 text-emerald-400"></i> <span class="text-emerald-300">Speak</span>';
+        elements.btnSpeakResult.classList.remove('bg-red-500/20', 'border-red-500/40');
+      }
+      if (window.lucide) lucide.createIcons();
     }
+  }
+
+  elements.btnSpeakResult?.addEventListener('click', () => {
+    if (!('speechSynthesis' in window)) {
+      alert('Speech synthesis is not supported in this browser.');
+      return;
+    }
+
+    // Second tap: If currently speaking, STOP immediately
+    if (window.speechSynthesis.speaking || isAiSpeaking) {
+      window.speechSynthesis.cancel();
+      updateSpeakButtonUI(false);
+      return;
+    }
+
+    // First tap: Start speaking
+    const text = elements.resultBodyText?.textContent?.trim();
+    if (!text) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+
+    utterance.onstart = () => {
+      updateSpeakButtonUI(true);
+    };
+
+    utterance.onend = () => {
+      updateSpeakButtonUI(false);
+    };
+
+    utterance.onerror = (e) => {
+      console.warn('Speech error:', e);
+      updateSpeakButtonUI(false);
+    };
+
+    window.speechSynthesis.speak(utterance);
+    updateSpeakButtonUI(true);
   });
   
   // Export Markdown Report

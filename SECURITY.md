@@ -8,10 +8,10 @@ The **Helper-AI** team is committed to delivering a secure, reliable autonomous 
 
 | Version | Status | Security Patches |
 | :--- | :--- | :--- |
-| **1.5.x** | **Active / Current** | :white_check_mark: Full Support |
-| **1.4.x** | **Maintenance** | :white_check_mark: Critical Security Only |
-| **1.3.x** | **Deprecated** | :x: Upgrade to 1.5.x Recommended |
-| **1.0.x** | **Deprecated** | :x: Upgrade to 1.5.x Recommended |
+| **2.8.x** | **Active / Current** | :white_check_mark: Full Support |
+| **2.7.x** | **Maintenance** | :white_check_mark: Critical Security Only |
+| **2.0.x** | **Deprecated** | :x: Upgrade to 2.8.x Recommended |
+| **1.x** | **Deprecated** | :x: Upgrade to 2.8.x Recommended |
 
 ---
 
