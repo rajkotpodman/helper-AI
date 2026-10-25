@@ -37,6 +37,7 @@ services:
       - ./history:/app/history
       - ./downloads:/app/downloads
       - ./agent_memory:/app/agent_memory
+      - ./workflows:/app/workflows
       - ./ai_2026_hub/dist:/app/ai_2026_hub/dist
     extra_hosts:
       - "host.docker.internal:host-gateway"

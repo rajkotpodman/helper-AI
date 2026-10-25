@@ -33,6 +33,9 @@ body:
       description: "Which part of Helper-AI is affected?"
       options:
         - "Core Agent & Tool Engine"
+        - "🗂️ DeepSeek Harness UI & Workspace Sessions"
+        - "⚡ Playwright CRM & Form Automation Studio"
+        - "💼 Job Portals Scanner & Profile Sync"
         - "🧬 AI 2026: Biological Wetware Hub (/wetware)"
         - "Web Dashboard & Voice UI"
         - "PC Desktop Automation (Windows UIA / Fast-Path)"

@@ -148,3 +148,12 @@ All 13 unit and integration tests validate:
 - Baseline creation and drift detection (modifications, additions, deletions)
 - JSON and CSV reporting integrity
 - CLI port range parsing logic
+
+---
+
+## 🤖 Helper-AI Agent Integration
+
+The security toolkit is directly registered into Helper-AI's autonomous tool loop:
+- **`system_super_optimizer`:** Uses the integrity checker and port scanner to identify exposed services and unauthorized file modifications.
+- **Autonomous Red-Teaming Swarm:** Can be commanded in plain language: *"Audit the security headers of example.com and save a formatted report"*.
+- **Immunity Log:** Results are recorded into `agent_memory.md` to maintain historical integrity tracking across sessions.

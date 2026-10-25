@@ -13,11 +13,13 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Wetware Hub: Online](https://img.shields.io/badge/Wetware%20Hub-CL--1%20Online-00F2FE.svg)](http://localhost:8000/wetware)
-[![Tests: 185+ Passed](https://img.shields.io/badge/tests-185%2B%20passed-success.svg)]()
+[![Tests: 195+ Passed](https://img.shields.io/badge/tests-195%2B%20passed-success.svg)]()
+[![Version: v2.9.0](https://img.shields.io/badge/version-2.9.0-blueviolet.svg)](CHANGELOG.md)
 
 <br>
 
-[🧬 AI 2026 Wetware Hub](http://localhost:8000/wetware) • [📖 Non-Technical User Manual](HOW_TO_USE.md) • [🇮🇳 ગુજરાતી માર્ગદર્શિકા (Gujarati Guide)](HOW_TO_USE.md#-%E0%AA%97%E0%AB%81%E0%AA%9C%E0%AA%B0%E0%AA%BE%E0%AA%A4%E0%AB%80-%E0%AA%B5%E0%AA%BF%E0%AA%AD%E0%AA%BE%E0%AA%97-gujarati-section) • [🛡️ Security Toolkit](security_toolkit/README.md) • [📋 Changelog](CHANGELOG.md)
+[🧬 AI 2026 Wetware Hub](http://localhost:8000/wetware) • [📖 Non-Technical User Manual](HOW_TO_USE.md) • [🇮🇳 ગુજરાતી માર્ગદર્શિકા (Gujarati Guide)](HOW_TO_USE.md#-%E0%AA%97%E0%AB%81%E0%AA%9C%E0%AA%B0%E0%AA%BE%E0%AA%A4%E0%AB%80-%E0%AA%B5%E0%AA%BF%E0%AA%AD%E0%AA%BE%E0%AA%97-gujarati-section) • [🛡️ Security Toolkit](security_toolkit/README.md) • [📋 Changelog](CHANGELOG.md)  
+**[⚡ Buy Pro Appointment](https://wa.me/919898048483)** • **[🪙 Donation System](https://docs.google.com/forms/d/e/1FAIpQLScJ7WjuxEXqdoSlUtxN7NQ8UeKpbEAeA9iIO-IXOmBmYzlLHQ/viewform?usp=sharing&ouid=116676179363878319046)** • **[🛒 Official Digital Store](https://wa.me/c/919898048483)**
 
 </div>
 
@@ -33,7 +35,9 @@ Imagine having a smart, tireless personal assistant sitting next to your compute
 * 🔍 **Researches the web and writes reports:** Reads articles online, downloads images or PDFs, and compiles clean, formatted reports directly onto your Desktop.
 * 💻 **Monitors your computer's health:** Checks how much RAM, CPU, or hard drive space you have left, and safely closes frozen programs.
 * 🌐 **Automates social media & websites:** Logs into your browser, drafts and publishes posts on LinkedIn, Facebook, or Blogger, and fills out forms.
-* 🛡️ **Defends your PC:** Performs defensive security audits, scans open network ports, and alerts you if sensitive system files have been altered.
+* 🗂️ **Interactive Workspace Tree (DeepSeek Harness UI v2):** Seamlessly switch between multiple session history tracks (*Coding capabilities, Autonomous PC & Internet, Job Portals sync*), filter sessions with instant search, or spawn custom workspaces on the fly.
+* 🐬 **Zero-Touch Local Dolphin AI Engine:** Boots background daemon on port 11434 with zero-prompt model bootstrapping, self-healing port listener, and uncensored offline execution.
+* ⚡ **1-Click Pro Connectors:** Instant integration with WhatsApp Pro appointment booking, official donation system, and digital product store.
 * 🗣️ **Speaks aloud in 30+ languages:** Can read answers aloud to you in natural human voices.
 * 🧠 **Persistent Memory Log:** Never forgets your instructions or learned applications, remembering them across restarts.
 

@@ -45,6 +45,17 @@
 
   <!-- DeepSeek Harness Design Styles -->
   <link rel="stylesheet" href="/static/css/styles.css">
+  
+  <style>
+    .modal-backdrop.hidden,
+    .modal-backdrop.is-hidden,
+    .modal-backdrop[hidden] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+  </style>
 </head>
 <body class="bg-[#151517] text-[#f4f4f5] flex h-screen w-screen overflow-hidden font-sans select-none">
 
@@ -105,33 +116,43 @@
         <div class="flex items-center justify-between text-xs text-zinc-400 px-2 mb-2 font-medium">
           <span>Workspaces</span>
           <div class="flex items-center gap-1.5 text-zinc-500">
-            <button class="hover:text-zinc-300" title="Search Workspaces"><i data-lucide="search" class="w-3.5 h-3.5"></i></button>
-            <button class="hover:text-zinc-300" title="New Workspace"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
-            <button class="hover:text-zinc-300" title="Collapse"><i data-lucide="chevron-down" class="w-3.5 h-3.5"></i></button>
+            <button id="btn-search-workspaces" class="p-1 rounded hover:text-white hover:bg-zinc-800 transition" title="Search Workspaces"><i data-lucide="search" class="w-3.5 h-3.5"></i></button>
+            <button id="btn-new-workspace" class="p-1 rounded hover:text-white hover:bg-zinc-800 transition" title="New Workspace"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+            <button id="btn-collapse-workspaces" class="p-1 rounded hover:text-white hover:bg-zinc-800 transition" title="Collapse / Expand"><i data-lucide="chevron-down" id="icon-collapse-workspaces" class="w-3.5 h-3.5 transition-transform duration-200"></i></button>
           </div>
         </div>
 
-        <div class="space-y-1">
-          <div class="text-xs text-zinc-300 px-2 py-1.5 flex items-center gap-2 font-semibold">
-            <i data-lucide="folder" class="w-3.5 h-3.5 text-blue-400"></i>
-            <span>Default workspace</span>
+        <!-- Workspaces Search Input (Toggleable) -->
+        <div id="workspaces-search-container" class="hidden px-1.5 mb-2">
+          <input type="text" id="input-search-workspaces" placeholder="Search sessions..." class="w-full text-xs bg-zinc-900 border border-zinc-700 rounded-lg px-2.5 py-1 text-white placeholder-zinc-500 outline-none focus:border-blue-500">
+        </div>
+
+        <div id="workspaces-items-container" class="space-y-1 transition-all">
+          <div class="text-xs text-zinc-300 px-2 py-1.5 flex items-center justify-between font-semibold">
+            <div class="flex items-center gap-2">
+              <i data-lucide="folder" class="w-3.5 h-3.5 text-blue-400"></i>
+              <span>Default workspace</span>
+            </div>
+            <span class="text-[10px] text-zinc-500 font-mono">3 sessions</span>
           </div>
 
-          <!-- Active Session Pill -->
-          <div class="dsh-nav-item active justify-between pl-6 py-2">
-            <span class="truncate text-xs" id="sidebar-active-session-label">Coding assistant capabilities</span>
-            <span class="text-[10px] text-zinc-500 font-mono">11min</span>
-          </div>
+          <!-- Active Session 1: Coding assistant capabilities -->
+          <button id="session-btn-coding" type="button" data-session-id="coding" class="session-history-item dsh-nav-item active w-full text-left justify-between pl-6 py-2 cursor-pointer transition">
+            <span class="truncate text-xs font-medium" id="sidebar-active-session-label">Coding assistant capabilities</span>
+            <span class="text-[10px] text-zinc-500 font-mono flex-shrink-0">11min</span>
+          </button>
 
-          <div class="dsh-nav-item pl-6 py-1.5 justify-between text-zinc-400 hover:text-zinc-200">
-            <span class="truncate text-xs">Autonomous PC & Internet</span>
-            <span class="text-[10px] text-zinc-600 font-mono">1h</span>
-          </div>
+          <!-- Session 2: Autonomous PC & Internet -->
+          <button id="session-btn-autonomous" type="button" data-session-id="autonomous" class="session-history-item dsh-nav-item w-full text-left justify-between pl-6 py-1.5 text-zinc-400 hover:text-zinc-200 cursor-pointer transition">
+            <span class="truncate text-xs font-medium">Autonomous PC & Internet</span>
+            <span class="text-[10px] text-zinc-600 font-mono flex-shrink-0">1h</span>
+          </button>
           
-          <div class="dsh-nav-item pl-6 py-1.5 justify-between text-zinc-400 hover:text-zinc-200">
-            <span class="truncate text-xs">Job Portals Automation</span>
-            <span class="text-[10px] text-zinc-600 font-mono">2h</span>
-          </div>
+          <!-- Session 3: Job Portals Automation -->
+          <button id="session-btn-jobportals" type="button" data-session-id="jobportals" class="session-history-item dsh-nav-item w-full text-left justify-between pl-6 py-1.5 text-zinc-400 hover:text-zinc-200 cursor-pointer transition">
+            <span class="truncate text-xs font-medium">Job Portals Automation</span>
+            <span class="text-[10px] text-zinc-600 font-mono flex-shrink-0">2h</span>
+          </button>
         </div>
       </div>
 
@@ -140,18 +161,11 @@
     <!-- Bottom Notification & Profile Section -->
     <div class="p-3 border-t border-zinc-800 space-y-3 bg-[#151517]">
       
-      <!-- Bonus Credited Alert Card (Matching Screenshot) -->
-      <div id="bonus-credited-card" class="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs relative shadow-lg">
-        <button id="btn-close-bonus" class="absolute top-2 right-2 text-zinc-500 hover:text-zinc-300">
-          <i data-lucide="x" class="w-3.5 h-3.5"></i>
-        </button>
-        <div class="flex items-center gap-1.5 font-bold text-zinc-200 mb-1">
-          <i data-lucide="bell" class="w-3.5 h-3.5 text-blue-400"></i>
-          <span>Bonus credited</span>
-        </div>
-        <p class="text-[11px] text-zinc-400 leading-relaxed pr-2">
-          You've received a CNY 6 bonus credit, valid until October 31, 2026, 1:02 PM Beijing Time.
-        </p>
+      <!-- Pro Action Buttons -->
+      <div class="pro-actions-container">
+        <button class="pro-btn btn-buy-pro" onclick="window.open('https://wa.me/919898048483', '_blank')">⚡ BUY NOW PRO (APPOINTMENT)</button>
+        <button class="pro-btn btn-donate" onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLScJ7WjuxEXqdoSlUtxN7NQ8UeKpbEAeA9iIO-IXOmBmYzlLHQ/viewform?usp=sharing&ouid=116676179363878319046', '_blank')">🪙 DONATION SYSTEM</button>
+        <button class="pro-btn btn-store" onclick="window.open('https://wa.me/c/919898048483', '_blank')">🛒 OFFICIAL DIGITAL STORE</button>
       </div>
 
       <!-- User Profile Row -->
@@ -274,7 +288,7 @@
 
     <!-- ================= CHAT VIEW ================= -->
     <div id="view-chat" class="dsh-chat-stream">
-      <div class="max-w-3xl w-full mx-auto space-y-6">
+      <div id="chat-messages-container" class="max-w-3xl w-full mx-auto space-y-6">
 
         <!-- 1. Default User Question Bubble (Matching Screenshot) -->
         <div class="dsh-user-bubble">
@@ -329,8 +343,7 @@
 
         </div>
 
-        <!-- Dynamic Live Messages Container -->
-        <div id="chat-messages-container" class="space-y-6"></div>
+      </div>
 
         <!-- Final Result Card (Hidden until complete) -->
         <div id="result-container" class="hidden p-4 rounded-2xl border border-emerald-500/30 bg-emerald-950/20 space-y-3">
@@ -538,13 +551,13 @@
   <!-- ================= 4. ALL SYSTEM MODALS ================= -->
 
   <!-- Settings Modal -->
-  <div id="modal-settings" class="modal-backdrop hidden">
+  <div id="modal-settings" class="modal-backdrop hidden" onclick="if(event.target === this) this.classList.add('hidden');">
     <div class="modal-dialog">
       <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-4">
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
           <i data-lucide="settings" class="w-4 h-4 text-blue-400"></i> Settings & AI Models
         </h3>
-        <button id="btn-close-settings-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+        <button id="btn-close-settings-modal" class="text-zinc-400 hover:text-white" onclick="document.getElementById('modal-settings')?.classList.add('hidden');"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
 
       <div class="space-y-4 text-xs">
@@ -613,8 +626,36 @@
           </div>
         </div>
 
+        <!-- Ollama / Dolphin Local Engine -->
+        <div id="group-ollama-config" class="hidden space-y-3 p-3 bg-zinc-900/80 rounded-xl border border-cyan-500/20">
+          <div class="flex items-center justify-between pb-1 border-b border-zinc-800">
+            <span class="font-bold text-cyan-400 flex items-center gap-1.5">
+              <span>🐬</span> Ollama: Dolphin-2.9-Llama3 Engine
+            </span>
+            <span id="ollama-port-badge" class="text-[10px] px-2 py-0.5 rounded-full font-mono bg-zinc-800 text-zinc-300">Port 11434</span>
+          </div>
+          <div>
+            <label class="block text-zinc-300 mb-1">Local Model Identifier</label>
+            <div class="flex items-center gap-2">
+              <input type="text" id="input-ollama-model" placeholder="dolphin-llama3" value="dolphin-llama3" class="flex-1 bg-zinc-950 border border-zinc-700 rounded p-2 text-white font-mono">
+              <button type="button" id="btn-quick-start-ollama" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded font-bold text-xs transition flex items-center gap-1 shadow">
+                <span>⚡</span> Start Port
+              </button>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 text-[11px]">
+            <span class="text-zinc-500">Quick models:</span>
+            <button type="button" class="btn-ollama-chip px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition" data-model="dolphin-llama3">dolphin-llama3</button>
+            <button type="button" class="btn-ollama-chip px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition" data-model="llama3.2:3b">llama3.2:3b</button>
+            <button type="button" class="btn-ollama-chip px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition" data-model="qwen2.5-coder:1.5b">qwen2.5-coder</button>
+          </div>
+          <div id="ollama-quick-status" class="text-[11px] font-mono text-zinc-400">
+            Status: checking...
+          </div>
+        </div>
+
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-zinc-800">
-          <button id="btn-cancel-settings-modal" class="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300">Cancel</button>
+          <button id="btn-cancel-settings-modal" class="px-3.5 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300" onclick="document.getElementById('modal-settings')?.classList.add('hidden');">Cancel</button>
           <button id="btn-save-settings-modal" class="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold">Save Settings</button>
         </div>
       </div>
@@ -622,13 +663,13 @@
   </div>
 
   <!-- Memory Modal -->
-  <div id="modal-memory" class="modal-backdrop hidden">
+  <div id="modal-memory" class="modal-backdrop hidden" onclick="if(event.target === this) this.classList.add('hidden');">
     <div class="modal-dialog max-w-2xl">
       <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
           <i data-lucide="brain" class="w-4 h-4 text-pink-400"></i> Persistent Agent Memory (`agent_memory.md`)
         </h3>
-        <button id="btn-close-memory-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+        <button id="btn-close-memory-modal" class="text-zinc-400 hover:text-white" onclick="document.getElementById('modal-memory')?.classList.add('hidden');"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
       <div class="space-y-3 text-xs">
         <p class="text-zinc-400">
@@ -650,13 +691,13 @@
   </div>
 
   <!-- Metrics Modal -->
-  <div id="modal-metrics" class="modal-backdrop hidden">
+  <div id="modal-metrics" class="modal-backdrop hidden" onclick="if(event.target === this) this.classList.add('hidden');">
     <div class="modal-dialog">
       <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
           <i data-lucide="bar-chart-3" class="w-4 h-4 text-amber-400"></i> Agent Telemetry & Tool Usage
         </h3>
-        <button id="btn-close-metrics-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+        <button id="btn-close-metrics-modal" class="text-zinc-400 hover:text-white" onclick="document.getElementById('modal-metrics')?.classList.add('hidden');"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
       <div id="metrics-content-box" class="space-y-3 text-xs">
         Loading telemetry metrics...
@@ -665,13 +706,13 @@
   </div>
 
   <!-- Connections Check Modal -->
-  <div id="modal-connections" class="modal-backdrop hidden">
+  <div id="modal-connections" class="modal-backdrop hidden" onclick="if(event.target === this) this.classList.add('hidden');">
     <div class="modal-dialog">
       <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
           <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i> System Diagnostics & Connections Check
         </h3>
-        <button id="btn-close-connections-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+        <button id="btn-close-connections-modal" class="text-zinc-400 hover:text-white" onclick="document.getElementById('modal-connections')?.classList.add('hidden');"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
       <div id="connections-content-box" class="space-y-3 text-xs">
         Running connection check...
@@ -680,58 +721,165 @@
   </div>
 
   <!-- Dolphin Setup Modal -->
-  <div id="modal-dolphin-setup" class="modal-backdrop hidden">
+  <div id="modal-dolphin-setup" class="modal-backdrop hidden is-hidden" style="display: none !important;" onclick="if(event.target === this) closeDolphinModal();">
     <div class="modal-dialog">
       <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
-          <span>🐬</span> Dolphin-2.9-Llama3 Compulsory Setup
+          <span>🐬</span> Dolphin-2.9-Llama3 AI Engine & Port Manager
         </h3>
-        <button id="btn-close-dolphin-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+        <button id="btn-close-dolphin-modal" type="button" class="text-zinc-400 hover:text-white cursor-pointer p-1 rounded" onclick="closeDolphinModal();">
+          <i data-lucide="x" class="w-4 h-4 pointer-events-none"></i>
+        </button>
       </div>
       <div class="space-y-3 text-xs text-zinc-300">
         <p>Helper-AI requires Dolphin-2.9-Llama3 for 100% offline, uncensored autonomous execution.</p>
-        <button id="btn-trigger-ollama-setup" class="w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 font-bold text-white flex items-center justify-center gap-2">
-          <span>🐬</span> Auto-Download & Configure Dolphin AI
-        </button>
-        <div id="ollama-setup-feedback" class="p-2.5 rounded bg-zinc-950 font-mono text-[11px] text-zinc-400 min-h-[50px]">
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-start-ollama-port" type="button" class="py-2.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-bold text-white flex items-center justify-center gap-1.5 shadow transition">
+            <span>⚡</span> Open Port 11434
+          </button>
+          <button id="btn-trigger-ollama-setup" type="button" class="py-2.5 px-3 rounded-lg bg-cyan-600 hover:bg-cyan-500 font-bold text-white flex items-center justify-center gap-1.5 shadow transition">
+            <span>🐬</span> Full Auto-Setup
+          </button>
+        </div>
+        <div id="ollama-setup-feedback" class="p-2.5 rounded bg-zinc-950 border border-zinc-800 font-mono text-[11px] text-zinc-400 min-h-[50px]">
           Ready.
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Playwright CRM Studio Modal -->
-  <div id="modal-playwright-crm" class="modal-backdrop hidden">
-    <div class="modal-dialog max-w-3xl">
+  <!-- Playwright CRM & Web Automation Studio Modal -->
+  <div id="modal-playwright-crm" class="modal-backdrop hidden is-hidden" style="display: none !important;" onclick="if(event.target === this) closePlaywrightModal();">
+    <div class="modal-dialog max-w-3xl" style="max-height: 92vh;">
+      <!-- Header -->
       <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
-        <h3 class="text-sm font-bold text-white flex items-center gap-2">
-          <i data-lucide="play-circle" class="w-4 h-4 text-emerald-400"></i> Playwright CRM Recorder & Batch Form Studio
-        </h3>
-        <button id="btn-close-playwright-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
-      </div>
-      <div class="space-y-3 text-xs text-zinc-300">
-        <p>Record user workflows and re-execute batch form fillings across CRM portals with 100% accuracy.</p>
-        <div class="flex items-center gap-2">
-          <input type="text" id="input-crm-url" placeholder="https://mycrm.example.com/leads/new" class="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg p-2 text-white font-mono">
-          <button id="btn-start-crm-recorder" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg flex items-center gap-1.5">
-            <i data-lucide="video" class="w-3.5 h-3.5"></i> Record Workflow
-          </button>
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <i data-lucide="play-circle" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              Playwright CRM Recorder & Automation Studio
+              <span id="crm-recorder-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-medium border border-emerald-500/30">Ready</span>
+            </h3>
+            <p class="text-[11px] text-zinc-400">Record live user workflows in Chrome with Inspector and re-execute them with 100% accuracy.</p>
+          </div>
         </div>
-        <div id="crm-workflow-list" class="max-h-60 overflow-y-auto space-y-1.5 p-2 bg-zinc-950 rounded-lg border border-zinc-800">
-          <div class="text-zinc-500 text-center py-4">No recorded workflows found.</div>
-        </div>
+        <button id="btn-close-playwright-modal" type="button" class="p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition cursor-pointer" title="Close (Esc)" onclick="closePlaywrightModal();">
+          <i data-lucide="x" class="w-4 h-4 pointer-events-none"></i>
+        </button>
       </div>
+
+      <!-- Main Controls Body -->
+      <div class="space-y-3.5 text-xs text-zinc-300">
+        
+        <!-- Step 1: Input target URL & Workflow name -->
+        <div class="p-3 bg-zinc-900/70 border border-zinc-800 rounded-xl space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold text-zinc-200 flex items-center gap-1.5">
+              <i data-lucide="globe" class="w-3.5 h-3.5 text-blue-400"></i> Target Application / CRM URL
+            </span>
+            <div class="flex items-center gap-2 text-[11px]">
+              <span class="text-zinc-500">Quick presets:</span>
+              <button type="button" class="btn-crm-quick-preset px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition" data-url="https://google.com">Google</button>
+              <button type="button" class="btn-crm-quick-preset px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition" data-url="https://httpbin.org/forms/post">Test Form</button>
+              <button type="button" class="btn-crm-quick-preset px-2 py-0.5 rounded bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition" data-url="https://github.com">GitHub</button>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input type="text" id="input-crm-url" placeholder="Paste link here (e.g. https://crm.zoho.com or https://example.com/login)" class="flex-1 bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-white font-mono text-xs focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/50">
+            <input type="text" id="input-crm-name" placeholder="workflow_name (optional)" class="w-48 bg-zinc-950 border border-zinc-700/80 rounded-lg px-3 py-2 text-white font-mono text-xs focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/50">
+          </div>
+
+          <!-- Options & Action Buttons -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-zinc-800/80">
+            <div class="flex items-center gap-4 text-[11px] text-zinc-400">
+              <label class="flex items-center gap-1.5 cursor-pointer hover:text-zinc-200">
+                <input type="checkbox" id="check-crm-chrome" checked class="rounded bg-zinc-800 border-zinc-700 text-emerald-500 focus:ring-0">
+                <span>Use Google Chrome</span>
+              </label>
+              <label class="flex items-center gap-1.5 cursor-pointer hover:text-zinc-200">
+                <input type="checkbox" id="check-crm-session" checked class="rounded bg-zinc-800 border-zinc-700 text-emerald-500 focus:ring-0">
+                <span>Save Session & Cookies</span>
+              </label>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button id="btn-start-crm-recorder" type="button" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg flex items-center gap-1.5 shadow-md shadow-emerald-900/30 transition">
+                <i data-lucide="video" class="w-4 h-4"></i>
+                <span>Record Workflow</span>
+              </button>
+              <button id="btn-stop-crm-recorder" type="button" class="hidden px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-lg flex items-center gap-1.5 shadow-md shadow-rose-900/30 animate-pulse transition">
+                <i data-lucide="square" class="w-4 h-4"></i>
+                <span>Stop Recording</span>
+              </button>
+              <button id="btn-refresh-crm-workflows" type="button" class="px-2.5 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition" title="Refresh workflows">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Status & Feedback Console Box -->
+        <div id="crm-feedback-box" class="p-2.5 bg-zinc-950 border border-zinc-800 rounded-xl font-mono text-[11px] text-zinc-400 space-y-1">
+          <div class="flex items-center gap-1.5 text-zinc-300 font-semibold">
+            <i data-lucide="terminal" class="w-3.5 h-3.5 text-emerald-400"></i>
+            <span>Recorder Status:</span>
+            <span id="crm-status-msg" class="text-zinc-400 font-normal">Ready. Paste a link above and click 'Record Workflow'.</span>
+          </div>
+        </div>
+
+        <!-- Script Code Preview Panel (Collapsible) -->
+        <div id="crm-code-viewer-panel" class="hidden p-3 bg-zinc-950 border border-zinc-800 rounded-xl space-y-2">
+          <div class="flex items-center justify-between">
+            <span id="crm-code-viewer-title" class="font-mono text-[11px] text-emerald-400 font-bold">script.py</span>
+            <button id="btn-close-crm-code-viewer" type="button" class="text-[11px] text-zinc-400 hover:text-white flex items-center gap-1" onclick="document.getElementById('crm-code-viewer-panel')?.classList.add('hidden');">
+              <i data-lucide="x" class="w-3.5 h-3.5"></i> Close Preview
+            </button>
+          </div>
+          <pre id="crm-code-viewer-content" class="max-h-48 overflow-y-auto p-2 bg-zinc-900 rounded-lg text-[11px] font-mono text-zinc-200 select-all"></pre>
+        </div>
+
+        <!-- Recorded Workflows Section -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold text-zinc-200 flex items-center gap-1.5">
+              <i data-lucide="file-code" class="w-3.5 h-3.5 text-emerald-400"></i>
+              Recorded Workflows (<span id="crm-workflow-count" class="text-emerald-400">0</span>)
+            </span>
+            <span class="text-[11px] text-zinc-500">Stored in workflows/playwright/</span>
+          </div>
+
+          <div id="crm-workflow-list" class="max-h-52 overflow-y-auto space-y-1.5 p-2 bg-zinc-950 rounded-xl border border-zinc-800">
+            <div class="text-zinc-500 text-center py-4">No recorded workflows found.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-between pt-3 border-t border-zinc-800 mt-3 text-xs">
+        <span class="text-[11px] text-zinc-500 flex items-center gap-1">
+          <kbd class="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-400">Esc</kbd>
+          or click backdrop to close
+        </span>
+        <button id="btn-dismiss-crm-modal" type="button" class="px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-semibold rounded-lg text-xs transition cursor-pointer" onclick="closePlaywrightModal();">
+          Close
+        </button>
+      </div>
+
     </div>
   </div>
 
   <!-- Job Portals Modal -->
-  <div id="modal-jobportals" class="modal-backdrop hidden">
+  <div id="modal-jobportals" class="modal-backdrop hidden" onclick="if(event.target === this) this.classList.add('hidden');">
     <div class="modal-dialog max-w-2xl">
       <div class="flex items-center justify-between pb-3 border-b border-zinc-800 mb-3">
         <h3 class="text-sm font-bold text-white flex items-center gap-2">
           <i data-lucide="briefcase" class="w-4 h-4 text-cyan-400"></i> 10 Job Portals Registration & CV Upload Studio
         </h3>
-        <button id="btn-close-jobportals-modal" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+        <button id="btn-close-jobportals-modal" class="text-zinc-400 hover:text-white" onclick="document.getElementById('modal-jobportals')?.classList.add('hidden');"><i data-lucide="x" class="w-4 h-4"></i></button>
       </div>
       <div class="space-y-3 text-xs text-zinc-300">
         <p>Automate registration and resume upload across Freelancer, Upwork, Indeed, LinkedIn, Naukri, Monster, and more.</p>
@@ -743,7 +891,7 @@
   </div>
 
   <!-- Permission Modal -->
-  <div id="modal-permission" class="modal-backdrop hidden">
+  <div id="modal-permission" class="modal-backdrop hidden" onclick="if(event.target === this) this.classList.add('hidden');">
     <div class="modal-dialog max-w-md">
       <div class="flex items-center gap-2.5 text-amber-400 font-bold pb-2 border-b border-zinc-800 mb-3">
         <i data-lucide="alert-triangle" class="w-5 h-5"></i>
@@ -753,7 +901,7 @@
         The agent is requesting permission to execute an action.
       </p>
       <div class="flex items-center justify-end gap-2">
-        <button id="btn-deny-permission" class="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs">Deny</button>
+        <button id="btn-deny-permission" class="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-xs" onclick="document.getElementById('modal-permission')?.classList.add('hidden');">Deny</button>
         <button id="btn-grant-permission" class="px-4 py-1.5 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg text-xs">Approve Action</button>
       </div>
     </div>
@@ -774,11 +922,74 @@
     <div class="max-h-60 overflow-y-auto divide-y divide-zinc-800/50 py-1" id="lang-items-container"></div>
   </div>
 
-  <!-- Main Application Script -->
-  <script src="/static/js/app.js"></script>
+  <!-- Main Application Script with Cache Buster -->
+  <script src="/static/js/app.js?v=20261025_esc_fix_v5"></script>
 
-  <!-- Lucide Icon Initializer & UI Bindings -->
+  <!-- Bulletproof Universal Modal Dismissal & UI Bindings (Zero Dependencies) -->
   <script>
+    function closeAllModals() {
+      document.querySelectorAll('.modal-backdrop').forEach(function(m) {
+        m.classList.add('hidden');
+        m.classList.add('is-hidden');
+        m.style.setProperty('display', 'none', 'important');
+      });
+      document.getElementById('lang-dropdown-menu')?.classList.add('hidden');
+      document.getElementById('more-dropdown-menu')?.classList.add('hidden');
+    }
+    window.closeAllModals = closeAllModals;
+
+    function closePlaywrightModal() {
+      const m = document.getElementById('modal-playwright-crm') || document.getElementById('modal-playwright');
+      if (m) {
+        m.classList.add('hidden');
+        m.classList.add('is-hidden');
+        m.style.setProperty('display', 'none', 'important');
+      }
+    }
+    window.closePlaywrightModal = closePlaywrightModal;
+
+    function closeDolphinModal() {
+      const m = document.getElementById('modal-dolphin-setup');
+      if (m) {
+        m.classList.add('hidden');
+        m.classList.add('is-hidden');
+        m.style.setProperty('display', 'none', 'important');
+      }
+    }
+    window.closeDolphinModal = closeDolphinModal;
+
+    function openPlaywrightModal() {
+      const m = document.getElementById('modal-playwright-crm') || document.getElementById('modal-playwright');
+      if (m) {
+        m.classList.remove('hidden');
+        m.classList.remove('is-hidden');
+        m.style.setProperty('display', 'flex', 'important');
+        setTimeout(() => {
+          document.getElementById('input-crm-url')?.focus();
+        }, 80);
+      }
+      if (typeof checkPlaywrightStatus === 'function') checkPlaywrightStatus();
+      if (typeof loadRecordedPlaywrightWorkflows === 'function') loadRecordedPlaywrightWorkflows();
+    }
+    window.openPlaywrightModal = openPlaywrightModal;
+    window.openPlaywrightCRMModal = openPlaywrightModal;
+
+    // 1. UNIVERSAL ESCAPE KEY LISTENER (Window Capture Phase - Fires 100% of the time)
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27) {
+        closeAllModals();
+      }
+    }, true);
+
+    // 2. UNIVERSAL BACKDROP CLICK LISTENER (Window Capture Phase)
+    window.addEventListener('click', function(e) {
+      if (e.target && e.target.classList && e.target.classList.contains('modal-backdrop')) {
+        e.target.classList.add('hidden');
+        e.target.classList.add('is-hidden');
+        e.target.style.setProperty('display', 'none', 'important');
+      }
+    }, true);
+
     document.addEventListener('DOMContentLoaded', () => {
       if (window.lucide) {
         lucide.createIcons();
@@ -832,20 +1043,407 @@
         document.getElementById('lang-dropdown-menu')?.classList.add('hidden');
       });
 
-      // Bonus Alert Dismiss
-      document.getElementById('btn-close-bonus')?.addEventListener('click', () => {
-        document.getElementById('bonus-credited-card')?.remove();
+      // =========================================================================
+      // Workspaces & Session History Management (3 Sessions + New Session)
+      // =========================================================================
+      const WORKSPACE_SESSIONS = {
+        coding: {
+          id: 'coding',
+          title: 'Coding assistant capabilities',
+          topbarTitle: 'Coding assistant capabilities • Default workspace',
+          time: '11min',
+          userMessage: 'what you can do for me',
+          userTime: '10:36',
+          completedBadge: 'Completed in 13s',
+          assistantHtml: `
+            <p>
+              I'm <strong class="text-white font-bold">Helper-AI</strong>, an autonomous PC and Internet agent running in this workspace (<code>E:\\ai agent</code>). Here's what I can actually do for you:
+            </p>
+
+            <div>
+              <h3 class="text-sm font-bold text-white">Write & fix code</h3>
+              <ul class="text-xs text-zinc-300 mt-1 space-y-1">
+                <li>• Build features, scaffold projects, refactor, debug, write tests, explain unfamiliar code</li>
+                <li>• Work across languages/stacks (JS/TS, Python, C#/.NET, Go, Rust, infra/config, etc.)</li>
+                <li>• Read, search, and edit files in this workspace; run builds, tests, and CLIs; inspect failures and iterate until green</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-sm font-bold text-white">Investigate & report</h3>
+              <ul class="text-xs text-zinc-300 mt-1 space-y-1">
+                <li>• Trace bugs through a codebase, review a diff or PR for correctness/security issues</li>
+                <li>• Research on the web and summarize with cited sources</li>
+                <li>• Analyze data or logs and produce charts/tables/documents</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-sm font-bold text-white">Produce deliverables</h3>
+              <ul class="text-xs text-zinc-300 mt-1 space-y-1">
+                <li>• Automate desktop tasks, browser interactions, web form submissions, and terminal operations</li>
+                <li>• Execute multi-step autonomous workflows with persistent self-healing memory</li>
+              </ul>
+            </div>
+          `,
+          terminalLogs: [
+            { time: '10:36:12', msg: '[System] Initializing DeepSeek Harness Agent Runtime...', type: 'info' },
+            { time: '10:36:15', msg: '💡 Plan: Inspect workspace tools, LLM providers, and agent memory...', type: 'thought' },
+            { time: '10:36:18', msg: '⚡ Action: Verifying system diagnostic tools and autonomous capabilities', type: 'action' },
+            { time: '10:36:25', msg: '🎉 Mission complete: Coding assistant capabilities ready', type: 'success' }
+          ]
+        },
+        autonomous: {
+          id: 'autonomous',
+          title: 'Autonomous PC & Internet',
+          topbarTitle: 'Autonomous PC & Internet • Default workspace',
+          time: '1h',
+          userMessage: 'Show autonomous PC & Internet navigation capabilities, browser control, and terminal operations',
+          userTime: '15:10',
+          completedBadge: 'Completed in 28s',
+          assistantHtml: `
+            <p>
+              <strong class="text-cyan-400 font-bold">Autonomous PC & Internet System</strong> provides end-to-end web browser manipulation, background process orchestration, and OS desktop automation:
+            </p>
+
+            <div class="space-y-3 mt-3">
+              <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
+                <h4 class="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                  <span>🌐</span> Automated Browser Navigation (Playwright & Chromium CDP)
+                </h4>
+                <p class="text-xs text-zinc-400 mt-1 leading-relaxed">
+                  Headless and headed Chromium with isolated session profiles (<code class="text-cyan-400">chrome_profile/</code>). Supports autonomous form filling, multi-tab automation, CAPTCHA bypass workflows, and cookie management.
+                </p>
+              </div>
+
+              <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
+                <h4 class="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                  <span>💻</span> Native OS & Background Process Control
+                </h4>
+                <p class="text-xs text-zinc-400 mt-1 leading-relaxed">
+                  Executes PowerShell, Bash, and Python scripts with async stdout/stderr streaming. Automatically monitors long-running daemon servers and system health.
+                </p>
+              </div>
+
+              <div class="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
+                <h4 class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                  <span>🛡️</span> Self-Healing Loop & Audit Logging
+                </h4>
+                <p class="text-xs text-zinc-400 mt-1 leading-relaxed">
+                  Autonomous error recovery analyzes command failure traces and automatically retries with corrected parameters while maintaining an immutable audit log.
+                </p>
+              </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-2">
+              <button onclick="document.getElementById('btn-project-browser')?.click()" class="px-3 py-1.5 rounded-lg bg-blue-600/20 border border-blue-500/40 text-blue-300 hover:text-white text-xs inline-flex items-center gap-1.5 transition">
+                <span>🌐</span> Launch Project Chrome
+              </button>
+              <button onclick="document.getElementById('btn-playwright-pill')?.click()" class="px-3 py-1.5 rounded-lg bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs inline-flex items-center gap-1.5 transition">
+                <span>▶️</span> Open CRM Playwright Studio
+              </button>
+            </div>
+          `,
+          terminalLogs: [
+            { time: '15:10:02', msg: '[System] Connecting to headless Chromium via CDP port...', type: 'info' },
+            { time: '15:10:08', msg: '⚡ Action: Browser launched with anti-detection profile', type: 'action' },
+            { time: '15:10:18', msg: '💡 Plan: Verifying network proxy, DOM isolation, and input devices', type: 'thought' },
+            { time: '15:10:30', msg: '🎉 Status: Autonomous PC & Internet engine healthy and active', type: 'success' }
+          ]
+        },
+        jobportals: {
+          id: 'jobportals',
+          title: 'Job Portals Automation',
+          topbarTitle: 'Job Portals Automation • Default workspace',
+          time: '2h',
+          userMessage: 'Execute job portals scanner and profile synchronization on LinkedIn, Indeed, Naukri, Internshala, and Foundit',
+          userTime: '14:39',
+          completedBadge: 'Completed in 45s',
+          assistantHtml: `
+            <p>
+              Executed autonomous candidate profile synchronization for <strong class="text-white">Jignesh jayantilal Kariya</strong> (<code class="text-blue-300">+91 9898048483</code>). Live status summary from <code class="text-zinc-400">jignesh_job_portals_status.json</code>:
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 text-xs">
+              <div class="p-2.5 rounded-lg bg-zinc-900 border border-emerald-500/30 flex items-start justify-between">
+                <div>
+                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <span>✓</span> Internshala
+                  </div>
+                  <div class="text-[11px] text-zinc-400 mt-0.5">Attached CV 'Jignesh_Kariya_CV (1).docx'</div>
+                </div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-700/50">Completed</span>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-zinc-900 border border-blue-500/30 flex items-start justify-between">
+                <div>
+                  <div class="font-bold text-blue-400 flex items-center gap-1.5">
+                    <span>⏳</span> Naukri.com
+                  </div>
+                  <div class="text-[11px] text-zinc-400 mt-0.5">Auto-filled Registration form, Mobile Verified</div>
+                </div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-700/50">In Progress</span>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-zinc-900 border border-blue-500/30 flex items-start justify-between">
+                <div>
+                  <div class="font-bold text-blue-400 flex items-center gap-1.5">
+                    <span>⏳</span> Indeed India
+                  </div>
+                  <div class="text-[11px] text-zinc-400 mt-0.5">Email authenticated & profile synced</div>
+                </div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-700/50">In Progress</span>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-zinc-900 border border-amber-500/30 flex items-start justify-between">
+                <div>
+                  <div class="font-bold text-amber-400 flex items-center gap-1.5">
+                    <span>📲</span> Wellfound (AngelList)
+                  </div>
+                  <div class="text-[11px] text-zinc-400 mt-0.5">Mobile OTP Verification Screen Active</div>
+                </div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-700/50">Awaiting OTP</span>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-zinc-900 border border-blue-500/30 flex items-start justify-between">
+                <div>
+                  <div class="font-bold text-blue-400 flex items-center gap-1.5">
+                    <span>⏳</span> Foundit (Monster)
+                  </div>
+                  <div class="text-[11px] text-zinc-400 mt-0.5">Contact info & CV upload initiated</div>
+                </div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-950/80 text-blue-300 border border-blue-700/50">In Progress</span>
+              </div>
+
+              <div class="p-2.5 rounded-lg bg-zinc-900 border border-emerald-500/30 flex items-start justify-between">
+                <div>
+                  <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                    <span>✓</span> Freelancer & Truelancer
+                  </div>
+                  <div class="text-[11px] text-zinc-400 mt-0.5">Candidate profiles successfully created</div>
+                </div>
+                <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-700/50">Completed</span>
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <button onclick="document.getElementById('btn-jobportals-pill')?.click()" class="px-3 py-1.5 rounded-lg bg-cyan-600/20 border border-cyan-500/40 text-cyan-300 hover:text-white text-xs inline-flex items-center gap-1.5 transition">
+                <span>💼</span> Open Job Portals Studio
+              </button>
+            </div>
+          `,
+          terminalLogs: [
+            { time: '14:39:14', msg: '⚡ Action: Navigated to Internshala • Attached CV \'Jignesh_Kariya_CV (1).docx\'', type: 'action' },
+            { time: '14:40:12', msg: '⚡ Action: Navigated to Naukri.com • Filled registration for Jignesh J. Kariya', type: 'action' },
+            { time: '14:41:01', msg: '⚡ Action: Navigated to Foundit (Monster) • Synced credentials', type: 'action' },
+            { time: '14:42:09', msg: '⚠️ Notice: Wellfound awaiting mobile OTP on +91 9898048483', type: 'warn' },
+            { time: '14:45:12', msg: '🎉 Status: 10 job portals scanned & synchronized successfully', type: 'success' }
+          ]
+        }
+      };
+
+      let activeWorkspaceSessionId = 'coding';
+      window.WORKSPACE_SESSIONS = WORKSPACE_SESSIONS;
+
+      function selectWorkspaceSession(sessionId) {
+        const session = WORKSPACE_SESSIONS[sessionId];
+        if (!session) return;
+        activeWorkspaceSessionId = sessionId;
+
+        // Switch to Chat Tab if Trajectory tab was active
+        tabChat?.click();
+
+        // 1. Highlight clicked session button
+        document.querySelectorAll('.session-history-item').forEach(btn => {
+          if (btn.dataset.sessionId === sessionId) {
+            btn.classList.add('active');
+            btn.classList.remove('text-zinc-400');
+          } else {
+            btn.classList.remove('active');
+            btn.classList.add('text-zinc-400');
+          }
+        });
+
+        // 2. Update Topbar Session Title
+        const topTitle = document.getElementById('topbar-session-title');
+        if (topTitle) {
+          topTitle.textContent = session.topbarTitle || `${session.title} • Default workspace`;
+        }
+
+        // 3. Render Session Chat Stream
+        const chatContainer = document.getElementById('chat-messages-container');
+        if (chatContainer) {
+          chatContainer.innerHTML = `
+            <!-- User Question Bubble -->
+            <div class="dsh-user-bubble">
+              ${session.userMessage.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+              <div class="flex items-center justify-end gap-1.5 text-[10px] text-zinc-500 mt-1">
+                <span>${session.userTime || 'Just now'}</span>
+                <button onclick="navigator.clipboard.writeText(this.closest('.dsh-user-bubble').firstChild.textContent.trim())" class="hover:text-zinc-300" title="Copy text">
+                  <i data-lucide="copy" class="w-3 h-3"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Assistant Answer Block -->
+            <div class="dsh-assistant-block">
+              <div class="dsh-completed-badge cursor-pointer" onclick="this.nextElementSibling.classList.toggle('hidden');">
+                <span>${session.completedBadge || 'Completed'}</span>
+                <i data-lucide="chevron-down" class="w-3 h-3"></i>
+              </div>
+              <div class="dsh-assistant-content space-y-4">
+                ${session.assistantHtml}
+              </div>
+            </div>
+          `;
+
+          // Append any user-generated messages during this session
+          if (session.extraMessages && session.extraMessages.length > 0) {
+            session.extraMessages.forEach(msg => {
+              const div = document.createElement('div');
+              div.innerHTML = msg;
+              chatContainer.appendChild(div.firstElementChild || div);
+            });
+          }
+
+          if (window.lucide) lucide.createIcons();
+          viewChat?.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 4. Update Trajectory Feed
+        const terminalBox = document.getElementById('terminal-stream');
+        if (terminalBox && session.terminalLogs) {
+          terminalBox.innerHTML = '';
+          session.terminalLogs.forEach(item => {
+            const line = document.createElement('div');
+            line.className = 'terminal-line';
+            let color = 'text-slate-400';
+            if (item.type === 'action') color = 'text-cyan-400 font-bold';
+            else if (item.type === 'thought') color = 'text-purple-400';
+            else if (item.type === 'success') color = 'text-emerald-400 font-bold';
+            else if (item.type === 'warn') color = 'text-amber-400 font-semibold';
+            line.innerHTML = `<span class="terminal-time">[${item.time}]</span> <span class="${color}">${item.msg}</span>`;
+            terminalBox.appendChild(line);
+          });
+        }
+        const execLabel = document.getElementById('execution-status-label');
+        if (execLabel) execLabel.textContent = 'Session Verified';
+        const stepCounter = document.getElementById('step-counter-label');
+        if (stepCounter) stepCounter.textContent = 'Step 4 of 4 (Completed)';
+
+        // Hide old standalone result box
+        document.getElementById('result-container')?.classList.add('hidden');
+      }
+      window.selectWorkspaceSession = selectWorkspaceSession;
+
+      // Attach click listeners to all 3 session buttons
+      document.querySelectorAll('.session-history-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const sid = btn.dataset.sessionId;
+          if (sid) selectWorkspaceSession(sid);
+        });
       });
 
-      // New Session Clear
+      // Workspaces Search Filtering
+      const btnSearchWorkspaces = document.getElementById('btn-search-workspaces');
+      const searchContainer = document.getElementById('workspaces-search-container');
+      const inputSearchWorkspaces = document.getElementById('input-search-workspaces');
+
+      btnSearchWorkspaces?.addEventListener('click', () => {
+        searchContainer?.classList.toggle('hidden');
+        if (!searchContainer?.classList.contains('hidden')) {
+          inputSearchWorkspaces?.focus();
+        }
+      });
+
+      inputSearchWorkspaces?.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        document.querySelectorAll('.session-history-item').forEach(item => {
+          const text = item.textContent.toLowerCase();
+          item.style.display = text.includes(query) ? 'flex' : 'none';
+        });
+      });
+
+      // Workspaces Collapse / Expand
+      const btnCollapseWorkspaces = document.getElementById('btn-collapse-workspaces');
+      const workspacesItems = document.getElementById('workspaces-items-container');
+      const iconCollapse = document.getElementById('icon-collapse-workspaces');
+      let isWorkspacesCollapsed = false;
+
+      btnCollapseWorkspaces?.addEventListener('click', () => {
+        isWorkspacesCollapsed = !isWorkspacesCollapsed;
+        if (workspacesItems) {
+          workspacesItems.classList.toggle('hidden', isWorkspacesCollapsed);
+        }
+        if (iconCollapse) {
+          iconCollapse.style.transform = isWorkspacesCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+      });
+
+      // New Workspace Dialog
+      document.getElementById('btn-new-workspace')?.addEventListener('click', () => {
+        const name = prompt('Enter name for the new workspace session:');
+        if (name && name.trim()) {
+          const sid = 'custom_' + Date.now();
+          WORKSPACE_SESSIONS[sid] = {
+            id: sid,
+            title: name.trim(),
+            topbarTitle: `${name.trim()} • Default workspace`,
+            time: 'Just now',
+            userMessage: `Initialized workspace session for: ${name.trim()}`,
+            userTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            completedBadge: 'Workspace Created',
+            assistantHtml: `<p>Workspace session <strong class="text-white">${name.trim()}</strong> created and active. You can execute tasks or configure workflows in this session.</p>`,
+            terminalLogs: [
+              { time: new Date().toLocaleTimeString(), msg: `[System] Created workspace session '${name.trim()}'`, type: 'info' }
+            ]
+          };
+
+          const newBtn = document.createElement('button');
+          newBtn.type = 'button';
+          newBtn.dataset.sessionId = sid;
+          newBtn.className = 'session-history-item dsh-nav-item w-full text-left justify-between pl-6 py-1.5 text-zinc-400 hover:text-zinc-200 cursor-pointer transition';
+          newBtn.innerHTML = `
+            <span class="truncate text-xs font-medium">${name.trim()}</span>
+            <span class="text-[10px] text-zinc-600 font-mono flex-shrink-0">Just now</span>
+          `;
+          newBtn.addEventListener('click', () => selectWorkspaceSession(sid));
+          workspacesItems?.appendChild(newBtn);
+          selectWorkspaceSession(sid);
+        }
+      });
+
+      // New Session Button: Switch to fresh state
       document.getElementById('btn-new-session')?.addEventListener('click', () => {
+        activeWorkspaceSessionId = 'new';
+        document.querySelectorAll('.session-history-item').forEach(btn => {
+          btn.classList.remove('active');
+          btn.classList.add('text-zinc-400');
+        });
+        const topTitle = document.getElementById('topbar-session-title');
+        if (topTitle) topTitle.textContent = 'Helper-AI Autonomous Workspace';
+
         const chatContainer = document.getElementById('chat-messages-container');
-        if (chatContainer) chatContainer.innerHTML = '';
+        if (chatContainer) {
+          chatContainer.innerHTML = `
+            <div class="p-8 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-center max-w-md mx-auto my-12 space-y-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center mx-auto text-lg">
+                ⚡
+              </div>
+              <h3 class="text-sm font-bold text-white">New Autonomous Session</h3>
+              <p class="text-xs text-zinc-400 leading-relaxed">
+                Helper-AI is ready for instructions. Ask questions, explore files, execute terminal tasks, or automate browser actions below.
+              </p>
+            </div>
+          `;
+          if (window.lucide) lucide.createIcons();
+        }
         const goalInput = document.getElementById('goal-input');
         if (goalInput) {
           goalInput.value = '';
           goalInput.focus();
         }
+        document.getElementById('result-container')?.classList.add('hidden');
       });
 
       // Scroll to bottom
@@ -872,12 +1470,88 @@
 
       // Sidebar Automation Tasks Button -> Open Playwright CRM Studio & Workflows
       document.getElementById('btn-sidebar-automation')?.addEventListener('click', () => {
-        const crmModal = document.getElementById('modal-playwright-crm');
-        if (crmModal) {
-          crmModal.classList.remove('hidden');
-          if (typeof loadRecordedPlaywrightWorkflows === 'function') {
-            loadRecordedPlaywrightWorkflows();
+        if (typeof openPlaywrightCRMModal === 'function') {
+          openPlaywrightCRMModal();
+        } else {
+          const crmModal = document.getElementById('modal-playwright-crm');
+          if (crmModal) {
+            crmModal.classList.remove('hidden');
+            if (typeof loadRecordedPlaywrightWorkflows === 'function') {
+              loadRecordedPlaywrightWorkflows();
+            }
           }
+        }
+      });
+
+      // Direct fallback binding for Record Workflow button
+      document.getElementById('btn-start-crm-recorder')?.addEventListener('click', async () => {
+        if (typeof launchPlaywrightCodegen === 'function') {
+          launchPlaywrightCodegen();
+          return;
+        }
+        const urlInput = document.getElementById('input-crm-url');
+        let url = (urlInput?.value || '').trim();
+        if (!url) {
+          alert('Please enter or paste a URL first before recording.');
+          urlInput?.focus();
+          return;
+        }
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = 'https://' + url;
+          if (urlInput) urlInput.value = url;
+        }
+        const nameInput = document.getElementById('input-crm-name');
+        const name = (nameInput?.value || '').trim() || ('crm_workflow_' + Math.floor(Date.now() / 1000));
+        const statusMsg = document.getElementById('crm-status-msg');
+        if (statusMsg) statusMsg.textContent = "🚀 Launching Playwright Inspector & Browser for '" + url + "'...";
+        try {
+          const res = await fetch('/api/playwright/codegen/launch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url, workflow_name: name, script_name: name, use_chrome: true, save_session: true })
+          });
+          const data = await res.json();
+          if (data.success || data.status === 'started' || data.status === 'already_running') {
+            if (statusMsg) statusMsg.innerHTML = "✅ <b>Playwright Inspector & Browser launched!</b> Perform your actions in Chrome. When finished, close Chrome or click 'Stop Recording'.";
+            document.getElementById('btn-start-crm-recorder')?.classList.add('hidden');
+            document.getElementById('btn-stop-crm-recorder')?.classList.remove('hidden');
+            const badge = document.getElementById('crm-recorder-badge');
+            if (badge) {
+              badge.textContent = 'Recording Active';
+              badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono font-medium border border-rose-500/30 animate-pulse';
+            }
+          } else {
+            if (statusMsg) statusMsg.textContent = "❌ Failed: " + (data.error || JSON.stringify(data));
+          }
+        } catch(err) {
+          if (statusMsg) statusMsg.textContent = "❌ Error: " + err.message;
+        }
+      });
+
+      // Direct fallback binding for Stop Recording button
+      document.getElementById('btn-stop-crm-recorder')?.addEventListener('click', async () => {
+        if (typeof stopPlaywrightCodegen === 'function') {
+          stopPlaywrightCodegen();
+          return;
+        }
+        try {
+          await fetch('/api/playwright/codegen/stop', { method: 'POST' });
+          const statusMsg = document.getElementById('crm-status-msg');
+          if (statusMsg) statusMsg.textContent = "⏹ Recording stopped. Script saved!";
+          document.getElementById('btn-start-crm-recorder')?.classList.remove('hidden');
+          document.getElementById('btn-stop-crm-recorder')?.classList.add('hidden');
+          const badge = document.getElementById('crm-recorder-badge');
+          if (badge) {
+            badge.textContent = 'Ready';
+            badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-medium border border-emerald-500/30';
+          }
+        } catch(err) {}
+      });
+
+      // Direct fallback binding for Refresh Workflows button
+      document.getElementById('btn-refresh-crm-workflows')?.addEventListener('click', () => {
+        if (typeof loadRecordedPlaywrightWorkflows === 'function') {
+          loadRecordedPlaywrightWorkflows();
         }
       });
     });

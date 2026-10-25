@@ -48,8 +48,10 @@ Traditional conversational AI chatbots (such as standard ChatGPT, Gemini, or Cla
 2. **Safe Mode & Human-In-The-Loop:** Dangerous actions (file deletions, system process halts) can require 1-click confirmation dialogs, protecting non-technical users.
 3. **Local & 100% Free Offline Engine:** Fully supports local Ollama models (`dolphin-llama3`, `mistral`, `llama3`) with zero subscriptions, API fees, or tracking.
 4. **CRM & Browser Automation Studio:** Integrates Playwright and Chrome profiles to record real user browser interactions and replay them dynamically for batch processing.
-5. **Reverse Engineering Any App (REA & App Memory):** Learns the fastest keyboard shortcuts and UI controls for software like Photoshop, Blender, Word, or Premiere Pro, saving fast-paths in persistent memory.
-6. **Bilingual User Experience (English + ગુજરાતી):** Full end-to-end documentation and voice instructions in both English and Gujarati, making state-of-the-art AI accessible to non-English speakers.
+5. **Interactive Workspaces & DeepSeek Harness UI v2:** 3-track session switcher (Coding, PC Control, Job Portals sync) with real-time search and collapse controls.
+6. **1-Click Pro Connectors:** Instant WhatsApp Pro appointment scheduling, donation system, and official digital store.
+7. **Reverse Engineering Any App (REA & App Memory):** Learns the fastest keyboard shortcuts and UI controls for software like Photoshop, Blender, Word, or Premiere Pro, saving fast-paths in persistent memory.
+8. **Bilingual User Experience (English + ગુજરાતી):** Full end-to-end documentation and voice instructions in both English and Gujarati, making state-of-the-art AI accessible to non-English speakers.
 
 ---
 

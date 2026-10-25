@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.9.0] - 2026-10-25
+
+### 🗂️ Interactive Workspace Tree & Multi-Session Switcher (DeepSeek Harness UI v2)
+- **3-Track Workspace History Architecture (`web/templates/index.html` & `web/static/js/app.js`):**
+  - Interactive multi-session switcher supporting instant switching between:
+    - **Coding assistant capabilities:** Code refactoring, test execution, AST verification, and repository architecture tasks.
+    - **Autonomous PC & Internet:** Headless/headed Chromium CDP navigation, terminal process management, and self-healing execution loops.
+    - **Job Portals Automation:** Live candidate profile synchronization matching `jignesh_job_portals_status.json` (*Internshala, Naukri, Indeed, Wellfound OTP, Foundit, Freelancer*).
+  - Synchronized state switching updates chat stream bubbles, trajectory terminal feeds, and 4-phase stepper pipeline simultaneously.
+  - Active session persistence records live user queries and execution bubbles across session switches without page reloads.
+  - Added instant session search filter bar, workspace tree collapse/expand toggle with rotating chevron, and custom session generator.
+
+### ⚡ Glassmorphic Pro Actions & External Connectors
+- **Modern Pro Actions Container (`styles.css` & `index.html`):**
+  - Replaced legacy bonus box with an ultra-attractive glassmorphic `.pro-actions-container`:
+    - **`⚡ BUY NOW PRO (APPOINTMENT)`**: 1-click WhatsApp appointment booking (`https://wa.me/919898048483`).
+    - **`🪙 DONATION SYSTEM`**: Dedicated community donation pledge via Google Forms.
+    - **`🛒 OFFICIAL DIGITAL STORE`**: Official product and automation catalog (`https://wa.me/c/919898048483`).
+  - Styled with glowing borders, hover elevation shifts, active touch scaling (`active:scale-[0.98]`), and responsive alignment.
+
+### 🐬 Zero-Touch Local Dolphin AI Engine & Background Daemon Management
+- **Automatic Port 11434 Startup & Healthcheck (`core/auto_setup_ollama.py` & `app.py`):**
+  - Detects local Ollama installation and automatically starts the background service on port 11434.
+  - Port standby detection, auto-open routines, and model bootstrap for `dolphin-llama3`.
+  - Added dedicated endpoint `/api/setup/ollama-dolphin` with instant feedback badges.
+
+### 🧪 Test Suite & Quality Verification
+- **Test Suite Expanded to 195+ Passing Tests:**
+  - Added test modules covering Dolphin Ollama background setup and Playwright CRM manager error handling.
+
 ## [2.8.0] - 2026-10-24
 
 ### 🧠 Native Anthropic & Claude Integration

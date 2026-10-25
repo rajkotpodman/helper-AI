@@ -758,8 +758,10 @@ async def execute_livekit_tool(req: LiveKitToolRequest):
 class PlaywrightLaunchRequest(BaseModel):
     url: Optional[str] = None
     workflow_name: Optional[str] = None
+    script_name: Optional[str] = None
     target_lang: Optional[str] = "python"
-    use_chrome: Optional[bool] = True
+    use_chrome: Optional[bool] = None
+    browser: Optional[str] = None
     save_session: Optional[bool] = True
     session_name: Optional[str] = "tata_crm_session"
 
@@ -768,10 +770,15 @@ class PlaywrightWorkflowSaveRequest(BaseModel):
     code: str
 
 class PlaywrightWorkflowRunRequest(BaseModel):
-    name: str
+    name: Optional[str] = None
+    workflow_name: Optional[str] = None
     data_records: Optional[List[Dict[str, Any]]] = None
+    leads_data: Optional[List[Dict[str, Any]]] = None
     delay_between_records_s: Optional[float] = 1.0
     timeout_seconds: Optional[int] = 180
+    timeout: Optional[int] = None
+    mode: Optional[str] = "standalone"
+    headless: Optional[bool] = False
 
 @app.get("/api/playwright/status")
 async def get_playwright_status():
@@ -783,14 +790,34 @@ async def get_playwright_status():
 async def launch_playwright_codegen_endpoint(req: PlaywrightLaunchRequest):
     """Launches Playwright Codegen recorder with real Google Chrome."""
     from core.playwright_manager import playwright_manager
-    return playwright_manager.launch_codegen(
-        url=req.url,
-        workflow_name=req.workflow_name,
+    name = req.workflow_name or req.script_name or f"crm_workflow_{int(time.time())}"
+    use_c = True
+    if req.use_chrome is not None:
+        use_c = bool(req.use_chrome)
+    elif req.browser:
+        use_c = (req.browser.lower() == "chrome")
+
+    target_url = req.url
+    if target_url and target_url.strip():
+        target_url = target_url.strip()
+        if not (target_url.startswith("http://") or target_url.startswith("https://")):
+            target_url = "https://" + target_url
+
+    res = playwright_manager.launch_codegen(
+        url=target_url,
+        workflow_name=name,
         target_lang=req.target_lang or "python",
-        use_chrome=bool(req.use_chrome),
-        save_session=bool(req.save_session),
+        use_chrome=use_c,
+        save_session=bool(req.save_session if req.save_session is not None else True),
         session_name=req.session_name
     )
+    if res.get("success"):
+        res["status"] = "started"
+    elif "already" in str(res.get("error", "")).lower():
+        res["status"] = "already_running"
+    else:
+        res["status"] = "error"
+    return res
 
 @app.post("/api/playwright/codegen/stop")
 async def stop_playwright_codegen_endpoint():
@@ -816,20 +843,40 @@ async def save_playwright_workflow_endpoint(req: PlaywrightWorkflowSaveRequest):
     from core.playwright_manager import playwright_manager
     return playwright_manager.save_workflow(req.name, req.code)
 
+@app.delete("/api/playwright/workflows/{name}")
+async def delete_playwright_workflow_endpoint(name: str):
+    """Deletes a recorded Playwright workflow script."""
+    from core.playwright_manager import playwright_manager
+    return playwright_manager.delete_workflow(name)
+
 @app.post("/api/playwright/workflows/run")
 async def run_playwright_workflow_endpoint(req: PlaywrightWorkflowRunRequest):
     """Runs a Playwright workflow standalone or in batch mode over Excel/CSV data records."""
     from core.playwright_manager import playwright_manager
-    if req.data_records and len(req.data_records) > 0:
-        return playwright_manager.run_workflow_batch(
-            name=req.name,
-            data_records=req.data_records,
+    target_name = req.name or req.workflow_name
+    if not target_name:
+        raise HTTPException(status_code=400, detail="Workflow script name is required.")
+
+    records = req.data_records or req.leads_data
+    timeout = req.timeout_seconds or req.timeout or 180
+
+    if records and len(records) > 0:
+        res = playwright_manager.run_workflow_batch(
+            name=target_name,
+            data_records=records,
             delay_between_records_s=req.delay_between_records_s or 1.0
         )
-    return playwright_manager.run_workflow_standalone(
-        name=req.name,
-        timeout_seconds=req.timeout_seconds or 180
-    )
+    else:
+        res = playwright_manager.run_workflow_standalone(
+            name=target_name,
+            timeout_seconds=timeout
+        )
+
+    if res.get("success"):
+        res["status"] = "completed"
+    else:
+        res["status"] = "error"
+    return res
 
 
 class JobPortalProcessRequest(BaseModel):

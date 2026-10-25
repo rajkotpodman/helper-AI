@@ -24,6 +24,22 @@ def test_ollama_status_api(client):
     assert "models" in data
     assert "dolphin_ready" in data
     assert "active_model" in data
+    assert "port" in data
+    assert data["port"] == 11434
+
+
+def test_ollama_start_api(client):
+    """Test the /api/ollama/start endpoint."""
+    with patch.object(OllamaAutoSetup, "is_ollama_installed", return_value=True), \
+         patch.object(OllamaAutoSetup, "ensure_server_running", return_value=True), \
+         patch.object(OllamaAutoSetup, "get_installed_models", return_value=["dolphin-llama3:latest"]):
+        response = client.post("/api/ollama/start")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["running"] is True
+        assert data["dolphin_ready"] is True
+        assert data["port"] == 11434
 
 
 def test_system_status_reports_ollama_model(client):

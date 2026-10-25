@@ -10,7 +10,11 @@ from dotenv import load_dotenv, set_key
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Response, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
+import logging
 from pydantic import BaseModel
+
+logger = logging.getLogger("HelperAI")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 load_dotenv(override=True)
 
@@ -33,6 +37,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_no_cache_headers(request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith("/static") or request.url.path == "/" or request.url.path.startswith("/api"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
 
 GLOBAL_TOOLS = ToolRegistry()
 
@@ -133,6 +146,18 @@ def _notify_permission_req(req_data: dict):
         pass
 
 permission_manager.set_listener(_notify_permission_req)
+
+@app.on_event("startup")
+async def startup_event():
+    def _auto_start_ollama():
+        try:
+            from core.auto_setup_ollama import OllamaAutoSetup
+            if OllamaAutoSetup.is_ollama_installed() and not OllamaAutoSetup.is_server_running():
+                logger.info("Ollama is installed on system. Booting background server on port 11434...")
+                OllamaAutoSetup.ensure_server_running(timeout_seconds=8)
+        except Exception as e:
+            logger.warning(f"Ollama auto-boot error: {e}")
+    asyncio.create_task(asyncio.to_thread(_auto_start_ollama))
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -593,11 +618,17 @@ async def get_system_status():
     }
 
 @app.get("/api/ollama/status")
-async def get_ollama_status():
+async def get_ollama_status(auto_start: bool = True):
     from core.auto_setup_ollama import OllamaAutoSetup
     def _check():
         installed = OllamaAutoSetup.is_ollama_installed()
         running = OllamaAutoSetup.is_server_running() if installed else False
+        
+        # Self-healing: if installed and port is closed, auto-open port 11434
+        if installed and not running and auto_start:
+            logger.info("Ollama port 11434 closed. Auto-starting background daemon...")
+            running = OllamaAutoSetup.ensure_server_running(timeout_seconds=4)
+
         models = OllamaAutoSetup.get_installed_models() if running else []
         dolphin_ready = any("dolphin" in m.lower() for m in models)
         return {
@@ -606,9 +637,37 @@ async def get_ollama_status():
             "models": models,
             "dolphin_ready": dolphin_ready,
             "active_model": os.getenv("OLLAMA_MODEL", "dolphin-llama3"),
-            "provider": os.getenv("LLM_PROVIDER", "gemini")
+            "provider": os.getenv("LLM_PROVIDER", "gemini"),
+            "port": 11434,
+            "status": "ready" if dolphin_ready else ("running" if running else ("installed_port_closed" if installed else "not_installed"))
         }
     return await asyncio.to_thread(_check)
+
+@app.post("/api/ollama/start")
+async def start_ollama_server():
+    from core.auto_setup_ollama import OllamaAutoSetup
+    def _start():
+        if not OllamaAutoSetup.is_ollama_installed():
+            return {"success": False, "error": "Ollama is not installed on this system."}
+        ok = OllamaAutoSetup.ensure_server_running(timeout_seconds=12)
+        models = OllamaAutoSetup.get_installed_models() if ok else []
+        dolphin_ready = any("dolphin" in m.lower() for m in models)
+        return {
+            "success": ok,
+            "running": ok,
+            "models": models,
+            "dolphin_ready": dolphin_ready,
+            "port": 11434,
+            "message": "Ollama daemon active on port 11434" if ok else "Failed to start Ollama server"
+        }
+    return await asyncio.to_thread(_start)
+
+@app.post("/api/ollama/verify")
+async def verify_ollama_dolphin():
+    from core.auto_setup_ollama import OllamaAutoSetup
+    model = os.getenv("OLLAMA_MODEL", "dolphin-llama3")
+    res = await asyncio.to_thread(OllamaAutoSetup.test_first_prompt, "hello i m helper ai", model)
+    return res
 
 @app.post("/api/setup/ollama-dolphin")
 async def setup_ollama_dolphin():
@@ -812,8 +871,10 @@ async def dispatch_voice_command(req: VoiceDispatchRequest):
 class PlaywrightLaunchRequest(BaseModel):
     url: Optional[str] = None
     workflow_name: Optional[str] = None
+    script_name: Optional[str] = None
     target_lang: Optional[str] = "python"
-    use_chrome: Optional[bool] = True
+    use_chrome: Optional[bool] = None
+    browser: Optional[str] = None
     save_session: Optional[bool] = True
     session_name: Optional[str] = "tata_crm_session"
 
@@ -822,10 +883,15 @@ class PlaywrightWorkflowSaveRequest(BaseModel):
     code: str
 
 class PlaywrightWorkflowRunRequest(BaseModel):
-    name: str
+    name: Optional[str] = None
+    workflow_name: Optional[str] = None
     data_records: Optional[List[Dict[str, Any]]] = None
+    leads_data: Optional[List[Dict[str, Any]]] = None
     delay_between_records_s: Optional[float] = 1.0
     timeout_seconds: Optional[int] = 180
+    timeout: Optional[int] = None
+    mode: Optional[str] = "standalone"
+    headless: Optional[bool] = False
 
 @app.get("/api/playwright/status")
 async def get_playwright_status():
@@ -837,14 +903,34 @@ async def get_playwright_status():
 async def launch_playwright_codegen_endpoint(req: PlaywrightLaunchRequest):
     """Launches Playwright Codegen recorder with real Google Chrome."""
     from core.playwright_manager import playwright_manager
-    return playwright_manager.launch_codegen(
-        url=req.url,
-        workflow_name=req.workflow_name,
+    name = req.workflow_name or req.script_name or f"crm_workflow_{int(time.time())}"
+    use_c = True
+    if req.use_chrome is not None:
+        use_c = bool(req.use_chrome)
+    elif req.browser:
+        use_c = (req.browser.lower() == "chrome")
+
+    target_url = req.url
+    if target_url and target_url.strip():
+        target_url = target_url.strip()
+        if not (target_url.startswith("http://") or target_url.startswith("https://")):
+            target_url = "https://" + target_url
+
+    res = playwright_manager.launch_codegen(
+        url=target_url,
+        workflow_name=name,
         target_lang=req.target_lang or "python",
-        use_chrome=bool(req.use_chrome),
-        save_session=bool(req.save_session),
+        use_chrome=use_c,
+        save_session=bool(req.save_session if req.save_session is not None else True),
         session_name=req.session_name
     )
+    if res.get("success"):
+        res["status"] = "started"
+    elif "already" in str(res.get("error", "")).lower():
+        res["status"] = "already_running"
+    else:
+        res["status"] = "error"
+    return res
 
 @app.post("/api/playwright/codegen/stop")
 async def stop_playwright_codegen_endpoint():
@@ -870,20 +956,40 @@ async def save_playwright_workflow_endpoint(req: PlaywrightWorkflowSaveRequest):
     from core.playwright_manager import playwright_manager
     return playwright_manager.save_workflow(req.name, req.code)
 
+@app.delete("/api/playwright/workflows/{name}")
+async def delete_playwright_workflow_endpoint(name: str):
+    """Deletes a recorded Playwright workflow script."""
+    from core.playwright_manager import playwright_manager
+    return playwright_manager.delete_workflow(name)
+
 @app.post("/api/playwright/workflows/run")
 async def run_playwright_workflow_endpoint(req: PlaywrightWorkflowRunRequest):
     """Runs a Playwright workflow standalone or in batch mode over Excel/CSV data records."""
     from core.playwright_manager import playwright_manager
-    if req.data_records and len(req.data_records) > 0:
-        return playwright_manager.run_workflow_batch(
-            name=req.name,
-            data_records=req.data_records,
+    target_name = req.name or req.workflow_name
+    if not target_name:
+        raise HTTPException(status_code=400, detail="Workflow script name is required.")
+
+    records = req.data_records or req.leads_data
+    timeout = req.timeout_seconds or req.timeout or 180
+
+    if records and len(records) > 0:
+        res = playwright_manager.run_workflow_batch(
+            name=target_name,
+            data_records=records,
             delay_between_records_s=req.delay_between_records_s or 1.0
         )
-    return playwright_manager.run_workflow_standalone(
-        name=req.name,
-        timeout_seconds=req.timeout_seconds or 180
-    )
+    else:
+        res = playwright_manager.run_workflow_standalone(
+            name=target_name,
+            timeout_seconds=timeout
+        )
+
+    if res.get("success"):
+        res["status"] = "completed"
+    else:
+        res["status"] = "error"
+    return res
 
 
 class JobPortalProcessRequest(BaseModel):

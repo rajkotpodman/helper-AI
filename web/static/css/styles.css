@@ -126,6 +126,31 @@ html, body {
   font-weight: 600;
 }
 
+.session-history-item {
+  border: 1px solid transparent;
+  outline: none;
+  background: transparent;
+  text-align: left;
+  user-select: none;
+}
+
+.session-history-item:hover {
+  background-color: var(--dsh-surface-hover);
+  color: var(--dsh-text-primary);
+}
+
+.session-history-item.active {
+  background-color: rgba(59, 130, 246, 0.12) !important;
+  color: #ffffff !important;
+  border-color: rgba(59, 130, 246, 0.35) !important;
+  border-left: 3px solid #3b82f6 !important;
+  font-weight: 600;
+}
+
+.session-history-item.active span:first-child {
+  color: #93c5fd !important;
+}
+
 .dsh-btn-new-session {
   display: flex;
   align-items: center;
@@ -509,6 +534,15 @@ html, body {
   z-index: 100;
 }
 
+.modal-backdrop.hidden,
+.modal-backdrop.is-hidden,
+.modal-backdrop[hidden] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 .modal-dialog {
   background-color: var(--dsh-card-bg);
   border: 1px solid var(--dsh-border);
@@ -522,36 +556,91 @@ html, body {
   color: var(--dsh-text-primary);
 }
 
-/* Pro action buttons */
+/* Pro action buttons - Sleek Modern Glassmorphic Badges */
+.pro-actions-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 12px;
+  background: rgba(24, 24, 27, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 16px -2px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+}
+
 .pro-btn {
-  display: inline-flex;
+  position: relative;
+  display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  width: 100%;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.03em;
-  padding: 4px 8px;
-  border-radius: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   text-transform: uppercase;
   border: 1px solid transparent;
   outline: none;
   text-decoration: none;
+  overflow: hidden;
+  user-select: none;
 }
+
+.pro-btn:active {
+  transform: scale(0.98);
+}
+
+/* Buy Pro - Vibrant Gold / Amber Glow */
 .pro-btn.btn-buy-pro {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fde68a;
-  border-color: rgba(245, 158, 11, 0.4);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(217, 119, 6, 0.09) 100%);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.38);
+  box-shadow: 0 2px 8px -2px rgba(245, 158, 11, 0.2);
 }
+
+.pro-btn.btn-buy-pro:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.32) 0%, rgba(217, 119, 6, 0.2) 100%);
+  color: #fffbeb;
+  border-color: rgba(245, 158, 11, 0.85);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4), inset 0 0 8px rgba(245, 158, 11, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Donation System - Emerald / Mint Glow */
 .pro-btn.btn-donate {
-  background: rgba(16, 185, 129, 0.15);
-  color: #a7f3d0;
-  border-color: rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16) 0%, rgba(5, 150, 105, 0.09) 100%);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.38);
+  box-shadow: 0 2px 8px -2px rgba(16, 185, 129, 0.2);
 }
+
+.pro-btn.btn-donate:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.32) 0%, rgba(5, 150, 105, 0.2) 100%);
+  color: #ecfdf5;
+  border-color: rgba(16, 185, 129, 0.85);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.4), inset 0 0 8px rgba(16, 185, 129, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Official Store - Cyan / Electric Blue Glow */
 .pro-btn.btn-store {
-  background: rgba(59, 130, 246, 0.15);
-  color: #bfdbfe;
-  border-color: rgba(59, 130, 246, 0.4);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.16) 0%, rgba(99, 102, 241, 0.09) 100%);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.38);
+  box-shadow: 0 2px 8px -2px rgba(59, 130, 246, 0.2);
 }
+
+.pro-btn.btn-store:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.32) 0%, rgba(99, 102, 241, 0.2) 100%);
+  color: #eff6ff;
+  border-color: rgba(59, 130, 246, 0.85);
+  box-shadow: 0 0 16px rgba(59, 130, 246, 0.4), inset 0 0 8px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
+

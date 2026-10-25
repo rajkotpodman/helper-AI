@@ -282,24 +282,33 @@ function initElements() {
   
   // Playwright CRM & Web Automation Studio
   elements.btnPlaywrightPill = document.getElementById('btn-playwright-pill');
-  elements.modalPlaywright = document.getElementById('modal-playwright');
+  elements.modalPlaywright = document.getElementById('modal-playwright-crm') || document.getElementById('modal-playwright');
   elements.btnClosePlaywrightModal = document.getElementById('btn-close-playwright-modal');
-  elements.playwrightStatusBadge = document.getElementById('playwright-status-badge');
+  elements.btnDismissPlaywrightModal = document.getElementById('btn-dismiss-crm-modal');
+  elements.playwrightStatusBadge = document.getElementById('crm-recorder-badge') || document.getElementById('playwright-status-badge');
   elements.playwrightCodegenBadge = document.getElementById('playwright-codegen-state-badge');
-  elements.playwrightInputUrl = document.getElementById('playwright-input-url');
-  elements.playwrightInputName = document.getElementById('playwright-input-name');
-  elements.playwrightCheckChrome = document.getElementById('playwright-check-chrome');
-  elements.playwrightCheckSaveSession = document.getElementById('playwright-check-save-session');
-  elements.btnPlaywrightLaunchCodegen = document.getElementById('btn-playwright-launch-codegen');
-  elements.btnPlaywrightStopCodegen = document.getElementById('btn-playwright-stop-codegen');
+  elements.playwrightInputUrl = document.getElementById('input-crm-url') || document.getElementById('playwright-input-url');
+  elements.playwrightInputName = document.getElementById('input-crm-name') || document.getElementById('playwright-input-name');
+  elements.playwrightCheckChrome = document.getElementById('check-crm-chrome') || document.getElementById('playwright-check-chrome');
+  elements.playwrightCheckSaveSession = document.getElementById('check-crm-session') || document.getElementById('playwright-check-save-session');
+  elements.btnPlaywrightLaunchCodegen = document.getElementById('btn-start-crm-recorder') || document.getElementById('btn-playwright-launch-codegen');
+  elements.btnPlaywrightStopCodegen = document.getElementById('btn-stop-crm-recorder') || document.getElementById('btn-playwright-stop-codegen');
   elements.playwrightSelectWorkflow = document.getElementById('playwright-select-workflow');
-  elements.btnPlaywrightRefreshWorkflows = document.getElementById('btn-playwright-refresh-workflows');
+  elements.btnPlaywrightRefreshWorkflows = document.getElementById('btn-refresh-crm-workflows') || document.getElementById('btn-playwright-refresh-workflows');
   elements.playwrightBatchContainer = document.getElementById('playwright-batch-data-container');
   elements.playwrightBatchInput = document.getElementById('playwright-batch-input');
   elements.playwrightCheckHeadless = document.getElementById('playwright-check-headless');
   elements.btnPlaywrightRunWorkflow = document.getElementById('btn-playwright-run-workflow');
   elements.playwrightConsoleOutput = document.getElementById('playwright-console-output');
   elements.playwrightRunStatus = document.getElementById('playwright-run-status');
+  elements.crmWorkflowList = document.getElementById('crm-workflow-list');
+  elements.crmWorkflowCount = document.getElementById('crm-workflow-count');
+  elements.crmStatusMsg = document.getElementById('crm-status-msg');
+  elements.crmFeedbackBox = document.getElementById('crm-feedback-box');
+  elements.crmCodeViewerPanel = document.getElementById('crm-code-viewer-panel');
+  elements.crmCodeViewerTitle = document.getElementById('crm-code-viewer-title');
+  elements.crmCodeViewerContent = document.getElementById('crm-code-viewer-content');
+  elements.btnCloseCrmCodeViewer = document.getElementById('btn-close-crm-code-viewer');
 
   // Job Portals & CV Automation Studio
   elements.btnJobportalsPill = document.getElementById('btn-jobportals-pill');
@@ -938,6 +947,19 @@ function handleExecutionComplete(data) {
     if (window.lucide) lucide.createIcons();
     const chatStream = document.getElementById('view-chat');
     chatStream?.scrollTo({ top: chatStream.scrollHeight, behavior: 'smooth' });
+
+    if (window.WORKSPACE_SESSIONS && state.currentAssistantBlock) {
+      const curSid = window.activeWorkspaceSessionId || 'coding';
+      if (window.WORKSPACE_SESSIONS[curSid]) {
+        if (!window.WORKSPACE_SESSIONS[curSid].extraMessages) {
+          window.WORKSPACE_SESSIONS[curSid].extraMessages = [];
+        }
+        if (state.currentUserBubble) {
+          window.WORKSPACE_SESSIONS[curSid].extraMessages.push(state.currentUserBubble.outerHTML);
+        }
+        window.WORKSPACE_SESSIONS[curSid].extraMessages.push(state.currentAssistantBlock.outerHTML);
+      }
+    }
   }
 
   // Show comprehensive final result card
@@ -988,6 +1010,7 @@ async function executeGoal() {
       </div>
     `;
     chatContainer.appendChild(userBubble);
+    state.currentUserBubble = userBubble;
 
     // Assistant Block Placeholder
     const assistantBlock = document.createElement('div');
@@ -1304,23 +1327,61 @@ function setupModals() {
 
   // Playwright CRM Studio Modal Listeners
   elements.btnPlaywrightPill?.addEventListener('click', openPlaywrightModal);
-  elements.btnClosePlaywrightModal?.addEventListener('click', () => elements.modalPlaywright?.classList.add('hidden'));
+  elements.btnClosePlaywrightModal?.addEventListener('click', closePlaywrightModal);
+  elements.btnDismissPlaywrightModal?.addEventListener('click', closePlaywrightModal);
   elements.btnPlaywrightLaunchCodegen?.addEventListener('click', launchPlaywrightCodegen);
   elements.btnPlaywrightStopCodegen?.addEventListener('click', stopPlaywrightCodegen);
   elements.btnPlaywrightRefreshWorkflows?.addEventListener('click', loadPlaywrightWorkflows);
   elements.btnPlaywrightRunWorkflow?.addEventListener('click', runPlaywrightWorkflow);
+  elements.btnCloseCrmCodeViewer?.addEventListener('click', () => {
+    elements.crmCodeViewerPanel?.classList.add('hidden');
+  });
+
+  // Sidebar Automation Tasks button
+  document.getElementById('btn-sidebar-automation')?.addEventListener('click', openPlaywrightModal);
+
+  // Dolphin AI setup modal close button
+  document.getElementById('btn-close-dolphin-modal')?.addEventListener('click', () => {
+    document.getElementById('modal-dolphin-setup')?.classList.add('hidden');
+  });
 
   // Job Portals Studio Modal Listeners
   elements.btnJobportalsPill?.addEventListener('click', openJobportalsModal);
   elements.btnCloseJobportalsModal?.addEventListener('click', () => elements.modalJobportals?.classList.add('hidden'));
   elements.btnRunAllJobportals?.addEventListener('click', runAllJobportalsAutomation);
 
-  // Quick CRM Preset Buttons
-  document.querySelectorAll('.btn-crm-url-preset').forEach(btn => {
+  // Quick CRM Preset Buttons (both legacy & modern presets)
+  document.querySelectorAll('.btn-crm-url-preset, .btn-crm-quick-preset').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const url = e.currentTarget.getAttribute('data-url');
-      if (elements.playwrightInputUrl && url) elements.playwrightInputUrl.value = url;
+      const input = document.getElementById('input-crm-url') || elements.playwrightInputUrl;
+      if (input && url) {
+        input.value = url;
+        input.focus();
+      }
     });
+  });
+
+  // UNIVERSAL: Click outside on modal-backdrop dismisses ANY open modal
+  document.addEventListener('click', (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains('modal-backdrop')) {
+      e.target.classList.add('hidden');
+      e.target.classList.add('is-hidden');
+      e.target.style.setProperty('display', 'none', 'important');
+    }
+  });
+
+  // UNIVERSAL: Pressing Escape key dismisses ANY open modal and floating dropdowns
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === 'Esc' || e.keyCode === 27) {
+      document.querySelectorAll('.modal-backdrop').forEach(modal => {
+        modal.classList.add('hidden');
+        modal.classList.add('is-hidden');
+        modal.style.setProperty('display', 'none', 'important');
+      });
+      document.getElementById('lang-dropdown-menu')?.classList.add('hidden');
+      document.getElementById('more-dropdown-menu')?.classList.add('hidden');
+    }
   });
 
   // Batch vs Single Mode toggle
@@ -1350,11 +1411,50 @@ function setupModals() {
     });
   });
 
-  // Dolphin Pill Click -> Open settings with Ollama focus
+  // Open Port / Start Ollama Action Handler
+  const handleStartOllama = async () => {
+    appendTerminalLog('🐬 Opening Ollama port 11434 & starting background engine...', 'action');
+    if (elements.dolphinStatusText) {
+      elements.dolphinStatusText.innerHTML = '<span class="inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span> Opening Port...</span>';
+      elements.dolphinStatusText.className = 'font-semibold text-amber-400';
+    }
+    const fb = elements.ollamaSetupFeedback;
+    if (fb) {
+      fb.classList.remove('hidden');
+      fb.innerHTML = '<span class="text-cyan-400">Starting Ollama background process on port 11434...</span>';
+    }
+    try {
+      const res = await fetch('/api/ollama/start', { method: 'POST' });
+      const data = await res.json();
+      if (data.running) {
+        appendTerminalLog('✓ Ollama engine is online and listening on port 11434!', 'success');
+        if (fb) {
+          fb.innerHTML = `<span class="text-emerald-400 font-bold">✓ Port 11434 is open & healthy! Dolphin Model: ${data.dolphin_ready ? 'Ready (8B)' : 'Available'}</span>`;
+        }
+        await checkOllamaStatus();
+      } else {
+        appendTerminalLog(`Failed to start Ollama: ${data.error || 'Port 11434 closed'}`, 'error');
+        if (fb) fb.innerHTML = `<span class="text-rose-400">Error: ${data.error || 'Port 11434 failed to open'}</span>`;
+      }
+    } catch(err) {
+      appendTerminalLog(`Error starting Ollama: ${err.message}`, 'error');
+    }
+  };
+
+  document.getElementById('btn-quick-start-ollama')?.addEventListener('click', handleStartOllama);
+  document.getElementById('btn-start-ollama-port')?.addEventListener('click', handleStartOllama);
+
+  // Dolphin Pill Click -> Auto-start if port is closed, switch provider and show modal
   elements.btnDolphinPill?.addEventListener('click', () => {
+    const statusText = elements.dolphinStatusText?.textContent?.toLowerCase() || '';
+    if (statusText.includes('closed') || statusText.includes('port')) {
+      handleStartOllama();
+    }
     if (elements.selectProvider) elements.selectProvider.value = 'ollama';
     updateProviderKeyVisibility();
     elements.modalSettings?.classList.remove('hidden');
+    elements.modalSettings?.classList.remove('is-hidden');
+    elements.modalSettings?.style.setProperty('display', 'flex', 'important');
     checkOllamaStatus();
   });
 
@@ -1398,19 +1498,59 @@ async function checkOllamaStatus() {
     const res = await fetch('/api/ollama/status');
     if (!res.ok) return;
     const data = await res.json();
+    
+    // Update sidebar dolphin pill badge
     if (elements.dolphinStatusText) {
       if (data.dolphin_ready) {
         elements.dolphinStatusText.textContent = 'Ready (8B Uncensored)';
         elements.dolphinStatusText.className = 'font-semibold text-emerald-400';
       } else if (data.running) {
-        elements.dolphinStatusText.textContent = 'Pulling / Standby';
+        elements.dolphinStatusText.textContent = 'Standby (Port Open)';
         elements.dolphinStatusText.className = 'font-semibold text-cyan-400';
       } else if (data.installed) {
-        elements.dolphinStatusText.textContent = 'Installed (Port closed)';
+        elements.dolphinStatusText.innerHTML = '<span class="inline-flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping"></span> Opening Port 11434...</span>';
         elements.dolphinStatusText.className = 'font-semibold text-amber-400';
+        
+        // Auto-heal: If installed and port closed, trigger background startup
+        if (!window._ollamaAutoStarting) {
+          window._ollamaAutoStarting = true;
+          fetch('/api/ollama/start', { method: 'POST' })
+            .then(r => r.json())
+            .then(res => {
+              window._ollamaAutoStarting = false;
+              if (res.running) checkOllamaStatus();
+            })
+            .catch(() => { window._ollamaAutoStarting = false; });
+        }
       } else {
         elements.dolphinStatusText.textContent = 'Auto-Install Ready';
         elements.dolphinStatusText.className = 'font-semibold text-blue-400';
+      }
+    }
+
+    // Update settings modal port badge
+    const portBadge = document.getElementById('ollama-port-badge');
+    if (portBadge) {
+      if (data.running) {
+        portBadge.textContent = 'Port 11434: Online';
+        portBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+      } else {
+        portBadge.textContent = 'Port 11434: Offline';
+        portBadge.className = 'text-[10px] px-2 py-0.5 rounded-full font-mono bg-amber-500/20 text-amber-400 border border-amber-500/30';
+      }
+    }
+
+    // Update quick status text in settings
+    const quickStatus = document.getElementById('ollama-quick-status');
+    if (quickStatus) {
+      if (data.dolphin_ready) {
+        quickStatus.innerHTML = '<span class="text-emerald-400 font-semibold">✓ Dolphin-2.9-Llama3 is ready & active on port 11434!</span>';
+      } else if (data.running) {
+        quickStatus.innerHTML = `<span class="text-cyan-400">⚡ Server online. Installed: ${(data.models || []).join(', ') || 'none'}</span>`;
+      } else if (data.installed) {
+        quickStatus.innerHTML = '<span class="text-amber-400">⚠️ Port 11434 is closed. Click "Start Port" to open the local server.</span>';
+      } else {
+        quickStatus.innerHTML = '<span class="text-zinc-500">Ollama is not installed on system.</span>';
       }
     }
   } catch (e) {}
@@ -2071,35 +2211,81 @@ let playwrightState = {
   activeCodegen: false,
   workflows: []
 };
+let playwrightPollInterval = null;
+
+function closePlaywrightModal() {
+  const modal = elements.modalPlaywright || document.getElementById('modal-playwright-crm') || document.getElementById('modal-playwright');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.add('is-hidden');
+    modal.style.setProperty('display', 'none', 'important');
+  }
+}
 
 async function openPlaywrightModal() {
-  elements.modalPlaywright?.classList.remove('hidden');
+  const modal = elements.modalPlaywright || document.getElementById('modal-playwright-crm') || document.getElementById('modal-playwright');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.remove('is-hidden');
+    modal.style.removeProperty('display');
+    modal.style.setProperty('display', 'flex', 'important');
+    setTimeout(() => {
+      const urlInput = document.getElementById('input-crm-url') || elements.playwrightInputUrl;
+      urlInput?.focus();
+    }, 120);
+  }
   await checkPlaywrightStatus();
   await loadPlaywrightWorkflows();
 }
+
+// Global window aliases
+window.closePlaywrightModal = closePlaywrightModal;
+window.openPlaywrightCRMModal = openPlaywrightModal;
+window.openPlaywrightModal = openPlaywrightModal;
+window.loadRecordedPlaywrightWorkflows = loadPlaywrightWorkflows;
 
 async function checkPlaywrightStatus() {
   try {
     const res = await fetch('/api/playwright/status');
     const data = await res.json();
-    playwrightState.activeCodegen = Boolean(data.active_codegen);
+    playwrightState.activeCodegen = Boolean(data.active_codegen || data.codegen_active);
     
-    if (elements.playwrightStatusBadge) {
-      elements.playwrightStatusBadge.textContent = data.playwright_installed ? (data.active_codegen ? 'Recording' : 'Ready') : 'CLI Missing';
-      elements.playwrightStatusBadge.className = data.active_codegen ? 'font-semibold text-amber-400' : 'font-semibold text-emerald-400';
+    // Status badge in modern modal
+    const badge = document.getElementById('crm-recorder-badge') || elements.playwrightStatusBadge;
+    if (badge) {
+      if (!data.playwright_installed && !data.installed) {
+        badge.textContent = 'CLI Missing';
+        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-medium border border-amber-500/30';
+      } else if (playwrightState.activeCodegen) {
+        badge.textContent = 'Recording Active';
+        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono font-medium border border-rose-500/30 animate-pulse';
+      } else {
+        badge.textContent = 'Ready';
+        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-medium border border-emerald-500/30';
+      }
+    }
+
+    // Toggle start/stop recorder buttons
+    const btnStart = document.getElementById('btn-start-crm-recorder') || elements.btnPlaywrightLaunchCodegen;
+    const btnStop = document.getElementById('btn-stop-crm-recorder') || elements.btnPlaywrightStopCodegen;
+    if (playwrightState.activeCodegen) {
+      btnStart?.classList.add('hidden');
+      btnStop?.classList.remove('hidden');
+    } else {
+      btnStart?.classList.remove('hidden');
+      btnStop?.classList.add('hidden');
     }
 
     if (elements.playwrightCodegenBadge) {
-      if (data.active_codegen) {
-        elements.playwrightCodegenBadge.textContent = `Recording (${data.codegen_details?.script_name || 'Active'})`;
+      if (playwrightState.activeCodegen) {
+        elements.playwrightCodegenBadge.textContent = 'Recording';
         elements.playwrightCodegenBadge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-red-600/30 text-red-300 font-mono animate-pulse';
-        elements.btnPlaywrightStopCodegen?.classList.remove('hidden');
       } else {
         elements.playwrightCodegenBadge.textContent = 'Idle';
         elements.playwrightCodegenBadge.className = 'text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono';
-        elements.btnPlaywrightStopCodegen?.classList.add('hidden');
       }
     }
+    return data;
   } catch (e) {
     console.error('Failed to check Playwright status:', e);
   }
@@ -2111,6 +2297,72 @@ async function loadPlaywrightWorkflows() {
     const data = await res.json();
     playwrightState.workflows = data.workflows || [];
     
+    // Update workflow count badge
+    const countBadge = document.getElementById('crm-workflow-count') || elements.crmWorkflowCount;
+    if (countBadge) countBadge.textContent = playwrightState.workflows.length;
+
+    // Render list in modal
+    const listContainer = document.getElementById('crm-workflow-list') || elements.crmWorkflowList;
+    if (listContainer) {
+      listContainer.innerHTML = '';
+      if (playwrightState.workflows.length === 0) {
+        listContainer.innerHTML = '<div class="text-zinc-500 text-center py-4">No recorded workflows found. Enter a URL above and click Record Workflow.</div>';
+      } else {
+        playwrightState.workflows.forEach(w => {
+          const item = document.createElement('div');
+          item.className = 'flex items-center justify-between p-2 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition';
+          item.innerHTML = `
+            <div class="flex items-center gap-2 overflow-hidden pr-2">
+              <i data-lucide="file-code" class="w-4 h-4 text-emerald-400 shrink-0"></i>
+              <div class="overflow-hidden">
+                <div class="font-mono text-xs font-semibold text-zinc-200 truncate" title="${w.filename}">${w.filename}</div>
+                <div class="text-[10px] text-zinc-500 font-mono">${w.size_bytes} B • ${w.modified || ''} • ${w.lines_count || 0} lines</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" class="btn-run-workflow px-2.5 py-1 bg-emerald-600/80 hover:bg-emerald-500 text-white rounded font-medium text-[11px] flex items-center gap-1 transition" data-name="${w.filename}">
+                <i data-lucide="play" class="w-3 h-3"></i> Run
+              </button>
+              <button type="button" class="btn-view-workflow px-2 py-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded text-[11px] flex items-center gap-1 transition" data-name="${w.filename}">
+                <i data-lucide="eye" class="w-3 h-3"></i> View
+              </button>
+              <button type="button" class="btn-delete-workflow px-1.5 py-1 text-zinc-500 hover:text-rose-400 rounded text-[11px] transition" data-name="${w.filename}" title="Delete workflow">
+                <i data-lucide="trash-2" class="w-3 h-3"></i>
+              </button>
+            </div>
+          `;
+          listContainer.appendChild(item);
+        });
+
+        // Attach action handlers for rendered items
+        listContainer.querySelectorAll('.btn-run-workflow').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const name = e.currentTarget.getAttribute('data-name');
+            runStandaloneWorkflow(name);
+          });
+        });
+
+        listContainer.querySelectorAll('.btn-view-workflow').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const name = e.currentTarget.getAttribute('data-name');
+            viewWorkflowScript(name);
+          });
+        });
+
+        listContainer.querySelectorAll('.btn-delete-workflow').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const name = e.currentTarget.getAttribute('data-name');
+            deleteWorkflowScript(name);
+          });
+        });
+
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+          window.lucide.createIcons();
+        }
+      }
+    }
+
+    // Also populate select dropdown if present
     if (elements.playwrightSelectWorkflow) {
       elements.playwrightSelectWorkflow.innerHTML = '';
       if (playwrightState.workflows.length === 0) {
@@ -2134,13 +2386,40 @@ async function loadPlaywrightWorkflows() {
 }
 
 async function launchPlaywrightCodegen() {
-  const url = elements.playwrightInputUrl?.value.trim() || 'https://google.com';
-  const name = elements.playwrightInputName?.value.trim() || 'tata_crm_lead_entry';
-  const useChrome = elements.playwrightCheckChrome ? elements.playwrightCheckChrome.checked : true;
-  const saveSession = elements.playwrightCheckSaveSession ? elements.playwrightCheckSaveSession.checked : true;
-  
-  appendPlaywrightLog(`⚡ Launching Playwright Codegen for '${url}'...`, 'info');
+  const urlInput = document.getElementById('input-crm-url') || elements.playwrightInputUrl;
+  let url = (urlInput?.value || '').trim();
+  if (!url) {
+    updateCrmStatus("⚠️ Please enter or paste a URL first before clicking Record Workflow.", "warning");
+    urlInput?.focus();
+    return;
+  }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = 'https://' + url;
+    if (urlInput) urlInput.value = url;
+  }
+
+  const nameInput = document.getElementById('input-crm-name') || elements.playwrightInputName;
+  const name = (nameInput?.value || '').trim() || `crm_workflow_${Math.floor(Date.now() / 1000)}`;
+
+  const chromeCheck = document.getElementById('check-crm-chrome') || elements.playwrightCheckChrome;
+  const useChrome = chromeCheck ? chromeCheck.checked : true;
+
+  const sessionCheck = document.getElementById('check-crm-session') || elements.playwrightCheckSaveSession;
+  const saveSession = sessionCheck ? sessionCheck.checked : true;
+
+  updateCrmStatus(`🚀 Launching Playwright Inspector & Browser for '${url}'...`, "info");
   appendTerminalLog(`Playwright Codegen starting on ${url}...`, 'action');
+
+  const btnStart = document.getElementById('btn-start-crm-recorder') || elements.btnPlaywrightLaunchCodegen;
+  const btnStop = document.getElementById('btn-stop-crm-recorder') || elements.btnPlaywrightStopCodegen;
+  btnStart?.classList.add('hidden');
+  btnStop?.classList.remove('hidden');
+
+  const badge = document.getElementById('crm-recorder-badge') || elements.playwrightStatusBadge;
+  if (badge) {
+    badge.textContent = 'Recording Active';
+    badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono font-medium border border-rose-500/30 animate-pulse';
+  }
 
   try {
     const res = await fetch('/api/playwright/codegen/launch', {
@@ -2148,35 +2427,143 @@ async function launchPlaywrightCodegen() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         url: url,
+        workflow_name: name,
         script_name: name,
         browser: useChrome ? 'chrome' : 'chromium',
+        use_chrome: useChrome,
         save_session: saveSession
       })
     });
     const data = await res.json();
-    if (data.status === 'started' || data.status === 'already_running') {
-      appendPlaywrightLog(`✅ Playwright Inspector & Chrome launched! Script will save to workflows/playwright/${name}.py`, 'success');
-      appendPlaywrightLog(`👉 Fill in your CRM form now. Playwright writes code live! Close the Chrome window when finished.`, 'info');
-      await checkPlaywrightStatus();
+    if (data.success || data.status === 'started' || data.status === 'already_running') {
+      updateCrmStatus(`✅ Playwright Inspector & Browser launched! Interact in the browser window to record actions live. When done, close the browser or click 'Stop Recording'. Script saves to workflows/playwright/${data.workflow_name || name}.py`, 'success');
+      playwrightState.activeCodegen = true;
+      startPlaywrightPolling();
     } else {
-      appendPlaywrightLog(`❌ Failed to start recorder: ${JSON.stringify(data)}`, 'error');
+      updateCrmStatus(`❌ Failed to start recorder: ${data.error || JSON.stringify(data)}`, 'error');
+      btnStart?.classList.remove('hidden');
+      btnStop?.classList.add('hidden');
+      if (badge) {
+        badge.textContent = 'Ready';
+        badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-medium border border-emerald-500/30';
+      }
     }
   } catch (e) {
-    appendPlaywrightLog(`❌ Request error: ${e.message}`, 'error');
+    updateCrmStatus(`❌ Request error: ${e.message}`, 'error');
+    btnStart?.classList.remove('hidden');
+    btnStop?.classList.add('hidden');
   }
 }
 
 async function stopPlaywrightCodegen() {
+  updateCrmStatus('Stopping active recording session...', 'info');
   try {
-    appendPlaywrightLog('Stopping active Codegen process...', 'info');
     const res = await fetch('/api/playwright/codegen/stop', { method: 'POST' });
     const data = await res.json();
-    appendPlaywrightLog(`Codegen stopped: ${JSON.stringify(data)}`, 'info');
+    updateCrmStatus(`⏹ Recording session stopped. Workflow script saved!`, 'success');
+    stopPlaywrightPolling();
     await checkPlaywrightStatus();
     await loadPlaywrightWorkflows();
   } catch (e) {
-    appendPlaywrightLog('Error stopping codegen: ' + e.message, 'error');
+    updateCrmStatus(`Error stopping recording: ${e.message}`, 'error');
   }
+}
+
+function startPlaywrightPolling() {
+  stopPlaywrightPolling();
+  playwrightPollInterval = setInterval(async () => {
+    const status = await checkPlaywrightStatus();
+    if (status && !status.active_codegen && !status.codegen_active) {
+      stopPlaywrightPolling();
+      updateCrmStatus('Recording session completed. Workflow saved!', 'success');
+      await loadPlaywrightWorkflows();
+    }
+  }, 2500);
+}
+
+function stopPlaywrightPolling() {
+  if (playwrightPollInterval) {
+    clearInterval(playwrightPollInterval);
+    playwrightPollInterval = null;
+  }
+}
+
+async function runStandaloneWorkflow(name) {
+  if (!name) return;
+  updateCrmStatus(`▶ Running workflow '${name}' in background...`, 'info');
+  appendTerminalLog(`Executing Playwright automation workflow '${name}'...`, 'action');
+
+  try {
+    const res = await fetch('/api/playwright/workflows/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name,
+        workflow_name: name,
+        mode: 'standalone',
+        timeout_seconds: 180
+      })
+    });
+    const data = await res.json();
+    if (data.success || data.status === 'completed') {
+      updateCrmStatus(`✅ Workflow '${name}' completed successfully! Return code: ${data.returncode ?? 0}`, 'success');
+      if (data.output) {
+        console.log('Workflow output:', data.output);
+      }
+    } else {
+      updateCrmStatus(`⚠️ Workflow '${name}' finished with error: ${data.error || 'Execution failed'}`, 'error');
+    }
+  } catch (e) {
+    updateCrmStatus(`❌ Error running workflow: ${e.message}`, 'error');
+  }
+}
+
+async function viewWorkflowScript(name) {
+  if (!name) return;
+  try {
+    const res = await fetch(`/api/playwright/workflows/${encodeURIComponent(name)}`);
+    const data = await res.json();
+    const panel = document.getElementById('crm-code-viewer-panel') || elements.crmCodeViewerPanel;
+    const title = document.getElementById('crm-code-viewer-title') || elements.crmCodeViewerTitle;
+    const content = document.getElementById('crm-code-viewer-content') || elements.crmCodeViewerContent;
+    if (panel && title && content) {
+      title.textContent = name;
+      content.textContent = data.code || '# No script content found.';
+      panel.classList.remove('hidden');
+      panel.scrollIntoView({ behavior: 'smooth' });
+    }
+  } catch (e) {
+    updateCrmStatus(`Error fetching script: ${e.message}`, 'error');
+  }
+}
+
+async function deleteWorkflowScript(name) {
+  if (!name) return;
+  if (!confirm(`Are you sure you want to delete workflow '${name}'?`)) return;
+  try {
+    const res = await fetch(`/api/playwright/workflows/${encodeURIComponent(name)}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      updateCrmStatus(`Deleted workflow '${name}'.`, 'info');
+      await loadPlaywrightWorkflows();
+    } else {
+      updateCrmStatus(`Failed to delete: ${data.error || 'Unknown error'}`, 'error');
+    }
+  } catch (e) {
+    updateCrmStatus(`Error deleting script: ${e.message}`, 'error');
+  }
+}
+
+function updateCrmStatus(message, type = 'info') {
+  const msgEl = document.getElementById('crm-status-msg') || elements.crmStatusMsg;
+  if (msgEl) {
+    msgEl.innerHTML = message;
+    if (type === 'success') msgEl.className = 'text-emerald-400 font-medium';
+    else if (type === 'error') msgEl.className = 'text-rose-400 font-medium';
+    else if (type === 'warning') msgEl.className = 'text-amber-400 font-medium';
+    else msgEl.className = 'text-cyan-300 font-normal';
+  }
+  appendPlaywrightLog(message, type);
 }
 
 async function runPlaywrightWorkflow() {
@@ -2197,7 +2584,6 @@ async function runPlaywrightWorkflow() {
         leadsData = JSON.parse(raw);
         if (!Array.isArray(leadsData)) leadsData = [leadsData];
       } else {
-        // Simple CSV parse
         const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
         if (lines.length > 1) {
           const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
@@ -2224,15 +2610,17 @@ async function runPlaywrightWorkflow() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        name: workflow,
         workflow_name: workflow,
         mode: mode,
         leads_data: leadsData,
+        data_records: leadsData,
         headless: headless,
-        timeout: 180
+        timeout_seconds: 180
       })
     });
     const data = await res.json();
-    if (data.status === 'completed') {
+    if (data.status === 'completed' || data.success) {
       appendPlaywrightLog(`✅ Workflow completed in ${data.duration_seconds || 0}s!`, 'success');
       if (data.batch_summary) {
         appendPlaywrightLog(`📊 Batch summary: ${data.batch_summary.successful}/${data.batch_summary.total_leads} leads processed successfully.`, 'info');
@@ -2242,7 +2630,7 @@ async function runPlaywrightWorkflow() {
       }
       appendTerminalLog(`Playwright workflow '${workflow}' executed successfully.`, 'action');
     } else {
-      appendPlaywrightLog(`⚠️ Execution status: ${data.status} • Error: ${data.error || 'Check logs'}`, 'error');
+      appendPlaywrightLog(`⚠️ Execution status: ${data.status || 'error'} • Error: ${data.error || 'Check logs'}`, 'error');
       if (data.output) appendPlaywrightLog(data.output, 'error');
     }
   } catch (err) {
@@ -2260,10 +2648,11 @@ function appendPlaywrightLog(message, type = 'info') {
   let colorClass = 'text-slate-300';
   if (type === 'success') colorClass = 'text-emerald-400 font-semibold';
   if (type === 'error') colorClass = 'text-red-400 font-semibold';
+  if (type === 'warning') colorClass = 'text-amber-400 font-semibold';
   if (type === 'info') colorClass = 'text-cyan-300';
   
   item.className = `leading-relaxed ${colorClass}`;
-  item.textContent = `[${time}] ${message}`;
+  item.textContent = `[${time}] ${message.replace(/<[^>]*>/g, '')}`;
   elements.playwrightConsoleOutput.appendChild(item);
   elements.playwrightConsoleOutput.scrollTop = elements.playwrightConsoleOutput.scrollHeight;
 }

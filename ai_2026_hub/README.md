@@ -52,7 +52,8 @@ Or double click `run_wetware_hub.bat` from the root repository.
 ### 2. Integrated into Helper-AI Backend (Port 8000)
 The built bundle is automatically mounted in `app.py`:
 - Navigate to: **`http://127.0.0.1:8000/wetware`**
-- Or click the top `🧬 AI 2026 Wetware Hub` pill button on `http://127.0.0.1:8000`.
+- Or click the `🧬 AI 2026 Wetware Hub` item in the DeepSeek Harness UI left sidebar or top navigation.
+- Fully integrated with the live audio briefing engine and agent goal dispatch bridge.
 
 ### 3. Production Build
 ```bash

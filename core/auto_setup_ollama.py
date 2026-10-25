@@ -117,33 +117,55 @@ class OllamaAutoSetup:
         return False
 
     @classmethod
+    def is_port_open(cls, host: str = "127.0.0.1", port: int = 11434, timeout: float = 0.3) -> bool:
+        """Instant socket probe on loopback port."""
+        import socket
+        try:
+            with socket.create_connection((host, port), timeout=timeout):
+                return True
+        except Exception:
+            return False
+
+    @classmethod
     def is_server_running(cls, base_url: str = DEFAULT_BASE_URL) -> bool:
         """Checks if Ollama HTTP server is responsive."""
         try:
-            r = requests.get(f"{base_url}/api/version", timeout=1.5)
+            from urllib.parse import urlparse
+            p = urlparse(base_url)
+            host = p.hostname or "127.0.0.1"
+            port = p.port or 11434
+            if not cls.is_port_open(host, port, timeout=0.35):
+                return False
+            r = requests.get(f"{base_url}/api/version", timeout=1.0)
             return r.status_code == 200
         except Exception:
             return False
 
     @classmethod
-    def ensure_server_running(cls, base_url: str = DEFAULT_BASE_URL, timeout_seconds: int = 15) -> bool:
+    def ensure_server_running(cls, base_url: str = DEFAULT_BASE_URL, timeout_seconds: int = 12) -> bool:
         """Starts Ollama daemon in the background if not already running."""
         if cls.is_server_running(base_url):
             return True
 
         ollama_bin = cls.get_ollama_path() or "ollama"
-        print("[*] Starting Ollama background daemon on port 11434...")
+        print(f"[*] Starting Ollama background daemon on port 11434 ({ollama_bin})...")
 
         creation_flags = 0
+        env = os.environ.copy()
         if platform.system() == "Windows":
-            # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
-            creation_flags = 0x00000008 | 0x00000200
+            ollama_dir = str(Path(ollama_bin).parent)
+            if ollama_dir not in env.get("PATH", ""):
+                env["PATH"] = f"{ollama_dir};{env.get('PATH', '')}"
+            # CREATE_NO_WINDOW (0x08000000) | CREATE_NEW_PROCESS_GROUP (0x00000200)
+            creation_flags = 0x08000000 | 0x00000200
 
         try:
             subprocess.Popen(
                 [ollama_bin, "serve"],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL,
+                env=env,
                 creationflags=creation_flags
             )
         except Exception as e:
@@ -153,9 +175,9 @@ class OllamaAutoSetup:
         deadline = time.time() + timeout_seconds
         while time.time() < deadline:
             if cls.is_server_running(base_url):
-                print("[✓] Ollama background daemon is active and healthy!")
+                print("[✓] Ollama background daemon is active and healthy on port 11434!")
                 return True
-            time.sleep(1)
+            time.sleep(0.5)
 
         print("[!] Timed out waiting for Ollama daemon.")
         return False

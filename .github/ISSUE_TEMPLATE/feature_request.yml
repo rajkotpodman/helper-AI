@@ -24,6 +24,10 @@ body:
       description: "Which area does this feature relate to?"
       options:
         - "Core Autonomous Agent Capabilities"
+        - "🗂️ DeepSeek Harness UI & Workspace Sessions"
+        - "⚡ Playwright CRM & Form Automation Studio"
+        - "💼 Job Portals Scanner & Profile Sync Engine"
+        - "🐬 Dolphin-2.9-Llama3 Local Background Engine"
         - "🧬 Biological Wetware & Superintelligence Hub"
         - "Desktop UI Automation & Operating System Integrations"
         - "Web & Browser Automation (Set-of-Marks)"

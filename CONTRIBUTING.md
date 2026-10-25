@@ -129,11 +129,11 @@ You do **not** need to write code to contribute to Helper-AI! We warmly welcome:
 
 ## 🧪 Testing & Quality Verification
 
-All contributions must pass the complete automated test suite before merging:
+All contributions must pass the complete automated test suite (195+ tests) before merging:
 
 ```bash
 # Run entire test suite:
-pytest -v
+pytest tests/ -v
 
 # Run with coverage report:
 pytest --cov=core tests/
@@ -142,6 +142,11 @@ pytest --cov=core tests/
 black --check .
 flake8 core/ tests/
 ```
+
+### Frontend Web UI Guidelines:
+- Helper-AI serves static assets from `web/` with automated fallback to `static/`.
+- When updating templates (`web/templates/index.html`) or styling (`web/static/css/styles.css`, `web/static/js/app.js`), ensure corresponding copies in `static/` are kept in sync.
+- Interactive workspace session state is managed via `WORKSPACE_SESSIONS` object with clean cross-session message persistence.
 
 On Linux or CI environments without a physical display, run tests under virtual framebuffer:
 ```bash

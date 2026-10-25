@@ -90,41 +90,43 @@ That's it! Your web browser will automatically open up at:
 
 ---
 
-## 3. Understanding the Web Dashboard Screen
+## 3. Understanding the Web Dashboard Screen (DeepSeek Harness UI v2)
 
 When you open `http://localhost:8000`, you will see a clean, dark-themed control center:
 
 ```text
-+-------------------------------------------------------------------------------------------------+
-| ⚡ Helper-AI               [● PC Control Online]  [🧩 Memory (0.02 MB)]  [⚙️ Settings]  [🛡️ Safe Mode] |
-+-------------------------------------------------------------------------------------------------+
-|                                                                                                 |
-|   🎯 What goal would you like Helper-AI to achieve?                                             |
-|   +-----------------------------------------------------------------------------------------+   |
-|   | [ Type your goal here in plain human language...                                      ] |   |
-|   +-----------------------------------------------------------------------------------------+   |
-|                                                                                                 |
-|   Quick Action Buttons:                                                                         |
-|   [💻 Check PC Health]  [🔍 Research AI & Save Report]  [📂 Clean Downloads Folder]             |
-|   [🧩 Reverse Engineer Notepad]  [🌐 List GitHub Repos]  [📝 Publish Social Media Post]         |
-|                                                                                                 |
-|   Status: Ready (RuleEngine Offline Mode Active)                 [⏹ Stop Agent] [🚀 Execute Goal]|
-+-------------------------------------------------------------------------------------------------+
-| 📊 Real-Time Execution Feed                                                                     |
-|   Step 0: ⚡ Loaded AI-friendly memory for 'Notepad'. Hotkeys (Ctrl+S, Ctrl+N) ready.           |
-|   Step 1: 💭 Thought: "I need to open Notepad and write the text..."                            |
-|           ⚡ Action: fast_app_operate(target="Notepad", action="save")                          |
-|           📋 Result: Executed fast-path 'save' (ctrl+s) on 'Notepad' with 100% precision.       |
-|   🎉 MISSION ACCOMPLISHED! Goal executed successfully.                                          |
-+-------------------------------------------------------------------------------------------------+
++-----------------------+-----------------------------------------------------------------------------------------+
+| ⚡ Helper-AI [AI]     | 🎯 Helper-AI Autonomous Workspace      [Chat] [Trajectory]      [CRM] [🧠 0.02 MB] [⚙️]  |
++-----------------------+-----------------------------------------------------------------------------------------+
+| [+ New Session]       |                                                                                         |
+| 🧩 Plugins            |  💬 Active Chat Stream:                                                                 |
+| ⏱ Automation tasks   |  +-----------------------------------------------------------------------------------+  |
+| 🧬 Wetware Hub        |  | 👤 User: What you can do for me                                                   |  |
+| 🐬 Dolphin AI [Ready] |  | 🤖 Helper-AI: [Completed in 13s]                                                  |  |
+|                       |  |    I'm Helper-AI, an autonomous agent with 38 tools ready to execute for you!     |  |
+| ▼ Workspaces [🔍][+][v|  +-----------------------------------------------------------------------------------+  |
+|   📁 Default workspace|                                                                                         |
+|   • Coding Assistant  |  -------------------------------------------------------------------------------------  |
+|   • Autonomous PC & Net  [ 💡 Write & fix code ]  [ 🌐 Run Playwright CRM ]  [ 💼 Sync 10 Job Portals ]         |
+|   • Job Portals Sync  |  +-----------------------------------------------------------------------------------+  |
+|                       |  | [ Type your goal here in plain human language...                                ] |  |
+| ⚡ BUY NOW PRO        |  +-----------------------------------------------------------------------------------+  |
+| 🪙 DONATION SYSTEM    |  [🛡️ Standard mode]  [🐬 Dolphin-LLaMA3]                    [⏹ Stop] [🚀 Execute Goal]  |
+| 🛒 OFFICIAL STORE     |                                                                                         |
+| 👤 Jignesh Kariya [⚙️]|                                                                                         |
++-----------------------+-----------------------------------------------------------------------------------------+
 ```
 
 ### Key Elements of the Screen:
-1. **The Goal Box:** The big text area in the middle. Type anything you want done on your computer in plain English, Gujarati, Hindi, or any language!
-2. **The Microphone Icon:** Click this to speak your goal using your microphone instead of typing.
-3. **The Quick Action Buttons:** Click any of these pre-made chip buttons to instantly populate common, useful tasks.
+1. **The Left Sidebar:** Contains the complete navigation system:
+   - **`+ New Session` Button:** Resets the conversation to a clean canvas for your next mission.
+   - **Workspaces Tree:** Seamlessly switch between 3 active session histories: *Coding assistant capabilities*, *Autonomous PC & Internet*, and *Job Portals Automation*. Includes real-time search filter and collapse/expand controls.
+   - **Pro Action Buttons:** Direct 1-tap connectors to **⚡ BUY NOW PRO** (WhatsApp appointment booking: `https://wa.me/919898048483`), **🪙 DONATION SYSTEM** (Google Form), and **🛒 OFFICIAL DIGITAL STORE** (WhatsApp Catalog: `https://wa.me/c/919898048483`).
+   - **Dolphin AI Indicator:** Shows live health status of the local uncensored Ollama model on port 11434.
+2. **The Goal Input Bar:** The floating text box at the bottom. Type anything you want done on your computer in plain English, Gujarati, Hindi, or any of 130+ languages!
+3. **Chat & Trajectory Tabs:** Toggle between conversational results (*Chat*) and atomic step-by-step terminal execution traces (*Trajectory*).
 4. **Memory Badge:** Displays the size of your agent's persistent memory. Click it to view all remembered apps, inspect keyboard shortcuts, and trigger on-demand reverse engineering!
-5. **Real-Time Execution Feed:** Shows you step-by-step what the AI is thinking, which tool it is executing, and what happened.
+5. **Real-Time Execution Feed:** Shows you step-by-step what the AI is thinking, which tool it is executing, and the final verified result.
 
 ---
 
@@ -464,16 +466,23 @@ Helper-AI puts your safety first:
 
 ---
 
-## ૩. વેબ ડેશબોર્ડનો સરળ ઉપયોગ
+## ૩. વેબ ડેશબોર્ડનો સરળ ઉપયોગ (DeepSeek Harness UI v2)
 
-1. **ટેક્સ્ટ બોક્સમાં તમારું લક્ષ્ય લખો** (અથવા માઇક્રોફોન બટન દબાવીને બોલો).
-2. **`🚀 Execute Goal`** બટન પર ક્લિક કરો.
-3. નીચે લાઈવ સ્ટેપ કાર્ડ્સ દેખાશે:
+1. **ડાબી બાજુની સાઇડબાર (Left Sidebar):**
+   - **`+ New Session`:** નવું સત્ર શરૂ કરવા માટે.
+   - **Workspaces ટ્રી:** ૩ સત્રો વચ્ચે ૧-ક્લિકમાં સ્વિચ કરો (*Coding Assistant*, *Autonomous PC*, *Job Portals Automation*).
+   - **પ્રો એક્શન બટન્સ:**
+     - **`⚡ BUY NOW PRO`**: સીધું વ્હોટ્સએપ એપોઇન્ટમેન્ટ બુકિંગ (`https://wa.me/919898048483`).
+     - **`🪙 DONATION SYSTEM`**: ડોનેશન અને સહયોગ ફોર્મ.
+     - **`🛒 OFFICIAL DIGITAL STORE`**: ઓફિશિયલ ડિજિટલ પ્રોડક્ટ સ્ટોર (`https://wa.me/c/919898048483`).
+2. **ટેક્સ્ટ બોક્સમાં તમારું લક્ષ્ય લખો** (અથવા માઇક્રોફોન બટન દબાવીને બોલો).
+3. **`🚀 Execute Goal`** બટન પર ક્લિક કરો.
+4. નીચે લાઈવ સ્ટેપ કાર્ડ્સ દેખાશે:
    - **💭 Thought (વિચાર):** એજન્ટ વિચારે છે કે હવે કયું પગલું લેવું.
    - **⚡ Action (એક્શન):** કયો કમાન્ડ કે શોર્ટકટ વપરાયો.
    - **📋 Terminal Output:** કમ્પ્યુટરમાંથી શું પરિણામ આવ્યું.
-4. જ્યારે કામ પૂરું થાય ત્યારે લીલા રંગનું **🎉 MISSION ACCOMPLISHED!** બોક્સ આવી જશે.
-5. જો વચ્ચે કામ અટકાવવું હોય, તો **`⏹ Stop Agent`** બટન દબાવો.
+5. જ્યારે કામ પૂરું થાય ત્યારે લીલા રંગનું **🎉 MISSION ACCOMPLISHED!** બોક્સ આવી જશે.
+6. જો વચ્ચે કામ અટકાવવું હોય, તો **`⏹ Stop Agent`** બટન દબાવો.
 
 ---
 

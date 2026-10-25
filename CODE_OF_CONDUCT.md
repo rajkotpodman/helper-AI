@@ -50,6 +50,10 @@ comments, commits, code, wiki edits, issues, and other contributions that are
 not aligned to this Code of Conduct, and will communicate reasons for moderation
 decisions when appropriate.
 
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported
+directly to the maintainers at **athanu000@gmail.com** or via official WhatsApp channels.
+All complaints will be reviewed and investigated promptly and fairly.
+
 ---
 
 ## Scope

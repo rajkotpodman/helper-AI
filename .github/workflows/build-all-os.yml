@@ -114,7 +114,7 @@ jobs:
 
       - name: Build Debian .deb Package
         run: |
-          VERSION="1.2.0"
+          VERSION="2.9.0"
           DEB_DIR="deb_pkg/helper-ai_${VERSION}_amd64"
           mkdir -p "$DEB_DIR/DEBIAN"
           mkdir -p "$DEB_DIR/usr/bin"
@@ -270,7 +270,7 @@ jobs:
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             echo "tag_name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
           else
-            echo "tag_name=v1.2.0-release" >> $GITHUB_OUTPUT
+            echo "tag_name=v2.9.0-release" >> $GITHUB_OUTPUT
           fi
 
       - name: Create or Update GitHub Release with Multi-OS Assets
@@ -281,7 +281,7 @@ jobs:
           body: |
             ## 🚀 Helper-AI Multi-OS Release: Standalone, Portable & Full Installers
             
-            Autonomous PC Control & Internet Agent with full multi-provider LLM intelligence and cross-platform automation.
+            Autonomous PC Control & Internet Agent with full multi-provider LLM intelligence, DeepSeek Harness UI v2, Playwright CRM automation, and cross-platform automation.
             
             ### 📦 Download Packages by Operating System:
             
@@ -291,7 +291,7 @@ jobs:
             - **Standalone Windows Binary:** `helper-ai-windows-x64.exe`
             
             #### 🐧 Linux (Ubuntu, Debian, Fedora, Arch):
-            - **Debian / Ubuntu Package:** `helper-ai_1.2.0_amd64.deb` (`sudo dpkg -i helper-ai_1.2.0_amd64.deb`)
+            - **Debian / Ubuntu Package:** `helper-ai_2.9.0_amd64.deb` (`sudo dpkg -i helper-ai_2.9.0_amd64.deb`)
             - **Portable Linux Package:** `Helper-AI-Linux-x86_64-Portable.tar.gz`
             - **Standalone Linux Binary:** `helper-ai-linux-x86_64`
             - **1-Click Linux Installer Script:** Included in source (`./install-linux.sh`)

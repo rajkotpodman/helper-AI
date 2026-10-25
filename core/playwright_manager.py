@@ -89,19 +89,11 @@ class PlaywrightManager:
         save_session: bool = True,
         session_name: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Launches real Chrome with Playwright Inspector side-by-side to record user actions.
-        
-        Args:
-            url: Starting URL (e.g. Tata CRM login or form page).
-            workflow_name: Name for the output file (e.g. 'tata_crm_lead_entry').
-            target_lang: Language to generate ('python', 'javascript', etc.).
-            use_chrome: Whether to launch installed Google Chrome instead of Chromium.
-            save_session: Whether to save authentication cookies & localStorage to session_name.
-            session_name: Key name for session persistence (e.g. 'tata_crm_session').
-        """
+        """Launches Chrome/Chromium with Playwright Inspector to record user actions."""
         if self.is_codegen_running():
             return {
                 "success": False,
+                "status": "already_running",
                 "error": "A Playwright Codegen recording session is already active.",
                 "pid": self._active_codegen_process.pid if self._active_codegen_process else None
             }
@@ -120,9 +112,17 @@ class PlaywrightManager:
         cmd.extend(["-o", str(out_path)])
         cmd.extend(["--target", target_lang])
 
-        # Prefer system Google Chrome if available
+        # Prefer system Google Chrome if available, otherwise fallback cleanly to Chromium
         if use_chrome:
-            cmd.extend(["--channel", "chrome"])
+            chrome_candidates = [
+                r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+                os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe")
+            ]
+            if any(os.path.exists(p) for p in chrome_candidates):
+                cmd.extend(["--channel", "chrome"])
+            else:
+                logger.info("System Chrome not detected; using default Playwright Chromium browser.")
 
         # Load existing storage state if available
         if storage_file.exists():
@@ -132,13 +132,16 @@ class PlaywrightManager:
         if save_session:
             cmd.extend(["--save-storage", str(storage_file)])
 
-        # Target starting URL
-        if url and url.strip():
-            cmd.append(url.strip())
+        # Clean and target starting URL
+        target_url = (url or "").strip()
+        if target_url:
+            if not (target_url.startswith("http://") or target_url.startswith("https://")):
+                target_url = "https://" + target_url
+            cmd.append(target_url)
 
         logger.info(f"Launching Playwright Codegen: {' '.join(cmd)}")
         try:
-            # Launch detached window so user can interact with Chrome & Inspector
+            # Launch detached process window so user can interact with Chrome & Inspector
             proc = subprocess.Popen(
                 cmd,
                 cwd=str(PROJECT_ROOT),
@@ -147,25 +150,44 @@ class PlaywrightManager:
             self._active_codegen_process = proc
             return {
                 "success": True,
-                "message": f"Playwright Codegen launched. Interacting in Chrome will generate code in {out_path.name}",
+                "status": "started",
+                "message": f"Playwright Codegen launched. Interacting in browser records code into {out_path.name}",
                 "workflow_file": str(out_path),
                 "workflow_name": out_path.name,
+                "script_name": out_path.name,
                 "pid": proc.pid
             }
         except Exception as e:
             logger.error(f"Failed to launch Playwright Codegen: {e}")
-            return {"success": False, "error": str(e)}
+            return {"success": False, "status": "error", "error": str(e)}
 
     def stop_codegen(self) -> Dict[str, Any]:
-        """Terminates active Codegen recording session."""
+        """Terminates active Codegen recording session and all child browser processes."""
         if self._active_codegen_process is not None:
             try:
-                self._active_codegen_process.terminate()
+                pid = self._active_codegen_process.pid
+                if os.name == "nt":
+                    # Force terminate process tree (Python + Node.js + Chrome / Inspector)
+                    subprocess.run(["taskkill", "/F", "/T", "/PID", str(pid)], capture_output=True)
+                else:
+                    self._active_codegen_process.terminate()
                 self._active_codegen_process = None
-                return {"success": True, "message": "Playwright Codegen session stopped."}
+                return {"success": True, "status": "stopped", "message": "Playwright Codegen session stopped."}
+            except Exception as e:
+                return {"success": False, "status": "error", "error": str(e)}
+        return {"success": True, "status": "stopped", "message": "No active Codegen session."}
+
+    def delete_workflow(self, name: str) -> Dict[str, Any]:
+        """Deletes a recorded workflow script."""
+        clean_name = name if name.endswith(".py") else f"{name}.py"
+        path = WORKFLOWS_DIR / clean_name
+        if path.exists():
+            try:
+                path.unlink()
+                return {"success": True, "message": f"Workflow {clean_name} deleted successfully."}
             except Exception as e:
                 return {"success": False, "error": str(e)}
-        return {"success": True, "message": "No active Codegen session."}
+        return {"success": False, "error": f"Workflow {clean_name} not found."}
 
     def list_workflows(self) -> List[Dict[str, Any]]:
         """Lists all recorded Playwright automation workflows."""
