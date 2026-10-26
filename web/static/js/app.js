@@ -2257,8 +2257,14 @@ async function checkPlaywrightStatus() {
         badge.textContent = 'CLI Missing';
         badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono font-medium border border-amber-500/30';
       } else if (playwrightState.activeCodegen) {
-        badge.textContent = 'Recording Active';
+        const count = data.recorded_steps_count || 0;
+        badge.textContent = count > 0 ? `Recording (${count} Steps)` : 'Recording Active';
         badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 font-mono font-medium border border-rose-500/30 animate-pulse';
+        
+        const statusMsg = document.getElementById('crm-status-msg');
+        if (statusMsg && count > 0) {
+          statusMsg.innerHTML = `🔴 <b>Recording Live in Chrome</b> • <span class="text-emerald-400 font-bold">${count} step(s) captured</span>. Every action is saved instantly. Click 'Finish & Save' in Chrome or here.`;
+        }
       } else {
         badge.textContent = 'Ready';
         badge.className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-medium border border-emerald-500/30';
@@ -2315,7 +2321,10 @@ async function loadPlaywrightWorkflows() {
             <div class="flex items-center gap-2 overflow-hidden pr-2">
               <i data-lucide="file-code" class="w-4 h-4 text-emerald-400 shrink-0"></i>
               <div class="overflow-hidden">
-                <div class="font-mono text-xs font-semibold text-zinc-200 truncate" title="${w.filename}">${w.filename}</div>
+                <div class="font-mono text-xs font-semibold text-zinc-200 truncate flex items-center gap-1.5" title="${w.filename}">
+                  <span>${w.filename}</span>
+                  ${w.is_self_healing ? '<span class="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-mono border border-emerald-500/30">Self-Healing</span>' : ''}
+                </div>
                 <div class="text-[10px] text-zinc-500 font-mono">${w.size_bytes} B • ${w.modified || ''} • ${w.lines_count || 0} lines</div>
               </div>
             </div>
@@ -2407,8 +2416,11 @@ async function launchPlaywrightCodegen() {
   const sessionCheck = document.getElementById('check-crm-session') || elements.playwrightCheckSaveSession;
   const saveSession = sessionCheck ? sessionCheck.checked : true;
 
-  updateCrmStatus(`🚀 Launching Playwright Inspector & Browser for '${url}'...`, "info");
-  appendTerminalLog(`Playwright Codegen starting on ${url}...`, 'action');
+  const modeRadio = document.querySelector('input[name="crm-recorder-mode"]:checked');
+  const recorderMode = modeRadio ? modeRadio.value : 'smart';
+
+  updateCrmStatus(`🚀 Launching Browser & Smart Studio for '${url}'...`, "info");
+  appendTerminalLog(`Playwright Automation Studio launching on ${url} (Mode: ${recorderMode})...`, 'action');
 
   const btnStart = document.getElementById('btn-start-crm-recorder') || elements.btnPlaywrightLaunchCodegen;
   const btnStop = document.getElementById('btn-stop-crm-recorder') || elements.btnPlaywrightStopCodegen;
@@ -2431,12 +2443,16 @@ async function launchPlaywrightCodegen() {
         script_name: name,
         browser: useChrome ? 'chrome' : 'chromium',
         use_chrome: useChrome,
-        save_session: saveSession
+        save_session: saveSession,
+        mode: recorderMode
       })
     });
     const data = await res.json();
     if (data.success || data.status === 'started' || data.status === 'already_running') {
-      updateCrmStatus(`✅ Playwright Inspector & Browser launched! Interact in the browser window to record actions live. When done, close the browser or click 'Stop Recording'. Script saves to workflows/playwright/${data.workflow_name || name}.py`, 'success');
+      const modeText = recorderMode === 'smart' 
+        ? "⚡ <b>Smart AI Studio Active</b> in Google Chrome! In-Browser HUD attached. Every click & keystroke is saved in real-time. When done, click 'Finish & Save' in Chrome or here."
+        : "🛠️ <b>Native Playwright Inspector active!</b> Interact in the browser window to record actions.";
+      updateCrmStatus(modeText, 'success');
       playwrightState.activeCodegen = true;
       startPlaywrightPolling();
     } else {

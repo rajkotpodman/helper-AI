@@ -99,3 +99,31 @@ print(f"Processed: {name} - {mobile}")
         if f.exists():
             f.unlink()
 
+def test_self_healing_engine_import_and_helpers():
+    from core.self_healing_engine import SmartCRMPage, CRM_SPINNER_SELECTORS
+    assert len(CRM_SPINNER_SELECTORS) >= 5
+    assert ".siebel-busy-indicator" in CRM_SPINNER_SELECTORS
+
+def test_smart_recorder_code_generation():
+    from core.smart_recorder import SmartRecorder
+    recorder = SmartRecorder()
+    sample_actions = [
+        {"action": "goto", "url": "https://crmdms.inservices.tatamotors.com/siebel/app/showroom"},
+        {"action": "click", "selector": "#s_swepi_1", "tag": "button", "text": "Submit", "locators": {"id": "#s_swepi_1", "text": "text=Submit"}},
+        {"action": "fill", "selector": "input[name='SWEUserName']", "value": "test_user", "tag": "input", "locators": {"css": "input[name='SWEUserName']"}},
+        {"action": "press", "selector": "input[name='SWEUserName']", "key": "Enter"}
+    ]
+    code = recorder.generate_python_script("https://crmdms.inservices.tatamotors.com/siebel/app/showroom", sample_actions, "test_smart_code")
+    assert "SmartCRMPage" in code
+    assert "crm.smart_goto" in code
+    assert "crm.smart_click" in code
+    assert "crm.smart_fill" in code
+    assert "crm.smart_press" in code
+    assert "PROJECT_ROOT" in code
+
+def test_playwright_manager_smart_mode_dispatch():
+    mgr = PlaywrightManager()
+    status = mgr.get_status()
+    assert "smart_recording_active" in status
+
+

@@ -877,6 +877,7 @@ class PlaywrightLaunchRequest(BaseModel):
     browser: Optional[str] = None
     save_session: Optional[bool] = True
     session_name: Optional[str] = "tata_crm_session"
+    mode: Optional[str] = "smart"
 
 class PlaywrightWorkflowSaveRequest(BaseModel):
     name: str
@@ -903,6 +904,7 @@ async def get_playwright_status():
 async def launch_playwright_codegen_endpoint(req: PlaywrightLaunchRequest):
     """Launches Playwright Codegen recorder with real Google Chrome."""
     from core.playwright_manager import playwright_manager
+    import time
     name = req.workflow_name or req.script_name or f"crm_workflow_{int(time.time())}"
     use_c = True
     if req.use_chrome is not None:
@@ -922,7 +924,8 @@ async def launch_playwright_codegen_endpoint(req: PlaywrightLaunchRequest):
         target_lang=req.target_lang or "python",
         use_chrome=use_c,
         save_session=bool(req.save_session if req.save_session is not None else True),
-        session_name=req.session_name
+        session_name=req.session_name,
+        mode=req.mode or "smart"
     )
     if res.get("success"):
         res["status"] = "started"
