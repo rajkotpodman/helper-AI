@@ -420,6 +420,9 @@
     function renderMarkdown(md) {
       const viewer = document.getElementById('docViewer');
       if (window.marked) {
+        if (typeof marked.setOptions === 'function') {
+          marked.setOptions({ breaks: true, gfm: true });
+        }
         viewer.innerHTML = marked.parse(md);
       } else {
         viewer.innerText = md;

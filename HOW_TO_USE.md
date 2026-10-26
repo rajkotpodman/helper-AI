@@ -157,42 +157,79 @@ Helper-AI will automatically check its App Memory Store for pre-learned shortcut
 Here is what every tool does in simple words:
 
 1. **`reverse_engineer_app`**: Deeply inspects any application, running window, binary executable, or website, maps out its buttons and keyboard shortcuts, and saves an AI-friendly memory profile.
+
 2. **`query_app_memory`**: Checks the permanent memory store for known apps and returns verified hotkeys (`Ctrl+S`, `Ctrl+O`, etc.) and Automation IDs for instant operation.
+
 3. **`fast_app_operate`**: Directly operates software using remembered hotkeys or UI Automation handles with 100% accuracy and zero visual delay.
+
 4. **`mcp_rea_call`**: Invokes any of the 200+ specialized reverse engineering tools provided by the REA framework.
+
 5. **`universal_terminal`**: Runs any command on your computer (PowerShell, Windows CMD, Linux Bash, Mac Zsh) and can run heavy background tasks without freezing your screen.
+
 6. **`synthesize_os_command`**: Turns your simple request (like *"kill the app using port 8000"*) into the exact command needed for your specific computer.
+
 7. **`command_hub`**: Downloads and displays cheat sheets and instructions for any tool (like `ffmpeg`, `docker`, `powershell`, or `curl`).
+
 8. **`audit_security_baseline`**: Scans your computer for defensive security: checks firewall status, open network ports, and missing security updates.
+
 9. **`deep_web_crawl`**: Explores entire websites, documentation portals, or blogs, saving the text into one clean document for you.
+
 10. **`batch_fetch_web`**: Downloads and extracts multiple web pages simultaneously.
+
 11. **`fetch_github_repo`**: Downloads code, README files, and repository lists from GitHub without needing Git installed.
+
 12. **`fetch_web_content`**: Reads any article or webpage on the internet, stripping away ads and popups.
+
 13. **`duckduckgo_search`**: Searches the live internet for free without needing any paid search subscription.
+
 14. **`download_file`**: Downloads files, PDFs, or software directly to your computer.
+
 15. **`execute_python_code`**: Runs Python code safely and automatically installs any missing packages.
+
 16. **`build_project_files`**: Creates full multi-file projects, websites, or folders in a single click.
+
 17. **`execute_powershell`**: Runs native Windows commands with automatic fixing for folder paths with spaces.
+
 18. **`read_file`**: Opens and reads any text or document file on your hard drive.
+
 19. **`write_file`**: Creates a new file or saves information to a text file.
+
 20. **`list_directory`**: Shows you all files and subfolders inside any folder (like your Desktop or Downloads).
+
 21. **`search_files`**: Finds files across your computer by name or file type (e.g. `*.docx` or `*.jpg`).
+
 22. **`move_or_copy_file`**: Moves, copies, or renames files safely.
+
 23. **`process_manager`**: Shows you which programs are running and closes frozen apps.
+
 24. **`system_health`**: Shows CPU usage, RAM memory, and hard drive free space.
+
 25. **`open_application`**: Opens apps on your computer like Chrome, Notepad, Calculator, or Spotify.
+
 26. **`manage_ollama`**: Lets you download and run 100% private, free AI models on your own PC.
+
 27. **`check_connections`**: Tests whether your internet, Google Translate, Anthropic API, and local servers are connected.
+
 28. **`browser_automation`**: Controls a web browser to log in, fill out forms, or post to social media.
+
 29. **`desktop_gui_control`**: Moves your mouse cursor, clicks buttons on your screen, and presses keyboard shortcuts (`Ctrl+C`, `Ctrl+V`).
+
 30. **`text_to_speech`**: Speaks out loud in a natural human voice using Microsoft's neural voice engine.
+
 31. **`vision_browser`**: Takes visual screenshots of websites and inspects the screen layout.
+
 32. **`mcp_tool`**: Connects external third-party tools via the Model Context Protocol.
+
 33. **`deep_research_studio`**: Multi-query web research studio that distills verified sources into a publication-grade intelligence dossier.
+
 34. **`orchestrate_complex_goal`**: Breaks massive directives into a 5-phase verified execution pipeline.
+
 35. **`code_studio_builder`**: Scaffolds full multi-file projects, websites, or apps in 1 step with automated AST syntax checking and test execution.
+
 36. **`system_super_optimizer`**: Complete PC performance suite: memory optimization analysis, network latency testing, and junk file scanning.
+
 37. **`windows_uia`**: Direct Windows UI Automation controls for clicking buttons by text name, filling native fields, and navigating menus.
+
 38. **`consult_background_ai`**: Dynamically queries background AI models (Anthropic Claude, DeepSeek, Groq, Gemini, Ollama) for advisory, debugging, code synthesis, or multi-AI swarm consensus.
 
 ---
@@ -447,9 +484,13 @@ Helper-AI puts your safety first:
 સામાન્ય ચેટબોટ્સ (જેવા કે સામાન્ય ChatGPT) ફક્ત તમને લખાણમાં જવાબો આપે છે, પરંતુ તે તમારા કમ્પ્યુટર પર જાતે કોઈ કામ કરી શકતા નથી. 
 
 **Helper-AI તદ્દન અલગ છે:**
+
 * તે એક **ઓટોનોમસ કમ્પ્યુટર એજન્ટ (Autonomous Computer Agent)** છે.
+
 * તે તમારા કમ્પ્યુટર અને ઈન્ટરનેટનું **સંપૂર્ણ નિયંત્રણ (Full Control)** ધરાવે છે.
+
 * તમે તેને ફક્ત એક લક્ષ્ય (Goal) આપો, તે જાતે પ્લાન બનાવશે, એપ્લિકેશન્સ ખોલશે, ફાઈલો તપાસશે, ઈન્ટરનેટ પર સર્ચ કરશે અને **તમને વારંવાર ડિસ્ટર્બ કર્યા વગર કામ પૂરું કરશે**.
+
 * તેમાં **રિવર્સ એન્જિનિયરિંગ અને એપ મેમરી** સિસ્ટમ છે: તે કોઈપણ સોફ્ટવેરને અંદરથી સમજીને તેના બટનો અને કીબોર્ડ શોર્ટકટ્સ કાયમ માટે યાદ રાખી લે છે!
 
 ---
@@ -459,8 +500,11 @@ Helper-AI puts your safety first:
 તમારે કોઈ પ્રોગ્રામિંગ કે કોડિંગ શીખવાની જરૂર નથી:
 
 1. ફોલ્ડર ખોલો: જ્યાં તમે પ્રોજેક્ટ ડાઉનલોડ કર્યો હોય (દા.ત. `E:\ai agent\`).
+
 2. **`start.bat`** અથવા **`run.bat`** ફાઈલ પર **ડબલ-ક્લિક (Double Click)** કરો.
+
 3. એક કાળી વિન્ડો ખૂલશે જે જરૂરી બધું આપમેળે તપાસશે.
+
 4. થોડી જ સેકન્ડોમાં તમારા ડિફોલ્ટ બ્રાઉઝરમાં વેબસાઇટ ઓટોમેટિક ખૂલી જશે:  
    👉 **`http://localhost:8000`**
 
@@ -475,56 +519,98 @@ Helper-AI puts your safety first:
      - **`⚡ BUY NOW PRO`**: સીધું વ્હોટ્સએપ એપોઇન્ટમેન્ટ બુકિંગ (`https://wa.me/919898048483`).
      - **`🪙 DONATION SYSTEM`**: ડોનેશન અને સહયોગ ફોર્મ.
      - **`🛒 OFFICIAL DIGITAL STORE`**: ઓફિશિયલ ડિજિટલ પ્રોડક્ટ સ્ટોર (`https://wa.me/c/919898048483`).
+
 2. **ટેક્સ્ટ બોક્સમાં તમારું લક્ષ્ય લખો** (અથવા માઇક્રોફોન બટન દબાવીને બોલો).
+
 3. **`🚀 Execute Goal`** બટન પર ક્લિક કરો.
-4. નીચે લાઈવ સ્ટેપ કાર્ડ્સ દેખાશે:
+
+4. **નીચે લાઈવ સ્ટેપ કાર્ડ્સ દેખાશે:**
    - **💭 Thought (વિચાર):** એજન્ટ વિચારે છે કે હવે કયું પગલું લેવું.
    - **⚡ Action (એક્શન):** કયો કમાન્ડ કે શોર્ટકટ વપરાયો.
    - **📋 Terminal Output:** કમ્પ્યુટરમાંથી શું પરિણામ આવ્યું.
-5. જ્યારે કામ પૂરું થાય ત્યારે લીલા રંગનું **🎉 MISSION ACCOMPLISHED!** બોક્સ આવી જશે.
-6. જો વચ્ચે કામ અટકાવવું હોય, તો **`⏹ Stop Agent`** બટન દબાવો.
+
+5. **જ્યારે કામ પૂરું થાય ત્યારે લીલા રંગનું 🎉 MISSION ACCOMPLISHED! બોક્સ આવી જશે.**
+
+6. **જો વચ્ચે કામ અટકાવવું હોય, તો `⏹ Stop Agent` બટન દબાવો.**
 
 ---
 
 ## ૪. ૩૮ પાવરફુલ ટૂલ્સની યાદી
 
 1. **`windows_uia`**: (Microsoft UFO પદ્ધતિ) Windows UI Automation વડે કોઈપણ સોફ્ટવેરના બટન ("Save", "OK", "Cancel") પર અંદાજા વગર ૧૦૦% સાચી ક્લિક કરે છે અને મેનૂ નેવિગેટ કરે છે.
+
 2. **`universal_terminal`**: (Open Interpreter પદ્ધતિ) જીવંત અને સ્ટેટફુલ PowerShell/Bash સેશન ચલાવે છે (ફોલ્ડર અને વેરિયેબલ્સ સ્ટેપ્સ વચ્ચે યાદ રહે છે).
+
 3. **`reverse_engineer_app`**: કોઈપણ સોફ્ટવેર (Notepad, Calculator, Spotify કે વેબસાઇટ) નું રિવર્સ એન્જિનિયરિંગ કરીને તેના કંટ્રોલ્સ મેમરીમાં સેવ કરે છે.
+
 4. **`query_app_memory`**: સેવ થયેલી એપ્સના શોર્ટકટ્સ અને ઓટોમેશન આઈડી તરત જ લાવી આપે છે.
+
 5. **`fast_app_operate`**: યાદ રાખેલા શોર્ટકટ્સ વાપરીને ૧ જ સેકન્ડમાં ૧૦૦% ચોકસાઈથી સોફ્ટવેર ઓપરેટ કરે છે.
+
 6. **`mcp_rea_call`**: REA ના ૨૦૦ થી વધુ ઊંડાણપૂર્વકના રિવર્સ એન્જિનિયરિંગ ટૂલ્સ ચલાવે છે.
+
 7. **`synthesize_os_command`**: તમારા સાદા લખાણને તમારી ઓપરેટિંગ સિસ્ટમ માટે યોગ્ય કમાન્ડમાં ફેરવે છે.
+
 8. **`command_hub`**: કોઈપણ ટૂલ (જેમ કે ffmpeg, docker, powershell) માટે ઉપયોગી ચીટ-શીટ્સ ડાઉનલોડ કરે છે.
+
 9. **`audit_security_baseline`**: કમ્પ્યુટરનું ફાયરવોલ, ઓપન પોર્ટ્સ અને સિક્યોરિટી ચેક કરે છે.
+
 10. **`deep_web_crawl`**: આખી વેબસાઇટ કે ડોક્યુમેન્ટ પોર્ટલ વાંચીને ફાઇલ બનાવે છે.
+
 11. **`batch_fetch_web`**: એકસાથે ઘણી બધી વેબસાઇટ્સમાંથી ડેટા લાવે છે.
+
 12. **`fetch_github_repo`**: ગિટહબ પરથી કોડ, ફાઈલો અને રિલીઝ લિસ્ટ ડાઉનલોડ કરે છે.
+
 13. **`fetch_web_content`**: કોઈપણ વેબસાઇટ પરથી જાહેરાત વગર ચોખ્ખી માહિતી વાંચે છે.
+
 14. **`duckduckgo_search`**: ઈન્ટરનેટ પર તદ્દન ફ્રીમાં લાઈવ સર્ચ કરે છે.
+
 15. **`download_file`**: ઈન્ટરનેટ પરથી સીધી ફાઈલ ડાઉનલોડ કરે છે.
+
 16. **`execute_python_code`**: પાયથોન કોડ રન કરે છે અને ખૂટતા પેકેજો જાતે ઇન્સ્ટોલ કરે છે.
+
 17. **`build_project_files`**: આખો સોફ્ટવેર પ્રોજેક્ટ કે ફોલ્ડર ૧ જ ક્લિકમાં બનાવે છે.
+
 18. **`execute_powershell`**: વિન્ડોઝ પાવરશેલ કમાન્ડ્સ ચલાવે છે.
+
 19. **`read_file`**: કમ્પ્યુટરની કોઈપણ ફાઈલ વાંચે છે.
+
 20. **`write_file`**: નવી ફાઈલ બનાવે છે કે ફાઈલમાં લખે છે.
+
 21. **`list_directory`**: ફોલ્ડરની અંદર કઈ ફાઈલો છે તે તપાસે છે.
+
 22. **`search_files`**: આખા કમ્પ્યુટરમાંથી ફાઈલ શોધી આપે છે.
+
 23. **`move_or_copy_file`**: ફાઈલોને એક જગ્યાએથી બીજી જગ્યાએ ખસેડે છે.
+
 24. **`process_manager`**: ચાલુ પ્રોગ્રામ્સ તપાસે છે અને હેંગ થયેલી એપ બંધ કરે છે.
+
 25. **`system_health`**: સીપીયુ, રેમ (મેમરી) અને હાર્ડ ડ્રાઈવની સ્પેસ બતાવે છે.
+
 26. **`open_application`**: નોટપેડ, ક્રોમ, કેલ્ક્યુલેટર જેવી એપ્સ ખોલે છે.
+
 27. **`manage_ollama`**: ૧૦૦% ઑફલાઇન ફ્રી AI મોડેલ ચલાવે છે.
+
 28. **`check_connections`**: ઈન્ટરનેટ અને સર્વર કનેક્શન તપાસે છે.
+
 29. **`browser_automation`**: (Browser-Use પદ્ધતિ) સોશિયલ મીડિયા પર પોસ્ટ લખવા કે Set-of-Marks નંબર બિલ્લા લગાવી બટન ક્લિક કરવા બ્રાઉઝર કંટ્રોલ કરે છે.
+
 30. **`desktop_gui_control`**: કમ્પ્યુટર સ્ક્રીન પર માઉસ ક્લિક અને કીબોર્ડ શોર્ટકટ ચલાવે છે.
+
 31. **`text_to_speech`**: કુદરતી માનવ અવાજમાં લખાણ બોલીને સંભળાવે છે.
+
 32. **`vision_browser`**: સ્ક્રીનશોટ પાડે છે અને વેબસાઇટનું લેઆઉટ જુએ છે.
+
 33. **`mcp_tool`**: બહારના ત્રીજા પક્ષના ટૂલ્સ જોડે છે.
+
 34. **`deep_research_studio`**: ઈન્ટરનેટ પરથી ઊંડાણપૂર્વક સંશોધન કરી ઉચ્ચ ગુણવત્તાવાળો રિપોર્ટ બનાવે છે.
+
 35. **`orchestrate_complex_goal`**: મોટા અને લાંબા કામોને ૫ સ્ટેપના પ્લાનમાં વહેંચીને સફળતાપૂર્વક પૂરું કરે છે.
+
 36. **`code_studio_builder`**: કોઈ પણ પ્રોજેક્ટ, વેબસાઇટ કે કોડિંગ ફાઈલો ૧ જ ક્લિકમાં બનાવી ચેક કરે છે.
+
 37. **`system_super_optimizer`**: કમ્પ્યુટરની સ્પીડ, રેમ, ઈન્ટરનેટ લેટન્સી અને નકામી ફાઈલો સાફ કરે છે.
+
 38. **`consult_background_ai`**: બેકગ્રાઉન્ડ AI સ્વૉર્મ એડવાઇઝરી પાસેથી વિશેષ સલાહ અને કન્સોર્ટિયમ અભિપ્રાય મેળવે છે.
 
 ---
@@ -532,19 +618,29 @@ Helper-AI puts your safety first:
 ## ૫. કોઈપણ એપનું રિવર્સ એન્જિનિયરિંગ અને એપ મેમરી (REA Guide)
 
 ### આ કેવી રીતે કામ કરે છે?
+
 * જ્યારે AI એજન્ટ કોઈપણ એપને પહેલી વાર જુએ છે, ત્યારે તે તે એપના અંદરના ભાગો (UI બટનો, મેનૂ અને કીબોર્ડ શોર્ટકટ્સ) તપાસે છે.
+
 * તે આ બધી માહિતી `agent_memory/apps/` ફોલ્ડરમાં કાયમ માટે સાચવી રાખે છે.
+
 * બીજી વાર જ્યારે તમે તે એપ વાપરવા કહો, ત્યારે તે માઉસ ફેરવીને સમય બગાડ્યા વગર સીધો જ કીબોર્ડ શોર્ટકટ (`Ctrl+S`, `Ctrl+O` વગેરે) વાપરીને ૧ જ સેકન્ડમાં કામ પૂરું કરે છે!
 
 ### પહેલેથી સેવ થયેલી મુખ્ય એપ્લિકેશન્સ:
+
 * 📝 **Notepad:** Save (`Ctrl+S`), Open (`Ctrl+O`), New (`Ctrl+N`), Find (`Ctrl+F`).
+
 * 🧮 **Calculator:** ડાયરેક્ટ આંકડા અને ગણતરી શોર્ટકટ્સ.
+
 * 💻 **VS Code:** Command Palette (`Ctrl+Shift+P`), Save (`Ctrl+S`).
+
 * 🌐 **Google Chrome & Edge:** Address bar (`Ctrl+L`), New Tab (`Ctrl+T`), Close (`Ctrl+W`).
 
 ### ડેશબોર્ડ પરથી કોઈપણ નવી એપ સેવ કરવાની રીત:
+
 1. ઉપર આપેલા **Memory** બટન પર ક્લિક કરો.
+
 2. બોક્સમાં એપનું નામ લખો (દા.ત. `calc`, `spotify`, કે વેબસાઇટ URL).
+
 3. **Analyze** બટન દબાવો — AI તરત જ તે એપને રિવર્સ એન્જિનિયર કરી મેમરીમાં સેવ કરી લેશે!
 
 ---
@@ -553,12 +649,16 @@ Helper-AI puts your safety first:
 
 * **ડાઉનલોડ્સ ફોલ્ડર સાફ કરવા માટે:**  
   *"મારા Downloads ફોલ્ડરમાં રહેલી બધી ફાઈલો તપાસો, પીડીએફ અને ફોટા માટે અલગ ફોલ્ડર બનાવી તેમાં મૂકો."*
+
 * **પીસી સ્પીડ અને રેમ તપાસવા માટે:**  
   *"મારા કમ્પ્યુટરની હેલ્થ તપાસો, કેટલી રેમ વપરાઈ રહી છે તે Desktop/pc_status.txt માં સેવ કરો."*
+
 * **નોટપેડમાં ફાસ્ટ-પાથ શોર્ટકટથી કામ કરવા માટે:**  
   *"નોટપેડ ખોલો અને તેમાં 'હેલ્પર-એઆઈ ટાસ્ક કમ્પ્લીટ' લખીને ફાસ્ટ પાથ શોર્ટકટથી સેવ કરો."*
+
 * **ઈન્ટરનેટ પરથી રિસર્ચ કરવા માટે:**  
   *"ઈન્ટરનેટ પરથી આ અઠવાડિયાના ટોચના ટેકનોલોજી સમાચારો શોધો અને ડેસ્કટોપ પર રિપોર્ટ સેવ કરો."*
+
 * **સોશિયલ મીડિયા પર પોસ્ટ કરવા માટે:**  
   *"લિંક્ડઇન પર આર્ટિફિશિયલ ઇન્ટેલિજન્સ વિશે એક સરસ પોસ્ટ તૈયાર કરીને પબ્લિશ કરો."*
 
@@ -569,20 +669,29 @@ Helper-AI puts your safety first:
 Helper-AI ની સૌથી મોટી વિશેષતા એ છે કે તમે **દુનિયાનું કોઈપણ AI મોડેલ** ફક્ત તેનું નામ, API Key અને URL નાખીને જોડી શકો છો!
 
 ### 🌍 Universal AI મોડ (દુનિયાના કોઈપણ AI સાથે કામ કરો):
+
 તમે **OpenRouter, Anthropic Claude, Mistral AI, xAI Grok, Perplexity કે તમારા કમ્પ્યુટર પર ચાલતા LM Studio / vLLM** કોઈપણ AI નો ઉપયોગ કરી શકો છો:
+
 1. વેબ ડેશબોર્ડમાં **Settings (સેટિંગ્સ)** ખોલો.
+
 2. ડ્રોપડાઉનમાંથી **🌍 Universal / Custom AI (Use ANY AI in the World)** પસંદ કરો.
+
 3. ૧-ક્લિક પ્રીસેટ પર ક્લિક કરો અથવા વિગતો ભરો:
-   * **AI નું નામ:** દા.ત. `OpenRouter` અથવા `Claude`
-   * **API Endpoint URL:** દા.ત. `https://openrouter.ai/api/v1` અથવા `https://api.anthropic.com/v1`
-   * **API Key:** તમારી કી દાખલ કરો (લોકલ સર્વર માટે ખાલી રાખો)
-   * **Model Name:** દા.ત. `anthropic/claude-3.5-sonnet`
+   - **AI નું નામ:** દા.ત. `OpenRouter` અથવા `Claude`
+   - **API Endpoint URL:** દા.ત. `https://openrouter.ai/api/v1` અથવા `https://api.anthropic.com/v1`
+   - **API Key:** તમારી કી દાખલ કરો (લોકલ સર્વર માટે ખાલી રાખો)
+   - **Model Name:** દા.ત. `anthropic/claude-3.5-sonnet`
+
 4. **Save Settings** પર ક્લિક કરો. હવે Helper-AI તમે પસંદ કરેલા AI સાથે કામ કરશે!
 
 ### 🌟 DeepSeek (V3 / R1) નો ઉપયોગ:
+
 DeepSeek એ અત્યંત હોંશિયાર અને ખૂબ જ ઓછા ખર્ચે (Low Cost) કામ કરતું શ્રેષ્ઠ AI મોડેલ છે:
+
 1. **[DeepSeek Platform](https://platform.deepseek.com/)** પરથી API Key મેળવો.
+
 2. વેબ ડેશબોર્ડમાં **Settings (સેટિંગ્સ)** ખોલો, **DeepSeek (V3 / R1)** પસંદ કરો, તમારી API Key દાખલ કરો અને **Save Settings** પર ક્લિક કરો.
+
 3. અથવા તમારી `.env` ફાઈલમાં ઉમેરો:
    ```ini
    LLM_PROVIDER=deepseek
@@ -592,30 +701,40 @@ DeepSeek એ અત્યંત હોંશિયાર અને ખૂબ જ
    *(અઘરા લોજિકલ અને ગણતરી વાળા ટાસ્ક માટે તમે `deepseek-reasoner` પણ વાપરી શકો છો)*
 
 ### 🧠 Anthropic Claude (Sonnet 3.5 / Haiku / Opus) નો નેટિવ ઉપયોગ:
+
 Helper-AI હવે Anthropic Claude ને સીધું નેટિવ પ્રોવાઈડર તરીકે સપોર્ટ કરે છે:
+
 1. વેબ ડેશબોર્ડમાં **Settings (સેટિંગ્સ)** ખોલો અને **Anthropic Claude** પસંદ કરો.
+
 2. તમારી `sk-ant-...` API Key દાખલ કરો અને મોડેલ પસંદ કરો (દા.ત. `claude-3-5-sonnet-20241022` કે `claude-3-5-haiku-20241022`).
+
 3. અથવા તમારી `.env` ફાઈલમાં ઉમેરો:
    ```ini
    LLM_PROVIDER=anthropic
    ANTHROPIC_API_KEY=sk-ant-તમારી_કી
    ANTHROPIC_MODEL=claude-3-5-sonnet-20241022
    ```
+
 4. **Save Settings** કરો અથવા સર્વર રીસ્ટાર્ટ કરો. Helper-AI નેટિવ ક્લાઉડ એન્ડપોઈન્ટથી સુપરફાસ્ટ સ્પીડે કોડિંગ અને ટૂલ્સ ચલાવશે!
 
 ### 🐬 ફરજિયાત લોકલ મોડેલ: Dolphin-2.9-Llama3 અને ૧-ક્લિક ઓટો સેટઅપ:
+
 Helper-AI ને કોઈ પણ જાતના ઇનકાર કે અટકાવ વગર ૧૦૦% સ્વાયત્ત (Uncensored) રીતે કમ્પ્યુટર ચલાવવા માટે **Dolphin-2.9-Llama3 (8B)** મોડેલ સાથે સજ્જ કરવામાં આવ્યું છે:
+
 1. ફક્ત **`setup_dolphin_ai.bat`** (અથવા `start.bat`) પર ડબલ-ક્લિક કરો.
+
 2. સિસ્ટમ જાતે જ:
-   * જો Ollama ન હોય તો ઓટોમેટિક ડાઉનલોડ કરીને સાયલન્ટ ઇન્સ્ટોલ કરશે.
-   * બેકગ્રાઉન્ડ સર્વર (Port 11434) ચાલુ કરશે.
-   * `dolphin-llama3` મોડેલ ડાઉનલોડ અને વેરિફાય કરશે.
-   * `.env` માં `LLM_PROVIDER=ollama` અને `OLLAMA_MODEL=dolphin-llama3` આપમેળે ગોઠવી દેશે.
-   * લાઇવ ચકાસણી માટે `"hello i m helper ai"` પ્રોમ્પ્ટ રન કરશે.
-   * `http://localhost:8000` પર વેબ ડેશબોર્ડ આપોઆપ ખોલી આપશે.
+   - જો Ollama ન હોય તો ઓટોમેટિક ડાઉનલોડ કરીને સાયલન્ટ ઇન્સ્ટોલ કરશે.
+   - બેકગ્રાઉન્ડ સર્વર (Port 11434) ચાલુ કરશે.
+   - `dolphin-llama3` મોડેલ ડાઉનલોડ અને વેરિફાય કરશે.
+   - `.env` માં `LLM_PROVIDER=ollama` અને `OLLAMA_MODEL=dolphin-llama3` આપમેળે ગોઠવી દેશે.
+   - લાઇવ ચકાસણી માટે `"hello i m helper ai"` પ્રોમ્પ્ટ રન કરશે.
+   - `http://localhost:8000` પર વેબ ડેશબોર્ડ આપોઆપ ખોલી આપશે.
+
 3. ઓછા રેમ વાળા કમ્પ્યુટર માટે **Llama 3.2 3B** કે **Qwen 2.5 Coder 1.5B** જેવા હળવા મોડેલો પણ સેટિંગ્સમાંથી ૧-ક્લિકમાં પસંદ કરી શકાય છે!
 
 ### 🔒 અન્ય ઑફલાઇન મોડેલો (Ollama):
+
 તમે કમાન્ડ પ્રોમ્પ્ટમાં `ollama pull llama3.2:3b` લખીને અન્ય મોડેલ પણ ડાઉનલોડ કરી શકો છો અને Settings માંથી પસંદ કરી શકો છો. ૧૦૦% પ્રાઈવેટ અને ફ્રી!
 
 ---
@@ -623,7 +742,9 @@ Helper-AI ને કોઈ પણ જાતના ઇનકાર કે અટ�
 ## ૮. સુરક્ષા અને ૧-ક્લિક મંજૂરી (Human-in-the-Loop)
 
 તમારું કમ્પ્યુટર હંમેશા સુરક્ષિત રહે છે:
+
 * **Safe Mode:** કોઈપણ જોખમી કમાન્ડ (જેમ કે ડ્રાઈવ ફોર્મેટ થવી) આપમેળે બ્લોક થઈ જાય છે.
+
 * **૧-ક્લિક મંજૂરી:** જ્યારે કોઈ પોસ્ટ પબ્લિશ થવાની હોય કે ફાઈલ ડિલીટ થવાની હોય, ત્યારે સ્ક્રીન પર પોપ-અપ આવે છે: *"શું તમે મંજૂરી આપો છો? [હા] / [ના]"*. તમે મંજૂરી આપો તો જ કામ આગળ વધે છે.
 
 ---
@@ -646,15 +767,23 @@ Helper-AI ને કોઈ પણ જાતના ઇનકાર કે અટ�
 આ નવું ફીચર ભવિષ્યની બાયોલોજિકલ કમ્પ્યુટિંગ અને AI સુરક્ષા માટેનું અત્યાધુનિક પ્લેટફોર્મ છે.
 
 ### 🌐 ખોલવાની રીત:
+
 * તમારા બ્રાઉઝરમાં ખોલો: 👉 **`http://localhost:8000/wetware`**
+
 * અથવા મુખ્ય ડેશબોર્ડ પર ઉપર આપેલા **`🧬 AI 2026 Wetware Hub`** બટન પર ક્લિક કરો.
+
 * અથવા ફોલ્ડરમાં રહેલી **`run_wetware_hub.bat`** ફાઈલ પર ડબલ ક્લિક કરીને પોર્ટ 3000 પર ખોલો.
 
 ### 🔍 મુખ્ય સુવિધાઓ:
+
 1. **CL-1 જીવંત ચેતાકોષ લેબ (DishBrain):** સિલિકોન ચિપ પર ઉગાડેલા ૮,૦૦,૦૦૦ માનવ ચેતાકોષો સાથે લાઈવ ઇન્ટરેક્શન કરો. **"Ping"** બટન દબાવીને ઇલેક્ટ્રિકલ સિગ્નલ આપો અને સ્પીકરમાંથી ચેતાકોષો ફાયર થવાનો અસલી બાયો-અવાજ સાંભળો.
+
 2. **૨૦ વોટ વિરુદ્ધ ૫ ગીગાવોટ કેલ્ક્યુલેટર:** પરંપરાગત GPU સિલિકોન ક્લસ્ટરને ઠંડુ રાખવા કેટલું પાણી અને કેટલા પરમાણુ રિએક્ટર જોઈએ તેની સરખામણી ૨૦ વોટના માનવ મગજ સાથે કરો.
+
 3. **AI સુરક્ષા અને એલાઈનમેન્ટ ઇન્સિડન્ટ લૉગ્સ:** Anthropic અને Apollo Research ના વાસ્તવિક જેલબ્રેક અને કન્ટેઈનમેન્ટ ભંગના લૉગ્સ વાંચો.
+
 4. **ઓડિયો લેક્ચર્સ અને લાઈવ ટ્રાન્સક્રિપ્ટ:** અંગ્રેજી અને ગુજરાતીમાં લાઈવ સિંક કરેલી ટ્રાન્સક્રિપ્ટ સાથે વિજ્ઞાનીઓના ઓડિયો લેક્ચર્સ સાંભળો.
+
 5. **હેલ્પર-AI એજન્ટ બ્રિજ:** વેટવેર સ્ક્રીન પરથી સીધા જ Helper-AI ને સંશોધન કે કમ્પ્યુટર કામગીરીના કમાન્ડ આપો.
 
 ---
@@ -664,22 +793,34 @@ Helper-AI ને કોઈ પણ જાતના ઇનકાર કે અટ�
 હવે તમે માઉસ કે કીબોર્ડને અડ્યા વગર ફક્ત બોલીને તમારા કમ્પ્યુટર પર કોઈ પણ કામ કરાવી શકો છો!
 
 ### ⚡ ૧. ડેસ્કટોપ સાઇડકાર (Windows Shortcut):
+
 1. ફોલ્ડરમાં રહેલી **`run_voice_sidecar.bat`** ફાઈલ પર ડબલ ક્લિક કરો. આ તમારા કમ્પ્યુટરના બેકગ્રાઉન્ડમાં શાંતિથી ચાલતું રહેશે.
-2. હવે તમે કમ્પ્યુટરમાં ગમે તે કામ કરતા હોવ (ગેમ રમતા હોવ, વીડિયો જોતા હોવ કે બ્રાઉઝર ખોલ્યું હોય), ફક્ત કીબોર્ડ પરથી દબાવો:
+
+2. હવે તમે કમ્પ્યુટરમાં ગમે તે કામ કરતા હોવ (ગેમ રમતા હોવ, વીડિયો જોતા હોવ કે બ્રાઉઝર ખોલ્યું હોય), ફક્ત કીબોર્ડ પરથી દબાવો:  
    👉 **`Ctrl + Shift + Space`**
+
 3. સ્ક્રીન પર વોઇસ ડાયલોગ ખુલશે અને હેલ્પર-AI તમારો અવાજ સાંભળીને સીધો સ્પીકરમાંથી બોલીને જવાબ આપશે!
 
 ### 🌐 ૨. વેબ ડેશબોર્ડ પરથી હેન્ડ્સ-ફ્રી વોઇસ વાપરવાની રીત:
+
 1. `http://localhost:8000` ખોલો.
+
 2. નીચે જમણી બાજુએ આપેલા જાંબલી રંગના **`🎙️ HANDS-FREE VOICE AGENT`** બટન પર ક્લિક કરો.
+
 3. લાઇવ સ્ટુડિયોમાં **"Start Live Voice Session"** બટન દબાવો.
+
 4. માઇક્રોફોનમાંથી બોલો—હેલ્પર-AI તમારો અવાજ લાઈવ સાંભળશે, સ્ક્રીન પર લખાણ બતાવશે, કમ્પ્યુટર પર કામ કરશે, અને કુદરતી અવાજમાં સામે બોલીને જવાબ આપશે!
 
 ### 🗣️ ૩. ગુજરાતી અને વિવિધ અવાજો (Neural Voices):
+
 વોઇસ સ્ટુડિયોમાં તમે તમારી પસંદગીનો અવાજ પસંદ કરી શકો છો:
+
 * **Dhwani:** કુદરતી ગુજરાતી સ્ત્રી અવાજ
+
 * **Niranjan:** સ્પષ્ટ ગુજરાતી પુરુષ અવાજ
+
 * **Swara:** હિન્દી અને ભારતીય અંગ્રેજી અવાજ
+
 * **Aria & Guy:** કુદરતી અમેરિકન અંગ્રેજી અવાજ
 
 જો ઈન્ટરનેટ બંધ થઈ જાય તો પણ હેલ્પર-AI વિન્ડોઝના ઇન-બિલ્ટ ઑફલાઇન સ્પીચ એન્જિન દ્વારા બોલી શકે છે—કોઈ અડચણ વગર!
@@ -693,27 +834,41 @@ Helper-AI ને કોઈ પણ જાતના ઇનકાર કે અટ�
 Helper-AI માં હવે **Microsoft Playwright Codegen (માઈક્રોસોફ્ટનું સત્તાવાર ૧૦૦% સચોટ ટૂલ)** ઇન્ટિગ્રેટ કરવામાં આવ્યું છે!
 
 ### 🌟 આ કેવી રીતે કામ કરે છે?
+
 તમારે કોઈ કોડિંગ શીખવાની જરૂર નથી:
+
 1. તમે ફક્ત એક બટન દબાવો.
+
 2. તમારી સામે તમારું સાચું **Google Chrome** બ્રાઉઝર અને સાથે Playwright Inspector ખુલશે.
+
 3. તમે ક્રોમમાં જઈને ટાટા CRM માં એક ગ્રાહકનું નામ, મોબાઇલ નંબર ટાઇપ કરીને સેવ કરશો, તે જ ક્ષણે પ્લેરાઇટ તમારી આંખો સામે આપોઆપ પાયથન સ્ક્રિપ્ટ લખી લેશે!
+
 4. **લોગિન સેશન સેવિંગ:** તમારું લોગિન આઈડી, પાસવર્ડ અને કૂકીઝ આપોઆપ સેવ થઈ જાય છે, જેથી વારંવાર OTP કે લોગિન નાખવાની જરૂર પડતી નથી.
+
 5. **એક્સેલ ડેટા સાથે ઓટો-રિપ્લે:** એકવાર સ્ક્રિપ્ટ સેવ થઈ જાય પછી તમારી પાસે ૧૦૦ કે ૧૦૦૦ ગ્રાહકોનું એક્સેલ લિસ્ટ હોય, ફક્ત એક ક્લિકમાં AI બધા ગ્રાહકોના ફોર્મ જાતે ભરી દેશે!
 
 ### 📋 સ્ટેપ-બાય-સ્ટેપ ઉપયોગ કરવાની રીત:
 
 #### પગલું ૧: રેકોર્ડર ચાલુ કરો
+
 * પ્રોજેક્ટ ફોલ્ડરમાં રહેલી **`launch_crm_recorder.bat`** ફાઇલ પર ડબલ ક્લિક કરો, અથવા
+
 * વેબ ડેશબોર્ડ (`http://localhost:8000`) પર ઉપર આપેલા લીલા રંગના **`CRM Studio (Ready)`** બટન પર ક્લિક કરો.
+
 * તમારા CRM નું URL નાખો (જેમ કે `https://tatamotorscrm.example.com`) અને સ્ક્રિપ્ટનું નામ આપો (જેમ કે `tata_crm_lead_entry`).
+
 * **"⚡ Start Recording in Chrome"** બટન દબાવો.
 
 #### પગલું ૨: એક ફોર્મ હાથે ભરો
+
 * ક્રોમ બ્રાઉઝરમાં પેજ ખુલે એટલે એક કસ્ટમરનું નામ, મોબાઇલ અને વિગતો ભરીને સેવ બટન દબાવો.
+
 * કામ પૂરું થાય એટલે ક્રોમ બ્રાઉઝર બંધ કરી દો. તમારી આખી સ્ક્રિપ્ટ `workflows/playwright/` ફોલ્ડરમાં સેવ થઈ ગઈ છે!
 
 #### પગલું ૩: એક્સેલ લીડ્સ સાથે ઓટોમેટિક રન કરો
+
 * CRM Studio માં તમારી સ્ક્રિપ્ટ સિલેક્ટ કરો.
+
 * તમારી એક્સેલ/CSV લીડ્સ પેસ્ટ કરો:
   ```json
   [
@@ -721,7 +876,9 @@ Helper-AI માં હવે **Microsoft Playwright Codegen (માઈક્ર
     {"name": "પ્રિયા શર્મા", "mobile": "9825011223", "city": "વડોદરા"}
   ]
   ```
+
 * **"▶ Run Automation Now"** દબાવો!
+
 * AI એક પછી એક તમામ ગ્રાહકોનું ફોર્મ આપોઆપ ભરીને સબમિટ કરી દેશે અને સંપૂર્ણ રિપોર્ટ આપશે.
 
 ---
