@@ -345,12 +345,34 @@ if __name__ == "__main__":
         clean_name = name if name.endswith(".py") else f"{name}.py"
         path = WORKFLOWS_DIR / clean_name
         path.write_text(code, encoding="utf-8")
+        self._ensure_syspath_in_script(path)
         return {
             "success": True,
             "status": "saved",
             "message": f"Workflow {clean_name} saved successfully.",
             "path": str(path)
         }
+
+    def _ensure_syspath_in_script(self, path: Path) -> None:
+        """Guarantees that a workflow script has sys.path configured to import core cleanly."""
+        if not path.exists():
+            return
+        try:
+            code = path.read_text(encoding="utf-8", errors="ignore")
+            if "from core" in code or "import core" in code:
+                if "PROJECT_ROOT" not in code or "sys.path.insert" not in code:
+                    bootstrap = (
+                        "import os\n"
+                        "import sys\n"
+                        "from pathlib import Path\n"
+                        "PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent\n"
+                        "if str(PROJECT_ROOT) not in sys.path:\n"
+                        "    sys.path.insert(0, str(PROJECT_ROOT))\n\n"
+                    )
+                    path.write_text(bootstrap + code, encoding="utf-8")
+                    logger.info(f"Auto-injected sys.path bootstrap into {path.name}")
+        except Exception as e:
+            logger.warning(f"Could not check/inject sys.path in {path.name}: {e}")
 
     def run_workflow_standalone(
         self,
@@ -362,6 +384,10 @@ if __name__ == "__main__":
         path = WORKFLOWS_DIR / clean_name
         if not path.exists():
             return {"success": False, "error": f"Workflow {clean_name} not found."}
+
+        # Auto-ensure sys.path is present so core modules always resolve
+        self._ensure_syspath_in_script(path)
+
         self._is_running_workflow = True
         self._last_run_logs = []
 
