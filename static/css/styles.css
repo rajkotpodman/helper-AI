@@ -49,10 +49,24 @@
   --dsh-text-muted: #71717a;
 }
 
-* {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+::selection {
+  background: rgba(59, 130, 246, 0.45) !important;
+  color: #ffffff !important;
+}
+
+::-moz-selection {
+  background: rgba(59, 130, 246, 0.45) !important;
+  color: #ffffff !important;
 }
 
 html, body {
@@ -92,7 +106,7 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  user-select: none;
+  user-select: text;
   transition: transform 0.25s ease, margin-left 0.25s ease;
   z-index: 40;
 }
@@ -131,7 +145,7 @@ html, body {
   outline: none;
   background: transparent;
   text-align: left;
-  user-select: none;
+  user-select: text;
 }
 
 .session-history-item:hover {
@@ -261,7 +275,7 @@ html, body {
   font-size: 0.775rem;
   color: var(--dsh-text-muted);
   cursor: pointer;
-  user-select: none;
+  user-select: text;
   width: fit-content;
   padding: 0.2rem 0.5rem;
   border-radius: 0.375rem;
@@ -589,7 +603,7 @@ html, body {
   outline: none;
   text-decoration: none;
   overflow: hidden;
-  user-select: none;
+  user-select: text;
 }
 
 .pro-btn:active {

@@ -47,6 +47,21 @@
   <link rel="stylesheet" href="/static/css/styles.css">
   
   <style>
+    /* Enable full text selection and copying across the entire application */
+    *, *::before, *::after {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+    }
+    ::selection {
+      background: rgba(59, 130, 246, 0.45) !important;
+      color: #ffffff !important;
+    }
+    ::-moz-selection {
+      background: rgba(59, 130, 246, 0.45) !important;
+      color: #ffffff !important;
+    }
     .modal-backdrop.hidden,
     .modal-backdrop.is-hidden,
     .modal-backdrop[hidden] {
@@ -57,7 +72,7 @@
     }
   </style>
 </head>
-<body class="bg-[#151517] text-[#f4f4f5] flex h-screen w-screen overflow-hidden font-sans select-none">
+<body class="bg-[#151517] text-[#f4f4f5] flex h-screen w-screen overflow-hidden font-sans select-text">
 
   <!-- ================= 1. LEFT SIDEBAR ================= -->
   <aside id="dsh-sidebar" class="dsh-sidebar flex flex-col justify-between">
